@@ -1,4 +1,5 @@
 """Entry point: python -m generator.build  (writes everything into data/)."""
+import os
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +12,7 @@ from .config import (INVENTORY_COLUMNS, IP_INR_PER_MONTH, PLANS, SNAPSHOT_INR_PE
 from .planted import planted_ips, planted_vms, planted_volumes, stray_series
 from .signals import AX, rng_for
 
-DATA = Path(__file__).resolve().parent.parent / "data"
+DATA = Path(os.environ.get("SCO_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 FIXTURE_NAMES = ["prod-batch-07", "dev-web-03", "vol-orphan-11"]
 
 
@@ -76,7 +77,7 @@ def volume_frame(s):
     rng = rng_for(s["inv"]["name"], "faults")
     df = pd.DataFrame({"resource_id": s["inv"]["resource_id"], "ts": AX.ts_utc,
                        "iops": s["metrics"]["iops"], "disk_used_pct": s["metrics"]["disk_used_pct"]})
-    return df[rng.random(len(df)) >= 0.005]
+    return quality.random_drops(df, rng)[0]
 
 
 def finalize_metrics(frames, cols):

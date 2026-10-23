@@ -1,14 +1,15 @@
 """python -m generator.validate : proves every planted case, fault and calibration target is present.
 Writes data/validation_report.md and exits non-zero on any failure."""
 import sys
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from .config import CALIBRATION, N_SLOTS, SLOTS_PER_DAY, TZ, WINDOW_START
+from .config import CALIBRATION, FITTED as FITTED_REF, N_SLOTS, SLOTS_PER_DAY, TZ, WINDOW_START
 
-DATA = Path(__file__).resolve().parent.parent / "data"
+DATA = Path(os.environ.get("SCO_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 PCT = ["cpu_pct", "mem_pct", "disk_used_pct"]
 
 
@@ -172,8 +173,14 @@ def main():
     full = [k for k, v in g.items() if v.day.min() == 0 and v.day.max() == 29 and k not in
             {rid[n] for n in ("dev-flaky-18", "staging-flaky-19", "prod-batch-20", "prod-api-02")}]
     share_missing = 1 - np.mean([len(g[k]) / N_SLOTS for k in full])
-    lo, hi = CALIBRATION["random_missing_share"]
-    check("E5", "fleet", f"random missing share {lo}-{hi}", lo <= share_missing <= hi, round(share_missing, 4))
+    ref = FITTED_REF.get("missing_share_bitbrains", {}).get("value")
+    if ref:
+        lo, hi = 0.8 * ref, 1.2 * ref
+        check("E5", "fleet", f"random missing share within +/-20% of Bitbrains ({ref:.4f})", lo <= share_missing <= hi,
+              round(share_missing, 4))
+    else:
+        lo, hi = CALIBRATION["random_missing_share"]
+        check("E5", "fleet", f"random missing share {lo}-{hi}", lo <= share_missing <= hi, round(share_missing, 4))
     cov18 = len(s("dev-flaky-18")) / N_SLOTS; cov19 = len(s("staging-flaky-19")) / N_SLOTS
     check("E6", "dev-flaky-18", "coverage 0.65-0.75", 0.65 <= cov18 <= 0.75, round(cov18, 3))
     check("E7", "staging-flaky-19", "coverage 0.85-0.92", 0.85 <= cov19 <= 0.92, round(cov19, 3))
@@ -223,11 +230,15 @@ def main():
     check("CAL", "fleet", f"median CPU p95 < {CALIBRATION['median_cpu_p95_below']}% (Google: usage << allocation)",
           stats.p95.median() < CALIBRATION["median_cpu_p95_below"], round(stats.p95.median(), 1))
 
+    # ---------------- FIT / TRUTH / PROV / INFO (checks added in CP5; see generator/fitcheck.py)
+    from . import fitcheck
+    fitcheck.run(check, g, inv, truth)
+
     # ---------------- billing and size
     daily = bill.groupby("date").cost_inr.sum().sort_index()
     growth = daily.iloc[-30:].sum() / daily.iloc[:30].sum()
     check("BILL", "fleet", "month 6 / month 1 in 1.35-1.45", 1.35 <= growth <= 1.45, round(growth, 3))
-    size_mb = sum(f.stat().st_size for f in DATA.rglob("*") if f.is_file()) / 1e6
+    size_mb = sum(f.stat().st_size for f in DATA.rglob("*") if f.is_file() and "external" not in f.parts) / 1e6
     check("SIZE", "data/", "total <= 30 MB", size_mb <= 30, f"{size_mb:.1f} MB")
     check("COUNT", "inventory", "117 VMs, 15 volumes, 8 IPs",
           inv.type.value_counts().to_dict() == {"vm": 117, "volume": 15, "ip": 8}, inv.type.value_counts().to_dict())

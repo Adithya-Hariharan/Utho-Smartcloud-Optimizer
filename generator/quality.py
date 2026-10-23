@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from .config import SLOTS_PER_DAY, TZ
+from .config import SLOTS_PER_DAY, TZ, fitted
 
 METRIC_COLS = ["cpu_pct", "mem_pct", "disk_used_pct", "iops", "net_in_mbps", "net_out_mbps"]
 
@@ -90,7 +90,9 @@ def ts_jitter(df, rng):
     return df, f"{m.sum()} timestamps offset +3 min on 2026-09-25 (e.g. 05:03)"
 
 
-def random_drops(df, rng, share=0.005):
+def random_drops(df, rng, share=None):
+    """Monitoring gaps at the rate measured in the Bitbrains mirror (median NaN share per VM)."""
+    share = fitted("missing_share_bitbrains") if share is None else share
     m = rng.random(len(df)) < share
     return df[~m], f"{m.sum()} random rows dropped"
 

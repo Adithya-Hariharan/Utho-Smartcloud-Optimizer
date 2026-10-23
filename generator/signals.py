@@ -1,11 +1,41 @@
 """Signal building blocks. All arrays are aligned to the 8,640-slot window (IST)."""
+import contextlib
 import zlib
 
 import numpy as np
 import pandas as pd
 from scipy.signal import lfilter
 
-from .config import N_SLOTS, SEED, SLOTS_PER_DAY, STEP, WINDOW_START
+from .config import (FITTED, N_SLOTS, PINNED_DRIFT_SD, PINNED_PHI, SEED, SLOTS_PER_DAY, STEP, WINDOW_START,
+                     fitted)
+
+# Active dynamics. Defaults are FITTED (Bitbrains); `pinned()` switches to the hand-set values for
+# planted scenarios whose edge-case targets need them.
+_DYN = {"pinned": False}
+
+
+@contextlib.contextmanager
+def pinned():
+    old = _DYN["pinned"]
+    _DYN["pinned"] = True
+    try:
+        yield
+    finally:
+        _DYN["pinned"] = old
+
+
+def _phi():
+    return PINNED_PHI if _DYN["pinned"] else fitted("ar1_phi_cpu")
+
+
+def _drift_sd():
+    return PINNED_DRIFT_SD if _DYN["pinned"] else fitted("drift_sd")
+
+
+def noise_sigma(level):
+    """Fitted heteroscedastic noise: sigma = a * level^b (Bitbrains), bounded to a sane range."""
+    m = FITTED["ar1_sigma_model"]
+    return float(np.clip(m["a"] * max(level, 0.5) ** m["b"], 0.3, 15.0))
 
 
 class _Axis:
@@ -51,20 +81,26 @@ def weekly(weekend_factor):
     return np.where(AX.weekend, weekend_factor, 1.0)
 
 
-def drift(rng, sd=0.05):
-    """One multiplier per day so no two days are identical."""
-    return rng.normal(1.0, sd, AX.day.max() + 1)[AX.day]
+def drift(rng, sd=None):
+    """One multiplier per day so no two days are identical (sd fitted: Bitbrains day-to-day variation).
+    Lognormal so a large sd can never produce a negative multiplier."""
+    sd = _drift_sd() if sd is None else sd
+    s = np.sqrt(np.log(1 + sd ** 2))
+    return rng.lognormal(-s ** 2 / 2, s, AX.day.max() + 1)[AX.day]
 
 
-def ar1(rng, sigma, phi=0.8):
-    """Autocorrelated noise with stationary std = sigma."""
+def ar1(rng, sigma, phi=None):
+    """Autocorrelated noise with stationary std = sigma (phi fitted: Bitbrains lag-1 autocorrelation)."""
+    phi = _phi() if phi is None else phi
     eps = rng.normal(0.0, sigma * np.sqrt(1 - phi ** 2), AX.n)
     return lfilter([1.0], [1.0, -phi], eps)
 
 
-def steady(rng, base, amp, weekend=0.85, sigma=2.0, start=8.0, end=20.0):
-    """Interactive workload: base + daily bump, weekend dip, daily drift, AR(1) noise."""
-    return (base + amp * daily(start, end) * weekly(weekend)) * drift(rng) + ar1(rng, sigma)
+def steady(rng, base, amp, weekend=0.85, sigma=None, start=8.0, end=20.0, drift_sd=None):
+    """Interactive workload: base + daily bump, weekend dip, daily drift, AR(1) noise.
+    sigma=None / drift_sd=None use the fitted values."""
+    sigma = noise_sigma(base + amp / 2) if sigma is None else sigma
+    return (base + amp * daily(start, end) * weekly(weekend)) * drift(rng, drift_sd) + ar1(rng, sigma)
 
 
 def random_spikes(rng, per_day, dur_slots=(2, 6), amp=(70.0, 85.0)):

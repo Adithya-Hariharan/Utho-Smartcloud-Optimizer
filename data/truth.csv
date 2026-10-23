@@ -81,13 +81,13 @@ vm-0079,staging-svc-54,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
 vm-0080,dev-svc-55,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
 vm-0081,dev-svc-56,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
 vm-0082,dev-svc-57,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
-vm-0083,prod-burst-58,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
-vm-0084,prod-burst-59,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
-vm-0085,prod-burst-60,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
-vm-0086,prod-burst-61,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
-vm-0087,prod-burst-62,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
-vm-0088,staging-burst-63,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
-vm-0089,staging-burst-64,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0083,prod-burst-58,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:00-10:30 peak
+vm-0084,prod-burst-59,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:00-10:30 peak
+vm-0085,prod-burst-60,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:00-10:30 peak
+vm-0086,prod-burst-61,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:00-10:30 peak
+vm-0087,prod-burst-62,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:00-10:30 peak
+vm-0088,staging-burst-63,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:00-10:30 peak
+vm-0089,staging-burst-64,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:00-10:30 peak
 vm-0090,prod-batch-65,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
 vm-0091,prod-batch-66,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
 vm-0092,prod-batch-67,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
