@@ -1,0 +1,4 @@
+resource_id,name,type,region,env,owner_team,purpose,service_group,plan_id,previous_plan_id,vcpu,ram_gb,disk_gb,provisioned_iops,bandwidth_mbps,state,stopped_since,created_at,last_resized_at,attached_to,unattached_since,optimize_policy,tags
+vm-0003,prod-batch-07,vm,noida,prod,data,batch,,B3,,6,16,80,3000,1000,running,,2026-03-07T05:00:00+05:30,,,,default,
+vm-0033,dev-web-03,vm,mumbai,dev,growth,web,,B4,,8,32,200,3000,2000,running,,2026-02-04T12:00:00+05:30,,,,default,
+vol-0010,vol-orphan-11,volume,noida,dev,data,storage,,,,,,500,3000,,unattached,,2026-01-08T12:00:00+05:30,,,2026-08-16T15:00:00+05:30,default,

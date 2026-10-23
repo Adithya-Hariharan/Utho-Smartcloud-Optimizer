@@ -1,0 +1,142 @@
+resource_id,name,type,archetype,edge_case_id,expected_verdict,expected_reason_code,expected_action,notes
+vm-0001,prod-api-01,vm,planted,A1,healthy,RIGHT_SIZED,none,p95 ~70%: must be left alone
+vm-0002,prod-api-07,vm,planted,A2,recommend,UNDERUSED,resize,"CPU p99 ~31%, mem ~15%: formula says B2, prod one-step rule gives B4->B3"
+vm-0003,prod-batch-07,vm,planted,A3,reject,VETO_RECURRING_PEAK,none,"mean ~8%, p99 ~92% in a 40-min window at 02:00 every night"
+vm-0004,prod-billing-01,vm,planted,A4,reject,VETO_RECURRING_PEAK,none,"idle 6 days, 90% every Sunday 09:00-12:00 (5 Sundays in window)"
+vm-0005,dev-report-02,vm,planted,A5,reject,PEAK_REPLAY_FAILED,none,p99 ~22% misses a weekly 1-hour job at 95% (Wed 15:00); replay on B1 fails
+vm-0006,prod-reports-02,vm,planted,A6,flag,ONE_OFF_PEAK,none,single 8-hour 95% spike on 2026-10-01; p99 without that day is low
+vm-0007,prod-checkout-03,vm,planted,A7,reject,VETO_RECURRING_PEAK,none,"average ~14%, p99 ~86% at 10:00 daily"
+vm-0008,prod-queue-02,vm,planted,A8,reject,PEAK_REPLAY_FAILED,none,unscheduled spikes 10->80% several times a day (no schedule)
+vm-0009,prod-cache-04,vm,planted,A9,reject,VETO_MEMORY,none,"CPU ~5%, memory p99 ~85%"
+vm-0010,prod-search-06,vm,planted,A10,flag,RESERVED_MEMORY,none,"memory flat at 78% (JVM heap reserved), std < 1"
+vm-0011,prod-orders-08,vm,planted,A11,reject,VETO_LEAK,none,memory climbs 40->85% over 7.5 days then drops (restart): 4 cycles; leak check runs before memory veto
+vm-0012,prod-db-01,vm,planted,A12,exclude,STATEFUL_PROD,none,"CPU ~12%, IOPS saturated; stateful"
+vm-0013,prod-ingest-09,vm,planted,A13,reject,VETO_IOPS,none,stateless but disk-bound: IOPS p95 ~90%
+vm-0014,prod-gateway-03,vm,planted,A14,reject,VETO_NETWORK,none,CPU ~4% but network p95 > 60% of bandwidth
+vm-0015,prod-api-04,vm,planted,A15,healthy,RIGHT_SIZED,none,CPU climbs 20->65% over 30 days: capacity-trend alert expected
+vm-0016,prod-search-02,vm,planted,A16,upsize,UNDER_PROVISIONED,upsize,CPU p99 > 90%
+vm-0017,prod-legacy-06,vm,planted,A17,flag,WENT_QUIET,none,"busy until 2026-10-12, near zero for the last 8 days"
+vm-0018,prod-ml-10,vm,planted,A18,reject,NO_CHEAPER_PLAN,none,CPU ~8% but memory p99 ~45% of 32 GB needs > 16 GB: no cheaper plan fits both
+vm-0019,dev-tiny-14,vm,planted,A19,recommend,IDLE,stop,"already the smallest plan: stop, never resize"
+vm-0020,staging-web-08,vm,planted,A20,recommend,UNDERUSED,resize,"needs ~3 vCPU: catalogue has 2 or 4, round UP to B2 (4 vCPU)"
+vm-0021,staging-api-09,vm,planted,A21,healthy,RIGHT_SIZED,none,rate-limited at exactly 40.00% in business hours: p95 = 40.0 is NOT < 40
+vm-0022,dev-tiny-15,vm,planted,A22,healthy,BELOW_FLOOR,none,schedule would save ~Rs 495/month (< Rs 500 floor); S1 cannot shrink
+vm-0023,prod-web-11a,vm,planted,A23,recommend,UNDERUSED,resize,"one group recommendation, sized on the busiest member (11b)"
+vm-0024,prod-web-11b,vm,planted,A23,recommend,UNDERUSED,resize,"one group recommendation, sized on the busiest member (11b)"
+vm-0025,prod-web-11c,vm,planted,A23,recommend,UNDERUSED,resize,"one group recommendation, sized on the busiest member (11b)"
+vm-0026,prod-k8s-node-1,vm,planted,A24,exclude,TAG_AUTOSCALED,none,"rightsize the node pool, not the node"
+vm-0027,prod-k8s-node-2,vm,planted,A24,exclude,TAG_AUTOSCALED,none,"rightsize the node pool, not the node"
+vm-0028,prod-k8s-node-3,vm,planted,A24,exclude,TAG_AUTOSCALED,none,"rightsize the node pool, not the node"
+vm-0029,prod-checkout-01,vm,planted,A25,exclude,TAG_SEASONAL,none,looks oversized in a quiet month; festive-sale peak is outside the window
+vm-0030,staging-db-02,vm,planted,B1,recommend,IDLE,snapshot+stop,"1% for 30 days; stateful non-prod: snapshot first, delete after 14 days"
+vm-0031,prod-old-12,vm,planted,B2,flag,IDLE_PROD,none,idle prod: review with owner
+vm-0032,dev-cache-13,vm,planted,B3,reject,VETO_MEMORY,none,CPU 2% but memory-resident at 74%: not idle
+vm-0033,dev-web-03,vm,planted,B4/E2,recommend,UNDERUSED,resize+schedule,"B4->B2 plus off Mon-Fri 20:00-08:00 and weekends; combined, not additive"
+vm-0034,dev-etl-04,vm,planted,B5,recommend,OFF_HOURS,schedule,nightly job 01:00-03:00: off-window must exclude it
+vm-0035,dev-support-05,vm,planted,B6,recommend,OFF_HOURS,schedule,night-shift team busy 22:00-06:00: window must be daytime
+vm-0036,staging-load-06,vm,planted,B7,recommend,OFF_HOURS,schedule,weekend-only load tests: weekdays off
+vm-0037,dev-misc-07,vm,planted,B9,recommend,UNDERUSED,resize,"activity scattered across all hours: off-hours fragmented, so no schedule"
+vm-0038,staging-demo-10,vm,planted,B10,healthy,RIGHT_SIZED,none,office-hours shape but keep_running tag: never scheduled
+vm-0039,vm-stopped-07,vm,planted,C10,recommend,STOPPED_VM,snapshot+delete,stopped 45 days; disk + IP still billed
+vm-0040,vm-maint-08,vm,planted,C11,exclude,STOPPED_RECENTLY,none,stopped 3 days ago: maintenance
+vm-0041,dev-test-12,vm,planted,D1,exclude,HISTORY_TOO_SHORT,none,created 3 days ago
+vm-0042,staging-app-05,vm,planted,D2,exclude,RECENTLY_RESIZED,none,resized B4->B3 6 days ago; older data describes a different machine
+vm-0043,prod-standby-01,vm,planted,D3,exclude,TAG_DR_STANDBY,none,DR warm standby: only the tag saves it
+vm-0044,prod-nomon-13,vm,planted,D4,exclude,NO_TELEMETRY,none,monitoring agent missing: no metrics at all
+vm-0045,vm-untagged-14,vm,planted,D5,recommend,UNDERUSED,resize,env tag missing: treated as prod (one step) + UNTAGGED_ENV flag
+vm-0046,dev-orphan-owner-15,vm,planted,D6,recommend,UNDERUSED,resize,owner missing: UNOWNED flag
+vm-0047,dev-misnamed-16,vm,planted,D7,recommend,UNDERUSED,resize,"name says dev, tag says prod: trust tag (one step) + TAG_NAME_CONFLICT flag"
+vm-0048,prod-legacy-plan-17,vm,planted,D8,exclude,UNKNOWN_PRICE,none,"plan L-OLD-4 not in catalogue (billed at Rs 3,500): never guess a price"
+vm-0049,prod-worker-05,vm,planted,D10/G3,exclude,ACTIVE_ANOMALY,none,"4x sustained CPU jump from 2026-10-18: anomaly alert, not sized"
+vm-0050,prod-api-02,vm,planted,E1,healthy,RIGHT_SIZED,none,"6-hour gap on 2026-10-02 10:00-16:00 must be NaN, not idle"
+vm-0051,dev-flaky-18,vm,planted,E6,exclude,LOW_COVERAGE,none,~70% coverage
+vm-0052,staging-flaky-19,vm,planted,E7,recommend,UNDERUSED,resize,"~88% coverage: allowed, confidence Medium, MEDIUM_COVERAGE flag"
+vm-0053,dev-api-16,vm,planted,E8,recommend,OFF_HOURS,schedule,stuck agent reports 0.0 for 48h (days 15-16): treat as missing
+vm-0054,prod-batch-20,vm,planted,E9,flag,PEAK_UNDER_OBSERVED,none,"02:00 batch, but 01:00-04:00 missing on 18 of 30 nights"
+vm-0055,dev-sandbox-17,vm,planted,G4,exclude,ACTIVE_ANOMALY,none,CPU 98% + 10x network out from 2026-10-16: critical 'possible compromise'
+vm-0056,prod-web-31,vm,right_sized_prod,G5-disk,healthy,RIGHT_SIZED,none,disk filling 0.8%/day -> capacity alert
+vm-0057,prod-api-32,vm,right_sized_prod,G5-disk,healthy,RIGHT_SIZED,none,disk filling 0.8%/day -> capacity alert
+vm-0058,prod-search-33,vm,right_sized_prod,G5-disk,healthy,RIGHT_SIZED,none,disk filling 0.8%/day -> capacity alert
+vm-0059,prod-checkout-34,vm,right_sized_prod,G5-disk,healthy,RIGHT_SIZED,none,disk filling 0.8%/day -> capacity alert
+vm-0060,prod-web-35,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0061,prod-api-36,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0062,prod-search-37,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0063,prod-checkout-38,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0064,prod-web-39,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0065,prod-api-40,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0066,prod-search-41,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0067,prod-checkout-42,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0068,prod-web-43,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0069,prod-api-44,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0070,prod-search-45,vm,right_sized_prod,A1-bulk,healthy,RIGHT_SIZED,none,
+vm-0071,prod-svc-46,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,prod: max one plan step down
+vm-0072,prod-svc-47,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,prod: max one plan step down
+vm-0073,prod-svc-48,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,prod: max one plan step down
+vm-0074,prod-svc-49,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,prod: max one plan step down
+vm-0075,prod-svc-50,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,prod: max one plan step down
+vm-0076,prod-svc-51,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,prod: max one plan step down
+vm-0077,staging-svc-52,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
+vm-0078,staging-svc-53,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
+vm-0079,staging-svc-54,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
+vm-0080,dev-svc-55,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
+vm-0081,dev-svc-56,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
+vm-0082,dev-svc-57,vm,steady_low,A2-bulk,recommend,UNDERUSED,resize,
+vm-0083,prod-burst-58,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0084,prod-burst-59,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0085,prod-burst-60,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0086,prod-burst-61,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0087,prod-burst-62,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0088,staging-burst-63,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0089,staging-burst-64,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none,daily 09:30-10:15 peak at 75-90%
+vm-0090,prod-batch-65,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
+vm-0091,prod-batch-66,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
+vm-0092,prod-batch-67,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
+vm-0093,staging-batch-68,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
+vm-0094,dev-batch-69,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
+vm-0095,dev-app-70,vm,office_hours_dev,D1-bulk/G7,exclude,HISTORY_TOO_SHORT,none,created 2026-10-12 by growth team; drives team cost-jump alert
+vm-0096,dev-app-71,vm,office_hours_dev,D1-bulk/G7,exclude,HISTORY_TOO_SHORT,none,created 2026-10-12 by growth team; drives team cost-jump alert
+vm-0097,dev-app-72,vm,office_hours_dev,D1-bulk/G7,exclude,HISTORY_TOO_SHORT,none,created 2026-10-12 by growth team; drives team cost-jump alert
+vm-0098,dev-app-73,vm,office_hours_dev,D1-bulk/G7,exclude,HISTORY_TOO_SHORT,none,created 2026-10-12 by growth team; drives team cost-jump alert
+vm-0099,dev-app-74,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0100,dev-app-75,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0101,dev-app-76,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0102,dev-app-77,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0103,dev-app-78,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0104,dev-app-79,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0105,dev-app-80,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0106,staging-app-81,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0107,staging-app-82,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0108,staging-app-83,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0109,staging-app-84,vm,office_hours_dev,B4-bulk,recommend,OFF_HOURS,schedule,idle weeknights and weekends
+vm-0110,dev-old-85,vm,zombie,B12-bulk,recommend,IDLE,stop,
+vm-0111,dev-old-86,vm,zombie,B12-bulk,recommend,IDLE,stop,
+vm-0112,dev-old-87,vm,zombie,B12-bulk,recommend,IDLE,stop,
+vm-0113,staging-old-88,vm,zombie,B12-bulk,recommend,IDLE,stop,
+vm-0114,staging-old-89,vm,zombie,B12-bulk,recommend,IDLE,stop,
+vm-0115,prod-mem-90,vm,memory_bound,A9-bulk,reject,VETO_MEMORY,none,
+vm-0116,prod-mem-91,vm,memory_bound,A9-bulk,reject,VETO_MEMORY,none,
+vm-0117,prod-mem-92,vm,memory_bound,A9-bulk,reject,VETO_MEMORY,none,
+vol-0001,vol-data-21,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0002,vol-data-22,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0003,vol-data-23,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0004,vol-data-24,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0005,vol-data-25,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0006,vol-data-26,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0007,vol-data-27,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0008,vol-data-28,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0009,vol-data-29,volume,healthy_volume,,healthy,RIGHT_SIZED,none,
+vol-0010,vol-orphan-11,volume,planted,C1,recommend,ORPHAN_VOLUME,snapshot+delete,unattached 65 days; 120 GB used -> snapshot Rs 480
+vol-0011,vol-new-12,volume,planted,C2,exclude,ORPHAN_TOO_NEW,none,unattached 2 days: under the 7-day gate
+vol-0012,vol-idle-04,volume,planted,C3,flag,IDLE_VOLUME_REVIEW,none,"attached to a running VM, zero IOPS for 30 days"
+vol-0013,vol-stopped-07,volume,planted,C4,recommend,STOPPED_VM,snapshot+delete,attached to a VM stopped 45 days
+vol-0014,vol-oversized-09,volume,planted,C5,recommend,OVERSIZED_VOLUME,shrink_volume,"500 GB, 40 GB used: migrate to 100 GB (no in-place shrink)"
+vol-0015,vol-growing-10,volume,planted,C6,reject,VETO_GROWTH,none,oversized today but growing 2%/day -> disk alert
+ip-0001,ip-pub-21,ip,healthy_ip,,healthy,RIGHT_SIZED,none,
+ip-0002,ip-pub-22,ip,healthy_ip,,healthy,RIGHT_SIZED,none,
+ip-0003,ip-pub-23,ip,healthy_ip,,healthy,RIGHT_SIZED,none,
+ip-0004,ip-pub-24,ip,healthy_ip,,healthy,RIGHT_SIZED,none,
+ip-0005,ip-pub-25,ip,healthy_ip,,healthy,RIGHT_SIZED,none,
+ip-0006,ip-unused-03,ip,planted,C7,recommend,UNUSED_IP,release,"allocated, never associated"
+ip-0007,ip-stopped-02,ip,planted,C8,recommend,STOPPED_VM,release,associated with a VM stopped 45 days
+ip-0008,ip-allowlist-04,ip,planted,C9,exclude,TAG_ALLOWLISTED_IP,none,on a bank/payment-gateway allowlist: cannot be re-acquired
+vm-9999,vm-ghost-99,vm,planted,D9,exclude,NOT_IN_INVENTORY,none,metrics exist but no inventory row

@@ -1,0 +1,11 @@
+item,kind,vcpu,ram_gb,bandwidth_mbps,monthly_inr,unit,basis
+S1,vm_plan,1.0,2.0,250.0,705,per VM per month,assumption: half of B1
+B1,vm_plan,2.0,4.0,500.0,1410,per VM per month,modelled on Utho Basic 1 public listing (illustrative)
+B2,vm_plan,4.0,8.0,1000.0,2826,per VM per month,modelled on Utho Basic 2 public listing (illustrative)
+B3,vm_plan,6.0,16.0,1000.0,3978,per VM per month,modelled on Utho Basic 3 public listing (illustrative)
+B4,vm_plan,8.0,32.0,2000.0,6690,per VM per month,modelled on Utho Basic 4 public listing (illustrative)
+B5,vm_plan,16.0,64.0,2000.0,13000,per VM per month,assumption: fills the gap between B4 and B6
+B6,vm_plan,24.0,96.0,4000.0,25962,per VM per month,modelled on Utho Basic 6 public listing (illustrative)
+block_volume,storage,,,,8,per GB per month,assumption (illustrative)
+snapshot,storage,,,,4,per GB per month,assumption (illustrative)
+public_ip,network,,,,200,per IP per month,assumption (illustrative)

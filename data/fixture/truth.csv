@@ -1,0 +1,4 @@
+resource_id,name,type,archetype,edge_case_id,expected_verdict,expected_reason_code,expected_action,notes
+vm-0003,prod-batch-07,vm,planted,A3,reject,VETO_RECURRING_PEAK,none,"mean ~8%, p99 ~92% in a 40-min window at 02:00 every night"
+vm-0033,dev-web-03,vm,planted,B4/E2,recommend,UNDERUSED,resize+schedule,"B4->B2 plus off Mon-Fri 20:00-08:00 and weekends; combined, not additive"
+vol-0010,vol-orphan-11,volume,planted,C1,recommend,ORPHAN_VOLUME,snapshot+delete,unattached 65 days; 120 GB used -> snapshot Rs 480
