@@ -12,7 +12,11 @@ import numpy as np
 from ..cost.model import format_inr, scheduled_compute, snapshot_cost
 from . import replay as rp
 from .candidates import schedule as make_schedule
-from .common import Outcome, action, build_options, days_since, key_of, used_gb, veto
+from .common import Outcome, action, build_options, days_since, key_of, now_text, used_gb, veto
+
+
+def snap_rate(e):
+    return int(e.cfg.get("pricing.snapshot_inr_per_gb_month"))
 from .sizing import index_of, needs, size
 
 ENV_PREFIXES = ("prod", "staging", "dev")
@@ -234,14 +238,15 @@ def upsize(e, rid, row, f, cur, cpu, mem, prod, tr):
     replay = {"limit_minutes_above_90": e.p.replay_limit(prod), "mem_cap_pct": e.p.mem_cap, "attempts": [a],
               "passed": a["passed"], "chosen_plan": fit.plan_id}
     after = fit.price + cur["storage_inr"]
+    formula = (f"{now_text(cur)} → {format_inr(fit.price)} {fit.plan_id} + {format_inr(cur['storage_inr'])} disk = "
+               f"{format_inr(after)}")
     o = Outcome("upsize", "UNDER_PROVISIONED",
                 f"{f['share_cpu_above_90']:.0%} of CPU samples are above 90% (p99 {m['cpu']['p99']:.0f}%). "
                 f"{row['plan_id']} → {fit.plan_id} brings the replayed peak to {a['max_cpu_pct']:.0f}%.",
                 actions=[action("upsize", f"Resize {row['plan_id']} → {fit.plan_id} in a maintenance window",
                                 rollback=f"resize back to {row['plan_id']}")],
                 target=e.target_block(fit, cur), default="upsize", replay=replay)
-    o.options = build_options(cur["monthly_inr"], {"upsize": (after, f"{format_inr(fit.price)} {fit.plan_id} + "
-                                                                     f"{format_inr(cur['storage_inr'])} disk")})
+    o.options = build_options(cur["monthly_inr"], {"upsize": (after, formula)})
     o.risk = e.risk(row, f, rp.projected_p99(cpu, row["vcpu"], fit), ["upsize"])
     tr.add("step3.decision", "upsize target", fit.plan_id, f"≥ {need_v:.1f} vCPU", "upsize", True)
     return o
@@ -255,7 +260,7 @@ def refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr):
     limit = e.p.replay_limit(prod)
     need_v, need_r = needs(row["vcpu"], row["ram_gb"], cpu_p, mem_p, e.p.cpu_target(prod), e.p.mem_target)
     plan, _ = size(e.cat, row["plan_id"], need_v, need_r, prod)
-    tr.add("step7.sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB", plan.plan_id if plan else None, row["plan_id"],
+    tr.add("sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB", plan.plan_id if plan else None, row["plan_id"],
            "pass" if plan and plan.price < compute else "fail")
     if plan is not None and plan.price < compute:
         replay, chosen = rp.search(cpu, mem, row["vcpu"], row["ram_gb"], plan, e.cat, compute, limit, e.p.mem_cap)
@@ -327,11 +332,14 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
             acts.append(action("snapshot", f"Snapshot the {gb} GB disk first (stateful)", rollback="delete the snapshot"))
             acts.append(action("stop", "Stop the VM; delete after 14 days if nobody objects", requires=["snapshot"],
                                rollback="start the VM"))
-            opts["snapshot+stop"] = (storage + snap, f"₹0 compute + {format_inr(storage)} disk + {format_inr(snap)} snapshot")
+            opts["snapshot+stop"] = (storage + snap, f"{now_text(cur)} → {format_inr(storage)} disk kept + "
+                                                     f"{format_inr(snap)} snapshot ({gb} GB × ₹{snap_rate(e)}) = "
+                                                     f"{format_inr(storage + snap)}")
         else:
             acts.append(action("stop", "Stop the VM; snapshot and delete after 14 days if nobody objects",
                                rollback="start the VM"))
-            opts["stop"] = (storage, f"₹0 compute + {format_inr(storage)} disk")
+            opts["stop"] = (storage, f"{now_text(cur)} → compute ₹0 while stopped + {format_inr(storage)} disk = "
+                                     f"{format_inr(storage)}")
         default = key_of([a["type"] for a in acts])
         o = Outcome("recommend", "IDLE",
                     f"Idle for 30 days: CPU {key} {cpu_p:.1f}%, network {net_pct:.3f}% of bandwidth, IOPS p95 "
@@ -353,7 +361,7 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
         plan, size_note = size(e.cat, row["plan_id"], need_v, need_r, prod)
         if plan is None or plan.price >= compute:
             return refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr)
-        tr.add("step7.sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB{basis}", plan.plan_id, row["plan_id"], "pass")
+        tr.add("sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB", f"{plan.plan_id}{basis}", row["plan_id"], "pass")
         replay, chosen = rp.search(cpu, mem, row["vcpu"], row["ram_gb"], plan, e.cat, compute,
                                    e.p.replay_limit(prod), e.p.mem_cap)
         tr.add("step8.peak_replay", "minutes CPU > 90% at the new size", replay["attempts"][-1]["minutes_above_90"],
@@ -392,20 +400,25 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
         return refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr)
 
     acts, opts = [], {}
+    now = now_text(cur)
     if target is not None:
         acts.append(action("resize", f"Resize {row['plan_id']} → {target.plan_id}" +
                            (" in a maintenance window" if prod else ""), rollback=f"resize back to {row['plan_id']}"))
-        opts["resize"] = (target.price + storage, f"{format_inr(target.price)} {target.plan_id} + {format_inr(storage)} disk")
+        after = target.price + storage
+        opts["resize"] = (after, f"{now} → {format_inr(target.price)} {target.plan_id} + {format_inr(storage)} disk = "
+                                 f"{format_inr(after)}")
     if sched is not None:
         on = sched["on_hours_per_week"]
         acts.append(action("schedule", "Stop/start on the windows: " +
-                           "; ".join(f"{w['days']} {w['start']}-{w['end']}" for w in sched["windows"]) + " IST",
+                           "; ".join(f"{w['days']} {w['start']}–{w['end']}" for w in sched["windows"]) + " IST",
                            rollback="remove the schedule"))
-        opts["schedule"] = (scheduled_compute(compute, on) + storage,
-                            f"{format_inr(compute)} × {on:.0f}/168 + {format_inr(storage)} disk")
+        after = scheduled_compute(compute, on) + storage
+        opts["schedule"] = (after, f"{now} → {format_inr(compute)} × {on}/168 h on + {format_inr(storage)} disk = "
+                                   f"{format_inr(after)}")
         if target is not None:
-            opts["resize+schedule"] = (scheduled_compute(target.price, on) + storage,
-                                       f"{format_inr(target.price)} {target.plan_id} × {on:.0f}/168 + {format_inr(storage)} disk")
+            after = scheduled_compute(target.price, on) + storage
+            opts["resize+schedule"] = (after, f"{now} → {format_inr(target.price)} {target.plan_id} × {on}/168 h on + "
+                                              f"{format_inr(storage)} disk = {format_inr(after)}")
     default = key_of([a["type"] for a in acts])
     code = "UNDERUSED" if target is not None else "OFF_HOURS"
     parts = []

@@ -4,6 +4,8 @@ cpu/mem/disk in %, iops_pct = iops / provisioned_iops x 100, net_pct = max(in, o
 import numpy as np
 import pandas as pd
 
+from ..engine.candidates import busy_profile
+
 PCTS = {"p50": 50, "p90": 90, "p95": 95, "p99": 99, "p99_5": 99.5}
 SLOTS_PER_DAY = 288
 
@@ -17,8 +19,8 @@ def pct_summary(arr):
     """p50..p99.5 and max with linear interpolation over non-NaN values; all None when empty."""
     v = arr[~np.isnan(arr)]
     if not len(v):
-        return {**{k: None for k in PCTS}, "max": None}
-    out = {k: float(np.percentile(v, p)) for k, p in PCTS.items()}
+        return {"mean": None, **{k: None for k in PCTS}, "max": None}
+    out = {"mean": float(v.mean()), **{k: float(np.percentile(v, p)) for k, p in PCTS.items()}}
     out["max"] = float(v.max())
     return out
 
@@ -102,6 +104,41 @@ def recurring_peak(cpu, grid, level, min_weeks):
             "weeks": int(counts[buckets].max()), "days": int(len(np.unique(grid.day[hit])))}
 
 
+def recurring_window(cpu, grid, level):
+    """Readable peak window, e.g. '02:00–02:40 IST', with a weekday prefix when every peak falls on one weekday
+    (frontend reference vm_features). None when no 30-minute window exceeds `level`."""
+    hot = rolling30(cpu) > level
+    if not hot.any():
+        return None
+    local = grid.ts_local
+    minute = (local.hour * 60 + local.minute).to_numpy()
+    above = cpu > level
+    mins = minute[above] if above.any() else minute[hot]
+    lo, hi = np.percentile(mins, 5), np.percentile(mins, 95) + 5
+    dows = set(local.day_of_week.to_numpy()[hot].tolist())
+    names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    prefix = names[dows.pop()] + " " if len(dows) == 1 else ""
+    return f"{prefix}{int(lo) // 60:02d}:{int(lo) % 60:02d}–{int(hi) // 60 % 24:02d}:{int(hi) % 60:02d} IST"
+
+
+def daily_max(arr, day, n_days):
+    out = np.full(n_days, np.nan)
+    ok = ~np.isnan(arr)
+    if ok.any():
+        g = pd.Series(arr[ok]).groupby(day[ok]).max()
+        out[g.index.to_numpy()] = g.to_numpy()
+    return out
+
+
+def daily_mean(arr, day, n_days):
+    out = np.full(n_days, np.nan)
+    ok = ~np.isnan(arr)
+    if ok.any():
+        g = pd.Series(arr[ok]).groupby(day[ok]).mean()
+        out[g.index.to_numpy()] = g.to_numpy()
+    return out
+
+
 def peak_hours_coverage(cpu, exists, grid, level):
     """Coverage of the IST hours of day whose p95 CPU >= level (the workload's peak window);
     None when the resource has no such hours. A gap that lands on the peak is what matters (E9)."""
@@ -177,6 +214,9 @@ def vm_features(s, inv_row, grid, cfg):
         "level_shift_down": ratio(_nanmean(cpu[last7]), _nanmean(cpu[: last7.start])),
         "leak_score": leak_score(mem, cfg.get("thresholds.leak_drop_pct_points"), cpu,
                                  cfg.get("thresholds.leak_cpu_drop_pct_points")),
+        "recurring_window": recurring_window(cpu, grid, cfg.get("thresholds.recurring_peak_pct")),
+        "daily_max": [_f(x) for x in daily_max(cpu, day, n_days)],
+        "how_busy": busy_profile(by_week),
         "recurring_peak": recurring_peak(cpu, grid, cfg.get("thresholds.recurring_peak_pct"),
                                          int(cfg.get("thresholds.recurring_peak_min_weeks"))),
         "peak_hours_coverage": peak_hours_coverage(cpu, s.exists, grid, cfg.get("thresholds.peak_hour_p95_pct")),
@@ -195,6 +235,7 @@ def volume_features(s, inv_row, grid, cfg):
     iops_pct = v["iops"] / prov * 100 if prov and prov > 0 else np.full(grid.slots, np.nan)
     daily = daily_p95(v["disk_used_pct"], day, n_days)
     return {
+        "daily_mean": {"disk_used": [_f(x) for x in daily_mean(v["disk_used_pct"], day, n_days)]},
         "resource_id": s.resource_id,
         "kind": "volume",
         "metrics": {"cpu": pct_summary(np.full(1, np.nan)), "mem": pct_summary(np.full(1, np.nan)),

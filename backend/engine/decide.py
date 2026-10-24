@@ -5,8 +5,8 @@ The engine is pure: it reads the cleaned series, the features table, inventory a
 import pandas as pd
 
 from ..cost.model import current_cost, format_inr
-from . import noncompute
-from .common import LEAF_KEYS, Outcome, Trace, group_members, resource_block
+from . import noncompute, present
+from .common import Outcome, Trace, group_members
 from .compute import evaluate_vm, flags_for
 from .params import params_for
 from .risk import risk, weekly_variation
@@ -56,7 +56,7 @@ class Engine:
                 best = (m["cpu"][key], self.inv.loc[rid, "name"])
             if m["mem"][key] is not None:
                 mem = max(mem, m["mem"][key])
-        return best[0], mem, f" (group {row['service_group']}, busiest member {best[1]})"
+        return best[0], mem, f" (group {row['service_group']}, sized on {best[1]})"
 
     def risk(self, row, f, projected_p99, action_types):
         env = row["env"] or "prod"
@@ -71,9 +71,9 @@ class Engine:
         if tr.add("step9.floor", "saving ≥ ₹500/month", saving, self.t("saving_floor_inr"),
                   "pass" if saving >= self.t("saving_floor_inr") else "below_floor", terminal=True) == "pass":
             return o
-        return Outcome("healthy", "RIGHT_SIZED",
-                       f"Best option ({o.default}) would save only {format_inr(saving)}/month, below the "
-                       f"{format_inr(self.t('saving_floor_inr'))} floor: counted in 'below floor', not listed.",
+        return Outcome("healthy", "BELOW_FLOOR",
+                       f"Best change ({o.default}) saves only {format_inr(saving)}/month, under the "
+                       f"{format_inr(self.t('saving_floor_inr'))} floor: not worth a human's attention.",
                        below_floor_saving=int(saving))
 
     # ---- one resource ----------------------------------------------------------------------------
@@ -105,16 +105,35 @@ class Engine:
         r["confidence_basis"] = "decided from inventory state (attachment, age)"
         return r
 
+    def member_names(self, rid):
+        """service_group members by name, including the resource itself (the UI groups when > 1)."""
+        others = self.members.get(rid, [])
+        if not others:
+            return []
+        return sorted(self.inv.loc[[rid] + others, "name"].tolist())
+
     def item(self, row, f, cur, o, flags, tr):
         rid = row["resource_id"]
-        is_vm_eval = row["type"] == "vm" and row["state"] == "running"
-        metrics = None if o.code in METRICS_NULL else {
-            k: {q: m[q] for q in LEAF_KEYS + ("p90", "p99_5") if q in m} for k, m in f["metrics"].items()}
+        series = self.cleaned.series.get(rid)
+        prod = self.is_prod(row)
+        naive = None
+        if o.verdict in ("reject", "flag"):
+            if row["type"] == "vm" and series is not None and series.kind == "vm" and f.get("mean_cpu") is not None \
+                    and row["plan_id"] in self.cfg.plans:
+                naive, att = present.naive_vm(self, row, f, cur, series, prod)
+                if att is not None and not (o.replay and o.replay.get("attempts")):
+                    o.replay = {"limit_minutes_above_90": self.p.replay_limit(prod), "mem_cap_pct": self.p.mem_cap,
+                                "attempts": [att], "passed": bool(att["passed"]), "chosen_plan": None}
+            elif row["type"] == "volume" and f.get("metrics", {}).get("disk_used", {}).get("p50") is not None:
+                naive = present.naive_volume(self, row, f)
+        v = present.veto(self, o, row, f, naive) if o.verdict == "reject" else None
+        reason = v["message"] if v else o.reason
         options = o.options or {"none": {"monthly_inr_after": cur["monthly_inr"], "saving_inr": 0,
                                          "formula": f"{format_inr(cur['monthly_inr'])}/month, no change"}}
+        has_tel = series is not None and o.code not in METRICS_NULL
         return {
             "rec_id": f"REC-{rid}-{self.p.preset}",
-            "resource": resource_block(row, self.members.get(rid, [])),
+            "resource": present.resource(row, self.member_names(rid)),
             "verdict": o.verdict,
             "reason_code": o.code,
             "actions": o.actions,
@@ -126,16 +145,17 @@ class Engine:
             "options": options,
             "evidence": {"window_days": int(self.cfg.raw["window"]["days"]), "days_of_data": f["days_of_data"],
                          "coverage": f["coverage"], "peak_window_coverage": f["peak_window_coverage"],
-                         "percentile_used": self.p.pct(self.is_prod(row)) if is_vm_eval else None,
-                         "metrics": metrics, "recurring_peak": o.recurring,
-                         "naive": o.naive if o.verdict == "reject" else None},
-            "replay": o.replay,
-            "veto": o.veto if o.verdict == "reject" else None,
+                         "percentile_used": self.p.pct_label(prod),
+                         "metrics": present.metrics(f, has_tel),
+                         "recurring_peak": present.recurring_peak(f) if row["type"] == "vm" else None,
+                         "naive": naive},
+            "replay": present.replay_block(o, row) if row["type"] == "vm" else None,
+            "veto": v,
             "risk": o.risk if o.verdict in ("recommend", "upsize") else None,
-            "reason": o.reason,
+            "reason": reason,
             "explanation_ai": None,
             "formula": options[o.default]["formula"],
-            "trace": list(tr),
+            "trace": present.trace(tr, o.verdict),
             "alert_ids": self.alert_ids.get(rid, []),
         }
 
@@ -147,6 +167,11 @@ class Engine:
                 below["count"] += 1
                 below["monthly_inr"] += o.below_floor_saving
             items.append(item)
+        for rid in self.cleaned.strays:
+            it = present.stray_item(rid, self.p.preset, int(self.cfg.raw["window"]["days"]),
+                                    self.cleaned.stray_series.get(rid), self.p.pct_label(True))
+            it["alert_ids"] = self.alert_ids.get(rid, [])
+            items.append(it)
         return items, below
 
 

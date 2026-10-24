@@ -69,9 +69,15 @@ class Outcome:
     flags: list = field(default_factory=list)
 
 
-def action(type_, description, requires=(), reversible=True, rollback=None):
+def action(type_, description, requires=(), reversible=True, rollback="no rollback needed"):
     return {"type": type_, "order": ACTION_ORDER[type_], "description": description, "requires": list(requires),
             "reversible": reversible, "rollback": rollback}
+
+
+def now_text(cur):
+    """'₹6,690 B4 + ₹1,600 disk = ₹8,290': the left side of every VM option formula (frontend reference)."""
+    return (f"{format_inr(cur['compute_inr'])} {cur['plan']} + {format_inr(cur['storage_inr'])} disk = "
+            f"{format_inr(cur['monthly_inr'])}")
 
 
 def key_of(types):
@@ -85,14 +91,10 @@ def veto(signal, metric, value, threshold, comparator, message):
 
 
 def build_options(current_monthly, opts):
+    """opts: key -> (monthly_after, complete formula text). 'none' is always first."""
     out = {"none": option(current_monthly, current_monthly, f"{format_inr(current_monthly)}/month, no change")}
-    for k, (after, expr) in opts.items():
-        after = int(round(after))
-        saving = current_monthly - after
-        verb = "saves" if saving >= 0 else "costs"
-        out[k] = option(current_monthly, after,
-                        f"{expr} = {format_inr(after)}/month; {verb} {format_inr(current_monthly)} − "
-                        f"{format_inr(after)} = {format_inr(abs(saving)) if saving >= 0 else '-' + format_inr(-saving)}/month")
+    for k, (after, formula) in opts.items():
+        out[k] = option(current_monthly, int(round(after)), formula)
     return out
 
 

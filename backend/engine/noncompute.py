@@ -22,11 +22,9 @@ def stopped_vm(e, rid, row, cur, tr):
     if tr.add("noncompute.stopped_age", "days stopped > 30", round(age, 1), e.t("stopped_vm_days"),
               "pass" if age > e.t("stopped_vm_days") else "fail") == "fail":
         tr.terminal()
-        # §4.5 has no exclude code for a recent stop; healthy + flag (see PLAN_final.md B10)
-        return Outcome("healthy", "RIGHT_SIZED",
-                       f"Stopped {age:.0f} days ago: treated as a maintenance stop, nothing to do yet.",
-                       flags=[{"code": "STOPPED_RECENTLY", "message": f"Stopped {age:.0f} days ago (maintenance); "
-                               f"re-check after {e.t('stopped_vm_days'):.0f} days."}])
+        return Outcome("exclude", "STOPPED_RECENTLY",
+                       f"Stopped {age:.0f} days ago (under {e.t('stopped_vm_days'):.0f}): looks like maintenance; "
+                       f"re-check after {e.t('stopped_vm_days'):.0f} days.")
     s = e.cleaned.series.get(rid)
     gb = used_gb(s.values["disk_used_pct"] if s else None, row["disk_gb"])
     snap = snapshot_cost(gb, e.cfg)
@@ -37,9 +35,20 @@ def stopped_vm(e, rid, row, cur, tr):
                          action("delete", "Delete the VM and its boot disk", requires=["snapshot"], reversible=False,
                                 rollback="restore from the snapshot")],
                 default="snapshot+delete")
-    o.options = build_options(cur["monthly_inr"], {"snapshot+delete": (snap, f"snapshot {gb} GB × ₹4")})
+    o.options = build_options(cur["monthly_inr"], {"snapshot+delete": (
+        snap, f"{format_inr(cur['storage_inr'])} disk billed while stopped → {format_inr(snap)} snapshot "
+              f"({gb} GB × ₹{_snap_rate(e)}) after delete")})
     tr.terminal()
     return o
+
+
+def _snap_rate(e):
+    return int(e.cfg.get("pricing.snapshot_inr_per_gb_month"))
+
+
+def _volume_delete_formula(e, size, cost, gb, snap):
+    return (f"{size} GB × ₹{int(e.cfg.get('pricing.volume_inr_per_gb_month'))} = {format_inr(cost)} → snapshot "
+            f"{gb} GB × ₹{_snap_rate(e)} = {format_inr(snap)}")
 
 
 def volume(e, rid, row, f, cur, tr):
@@ -64,7 +73,8 @@ def volume(e, rid, row, f, cur, tr):
                              action("delete", "Delete the volume", requires=["snapshot"], reversible=False,
                                     rollback="restore from the snapshot")],
                     default="snapshot+delete")
-        o.options = build_options(cur["monthly_inr"], {"snapshot+delete": (snap, f"snapshot {gb} GB × ₹4")})
+        o.options = build_options(cur["monthly_inr"], {"snapshot+delete": (
+            snap, _volume_delete_formula(e, size, cur["monthly_inr"], gb, snap))})
         tr.add("noncompute.decision", "orphan volume", round(age, 1), e.t("orphan_age_days"), "recommend", True)
         return o
 
@@ -79,7 +89,8 @@ def volume(e, rid, row, f, cur, tr):
                              action("delete", "Delete the volume with its VM", requires=["snapshot"], reversible=False,
                                     rollback="restore from the snapshot")],
                     default="snapshot+delete")
-        o.options = build_options(cur["monthly_inr"], {"snapshot+delete": (snap, f"snapshot {gb} GB × ₹4")})
+        o.options = build_options(cur["monthly_inr"], {"snapshot+delete": (
+            snap, _volume_delete_formula(e, size, cur["monthly_inr"], gb, snap))})
         tr.add("noncompute.decision", "attached VM stopped > 30 d", round(age, 1), e.t("stopped_vm_days"), "recommend", True)
         return o
 
@@ -120,7 +131,10 @@ def volume(e, rid, row, f, cur, tr):
                         actions=[action("shrink_volume", f"Migrate data to a new {target} GB volume, then delete the "
                                         f"{size} GB one", rollback="keep the old volume until verified")],
                         default="shrink_volume")
-            o.options = build_options(cur["monthly_inr"], {"shrink_volume": (after, f"{target} GB × ₹{gb_rate}")})
+            used = size * float(np.nanmax(disk)) / 100
+            o.options = build_options(cur["monthly_inr"], {"shrink_volume": (
+                after, f"{size} GB × ₹{gb_rate} = {format_inr(cur['monthly_inr'])} → {target} GB × ₹{gb_rate} = "
+                       f"{format_inr(after)} ({used:.0f} GB used)")})
             tr.add("noncompute.oversized", "disk used p99 < 30%", used_p99, e.t("volume_oversized_used_pct"),
                    "recommend", True)
             return o
@@ -147,7 +161,7 @@ def ip(e, rid, row, cur, tr):
         o = Outcome("recommend", "UNUSED_IP", f"Allocated but not associated for {age:.0f} days.",
                     actions=[action("release", "Release the IP", reversible=False,
                                     rollback="allocate a new IP (the address changes)")], default="release")
-        o.options = build_options(cur["monthly_inr"], {"release": (0, "released IP = ₹0")})
+        o.options = build_options(cur["monthly_inr"], {"release": (0, _release_formula(cur))})
         tr.terminal()
         return o
     long_stop, age = _stopped_long(e, row["attached_to"])
@@ -156,8 +170,12 @@ def ip(e, rid, row, cur, tr):
                     f"Associated with {e.inv.loc[row['attached_to'], 'name']}, stopped {age:.0f} days: release with the VM.",
                     actions=[action("release", "Release the IP with its stopped VM", reversible=False,
                                     rollback="allocate a new IP (the address changes)")], default="release")
-        o.options = build_options(cur["monthly_inr"], {"release": (0, "released IP = ₹0")})
+        o.options = build_options(cur["monthly_inr"], {"release": (0, _release_formula(cur))})
         tr.add("noncompute.decision", "attached VM stopped > 30 d", round(age, 1), e.t("stopped_vm_days"), "recommend", True)
         return o
     tr.add("noncompute.healthy", "associated with a running VM", row["attached_to"], None, "healthy", True)
     return Outcome("healthy", "RIGHT_SIZED", "Associated with a running VM.")
+
+
+def _release_formula(cur):
+    return f"{format_inr(cur['monthly_inr'])}/month public IP → ₹0"

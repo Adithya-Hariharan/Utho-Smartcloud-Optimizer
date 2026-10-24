@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from backend.engine.candidates import off_hour_mask, schedule
-from backend.engine.params import PresetNotEnabled, params_for
+from backend.engine.params import PresetNotEnabled, enabled_presets, params_for
 from backend.engine.replay import attempt, search
 from backend.engine.risk import risk
 from backend.engine.sizing import catalogue, cheapest_fit, needs, size
@@ -18,11 +18,35 @@ def plan(cat, pid):
     return next(p for p in cat if p.plan_id == pid)
 
 
-def test_params_default_only(cfg):
+def test_params_four_presets(cfg):
     p = params_for(cfg)
     assert (p.pct(True), p.pct(False), p.cpu_target(True), p.replay_limit(True)) == (99, 95, 70, 0)
+    assert p.pct_label(True) == "p99" and p.pct_label(False) == "p95"
+    # default preset mirrors the threshold table
+    assert p.pct_prod == cfg.get("thresholds.percentile_prod") and p.cpu_target_nonprod == cfg.get("thresholds.cpu_target_nonprod_pct")
+    expected = {"max_savings": (90, 90, 90, 90, 60, 60), "balanced": (95, 95, 80, 80, 30, 30),
+                "default": (99, 95, 70, 80, 0, 30), "max_performance": (99.5, 99.5, 60, 60, 0, 0)}
+    assert enabled_presets(cfg) == list(expected)
+    for name, vals in expected.items():
+        q = params_for(cfg, name)
+        assert (q.pct_prod, q.pct_nonprod, q.cpu_target_prod, q.cpu_target_nonprod, q.replay_limit_prod,
+                q.replay_limit_nonprod) == vals
+        assert (q.mem_target, q.mem_cap) == (75, 95)
+    assert params_for(cfg, "max_performance").pct_label(True) == "p99.5"
+    assert params_for(cfg, "max_performance").pct_key(True) == "p99_5"
     with pytest.raises(PresetNotEnabled):
-        params_for(cfg, "balanced")
+        params_for(cfg, "nope")
+
+
+def test_new_config_sections(cfg):
+    c = cfg.raw["carbon"]
+    assert c["placeholder"] is True and "PLACEHOLDER" in c["source"]
+    assert (c["w_per_vcpu_min"], c["w_per_vcpu_max"], c["w_per_gb_ram"], c["pue"], c["kg_co2_per_kwh"]) == (0.74, 3.5, 0.392, 1.4, 0.71)
+    assert cfg.get("forecast.alpha") == 0.3 and cfg.get("forecast.season_days") == 7
+    assert cfg.get("whatif.busy_cpu_pct") == 5 and cfg.get("metrics.gap_min_slots") == 6
+    assert cfg.get("thresholds.comparisons") == "strict < / >"
+    names = [r["name"] for r in cfg.raw["assumptions_table"]]
+    assert "Saving floor" in names and "Comparisons" in names
 
 
 def test_catalogue_ordered_by_price(cat):
@@ -75,16 +99,17 @@ def test_schedule_office_hours():
     off = [h for h in range(168) if (h // 24 >= 5) or (h % 24 >= 20) or (h % 24 < 8)]
     sched, _ = schedule([week(off)] * 4, 5, 4, 40, "Asia/Kolkata")
     assert sched["off_hours_per_week"] == 108 and sched["on_hours_per_week"] == 60
-    assert {"days": "Fri→Mon", "start": "20:00", "end": "08:00"} in sched["windows"]
-    assert {"days": "Mon→Tue", "start": "20:00", "end": "08:00"} in sched["windows"]
+    assert {"days": "Fri → Mon", "start": "20:00", "end": "08:00"} in sched["windows"]
+    assert {"days": "Mon–Thu", "start": "20:00", "end": "08:00 (next day)"} in sched["windows"]
 
 
 def test_schedule_keeps_nightly_job_on():
     off = [h for h in range(168) if (h % 24 >= 20) or (h % 24 < 8)]
     off = [h for h in off if h % 24 not in (1, 2)]                  # job 01:00-03:00
     sched, _ = schedule([week(off)] * 4, 5, 4, 40, "Asia/Kolkata")
-    assert all(not (w["start"] <= "01:00" < w["end"]) or w["start"] > w["end"] for w in sched["windows"])
-    assert "Mon 01:00-03:00" in sched["busy_hours_excluded"]
+    assert sched["busy_hours_excluded"] == ["01:00–03:00 daily"]
+    assert {"days": "Mon–Sun", "start": "20:00", "end": "01:00 (next day)"} in sched["windows"]
+    assert {"days": "Mon–Sun", "start": "03:00", "end": "08:00"} in sched["windows"]
     assert sched["off_hours_per_week"] == 70
 
 

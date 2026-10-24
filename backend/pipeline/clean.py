@@ -22,6 +22,7 @@ class CleanSeries:
     values: dict                    # column -> float64 array (n_slots), NaN = missing
     exists: np.ndarray              # bool (n_slots): the resource existed in that slot
     report: dict = field(default_factory=dict)
+    flat: np.ndarray = None         # bool (n_slots): slots inside a frozen (stuck-agent) run
 
     @property
     def primary(self):
@@ -35,6 +36,7 @@ class CleanResult:
     series: dict                    # resource_id -> CleanSeries (inventory resources with metrics)
     strays: list                    # metric resource_ids with no inventory row (D9)
     no_metrics: list                # inventory VMs with no metric rows
+    stray_series: dict = field(default_factory=dict)   # cleaned stray series (reported, never sized)
 
 
 def existence_mask(inv_row, grid):
@@ -55,10 +57,12 @@ def existence_mask(inv_row, grid):
 
 def _flatline(cpu, mem, min_run):
     """Runs of >= min_run consecutive valid samples where cpu AND mem both stay constant -> NaN in both.
-    Missing slots do not break a run (only valid samples are compared)."""
+    Missing slots do not break a run (only valid samples are compared).
+    Returns (samples nulled, span mask): the mask covers each run from its first to its last slot."""
+    span = np.zeros(len(cpu), dtype=bool)
     idx = np.flatnonzero(~np.isnan(cpu) & ~np.isnan(mem))
     if len(idx) < min_run:
-        return 0
+        return 0, span
     same = (np.diff(cpu[idx]) == 0) & (np.diff(mem[idx]) == 0)
     nulled = 0
     i = 0
@@ -75,9 +79,39 @@ def _flatline(cpu, mem, min_run):
             hit = idx[i:j + 1]
             cpu[hit] = np.nan
             mem[hit] = np.nan
+            span[idx[i]:idx[j] + 1] = True
             nulled += run
         i = j
-    return nulled
+    return nulled, span
+
+
+def runs_of(mask, min_len=1):
+    """(start, end_exclusive) of True runs of at least min_len slots."""
+    edges = np.diff(np.concatenate(([0], mask.astype(np.int8), [0])))
+    starts, ends = np.flatnonzero(edges == 1), np.flatnonzero(edges == -1)
+    keep = (ends - starts) >= min_len
+    return list(zip(starts[keep].tolist(), ends[keep].tolist()))
+
+
+def observed_span(arr):
+    """(first, last) slot with a valid value, or None."""
+    ok = np.flatnonzero(~np.isnan(arr))
+    return (int(ok[0]), int(ok[-1])) if len(ok) else None
+
+
+def gap_runs(s, min_slots):
+    """Missing runs (>= min_slots, inside the observed span, flatline excluded) and flatline runs.
+    Returns [(start, end_exclusive, kind)]."""
+    flat = s.flat if s.flat is not None else np.zeros(len(s.primary), dtype=bool)
+    span = observed_span(np.where(flat, 0.0, s.primary)) if flat.any() else observed_span(s.primary)
+    out = []
+    if span is not None:
+        miss = np.isnan(s.primary) & ~flat
+        miss[: span[0]] = False
+        miss[span[1] + 1:] = False
+        out += [(a, b, "missing") for a, b in runs_of(miss, min_slots)]
+    out += [(a, b, "flatline") for a, b in runs_of(flat, 1)]
+    return sorted(out)
 
 
 def _longest_nan_run(arr, exists):
@@ -99,7 +133,7 @@ def peak_window_coverage(valid, exists, hour_of_week):
     return float((got[used] / have[used]).min())
 
 
-def clean_resource(raw, resource_id, kind, exists, grid, flatline_slots=24):
+def clean_resource(raw, resource_id, kind, exists, grid, flatline_slots=24, gap_min_slots=6):
     """raw: rows of one resource in file order (columns ts + metric columns)."""
     cols = VM_COLS if kind == "vm" else VOLUME_COLS
     pos = grid.slot_of(raw["ts"])
@@ -128,10 +162,15 @@ def clean_resource(raw, resource_id, kind, exists, grid, flatline_slots=24):
         arr[~exists] = np.nan
         values[c] = arr
 
-    flat = _flatline(values["cpu_pct"], values["mem_pct"], flatline_slots) if kind == "vm" else 0
-    s = CleanSeries(resource_id, kind, values, exists)
+    if kind == "vm":
+        flat, flat_mask = _flatline(values["cpu_pct"], values["mem_pct"], flatline_slots)
+    else:
+        flat, flat_mask = 0, np.zeros(grid.slots, dtype=bool)
+    s = CleanSeries(resource_id, kind, values, exists, flat=flat_mask)
     valid = ~np.isnan(s.primary) & exists
     n_exist = int(exists.sum())
+    missing = [(a, b) for a, b, k in gap_runs(s, gap_min_slots) if k == "missing"]
+    span = observed_span(np.where(flat_mask, 0.0, s.primary))
     s.report = {
         "resource_id": resource_id,
         "rows_in": int(len(raw)),
@@ -141,9 +180,12 @@ def clean_resource(raw, resource_id, kind, exists, grid, flatline_slots=24):
         "outside_window": int((keep & ~inside).sum()),
         "out_of_range_nulled": out_of_range,
         "flatline_nulled": int(flat),
+        "flatline_slots": int(flat_mask.sum()),          # span of frozen runs (E8 reports 576)
         "coverage": round(float(valid.sum() / n_exist), 4) if n_exist else 0.0,
         "peak_window_coverage": round(peak_window_coverage(valid, exists, grid.hour_of_week), 4),
-        "longest_gap_slots": _longest_nan_run(s.primary, exists),
+        "expected_slots": (span[1] - span[0] + 1) if (span and kind == "vm") else (grid.slots if kind == "volume" else 0),
+        "longest_gap_slots": max((b - a for a, b in missing), default=0),   # missing only, >= 30 min
+        "gaps": len(missing),
     }
     return s
 
@@ -151,24 +193,27 @@ def clean_resource(raw, resource_id, kind, exists, grid, flatline_slots=24):
 def empty_report(resource_id):
     return {"resource_id": resource_id, "rows_in": 0, "snapped": 0, "reordered": 0,
             "duplicates_removed": 0, "outside_window": 0, "out_of_range_nulled": 0, "flatline_nulled": 0,
-            "coverage": 0.0, "peak_window_coverage": 0.0, "longest_gap_slots": 0}
+            "flatline_slots": 0, "coverage": 0.0, "peak_window_coverage": 0.0, "expected_slots": 0,
+            "longest_gap_slots": 0, "gaps": 0}
 
 
 def clean_all(ds, cfg):
     grid = grid_from_config(cfg)
     flat = int(cfg.get("thresholds.flatline_slots"))
+    gap = int(cfg.get("metrics.gap_min_slots"))
     inv = ds.inventory.set_index("resource_id")
-    series, strays = {}, []
+    series, stray_series = {}, {}
     for kind, frame in (("vm", ds.metrics), ("volume", ds.volume_metrics)):
         for rid, raw in frame.groupby("resource_id", sort=True, observed=True):
-            if rid not in inv.index:
-                strays.append(rid)
+            if rid not in inv.index:              # D9: cleaned and reported, but never sized or alerted on
+                stray_series[rid] = clean_resource(raw, rid, kind, np.ones(grid.slots, dtype=bool), grid, flat, gap)
                 continue
             row = inv.loc[rid]
-            series[rid] = clean_resource(raw, rid, kind, existence_mask(row, grid), grid, flat)
+            series[rid] = clean_resource(raw, rid, kind, existence_mask(row, grid), grid, flat, gap)
     vms = inv.index[inv["type"] == "vm"]
     no_metrics = sorted(r for r in vms if r not in series)
-    return CleanResult(grid=grid, series=series, strays=sorted(strays), no_metrics=no_metrics)
+    return CleanResult(grid=grid, series=series, strays=sorted(stray_series), no_metrics=no_metrics,
+                       stray_series=stray_series)
 
 
 def series_to_frame(s, grid):

@@ -144,6 +144,31 @@ Modules: `params.py` (preset → percentiles, CPU targets, replay limits), `sizi
 
 **Merge with main (2026-10-24):** main brought a regenerated dataset (fitted to public traces, 9 label disputes resolved) and a second engine in `engine/`. The rules above were aligned with main's published choices (relative idle lines, batchy-not-starved upsize, leak on every VM, schedule around a recurring peak, refusal explanation for every env) so both engines agree with `truth.csv`. `backend/` and `engine/` coexist; `pytest` runs both suites (454 tests).
 
+## B11. Frontend integration (implemented; plan: `PLAN_frontend_integration.md`)
+The backend now serves every endpoint in the frontend's own shapes (`frontend/src/types/*.ts`, `frontend/API_CONTRACT.md`). The B6 stub and "not in MVP" 501s are gone: forecast, what-if, export and all four presets are built. The dataset is unchanged.
+- **Schema v1.0 extended** (complete list in `PLAN_frontend_integration.md` §3):
+  - envelope `mock_engine: false`
+  - `resource.state` and `plan_id`; `members` are names; empty strings become null
+  - codes `BELOW_FLOOR`, `STOPPED_RECENTLY` and `NOT_IN_INVENTORY`, plus a stray-series item (vm-9999, named by its id). These are now emitted directly, so the scorecard no longer maps them
+  - `percentile_used` is a string; metric leaves `{mean, p50, p95, p99, max}` or null; `recurring_peak {window_ist, days}`
+  - `naive {action, target_plan, saving_inr, basis, replay_minutes_above_90}` on rejects and flags, with a naive replay when nothing else was replayed
+  - `replay.from_vcpu` and `from_ram_gb`
+  - trace values are strings, with results pass / fail / info / skip
+- **Text formats** copied from the frontend reference (`docs/reference/mock_engine.py`), with our numbers:
+  - schedule windows ("Mon–Thu 19:00–09:00 (next day)", "Fri → Mon") and busy hours ("01:00–03:00 daily")
+  - option formulas ("… × 50/168 h on …")
+  - veto vocabulary ("days with a 30-min peak > 80%")
+  - alert types and wording
+- **New modules:** `backend/api/views.py` (one function per endpoint), `backend/engine/present.py`, and `backend/insights/{forecast,whatif,export}.py`. `scorecard.py`, `alerts.py` and `growth.py` were rewritten to the frontend shapes.
+- **Carbon** (Forecast & Green) uses PLACEHOLDER coefficients in `config.yaml` (`carbon`: CCF / CEA published averages). The dataset has no power, PUE or grid data. Adding them is **future scope** (§10 of the integration plan).
+- **One deliberate deviation from the integration plan (E4):** the replay chart projects onto the plan the replay attempts were run on, i.e. chosen plan, else last attempt, else naive target. The plan said "else naive target, else last attempt", but with that order `dev-report-02` would chart S1 while its rejecting attempt was B1.
+- **Verified:**
+  - `pytest` passes (491 tests).
+  - A shape diff of every endpoint against every frontend fixture finds 0 missing and 0 type mismatches.
+  - The frontend's `check_fixtures.mjs` passes all 5,854 checks on a dump of the live API.
+  - The frontend typechecks, its unit tests pass (19) and it builds.
+  - **Live browser suite** (`E2E_LIVE=1`, installed Chrome): 53 pass, and the 11 failures are exactly the test lines in the integration plan §9. With those test-only edits applied in a scratch copy, 64 of 64 pass (1 test is `fixme`). The edits are not in the repo; they wait for the frontend owner's approval.
+
 ---
 
 # STEP 1 (COMPLETED; kept for reference): Generate the synthetic dataset ONLY
