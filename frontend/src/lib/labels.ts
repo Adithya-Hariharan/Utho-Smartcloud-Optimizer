@@ -1,13 +1,13 @@
 import type { ActionType, ReasonCode, Recommendation, Verdict } from '../types/contract'
 import { actionsOf } from './cost'
 
-export const VERDICT_META: Record<Verdict, { label: string; cls: string; dot: string }> = {
-  recommend: { label: 'Save', cls: 'bg-save-50 text-save-700 ring-save-600/25', dot: 'bg-save-600' },
-  reject: { label: 'Checked & kept', cls: 'bg-kept-50 text-kept-700 ring-kept-600/25', dot: 'bg-kept-600' },
-  flag: { label: 'Review', cls: 'bg-review-50 text-review-700 ring-review-600/25', dot: 'bg-review-600' },
-  exclude: { label: 'Excluded', cls: 'bg-slate-100 text-slate-600 ring-slate-400/30', dot: 'bg-slate-400' },
-  healthy: { label: 'Healthy', cls: 'bg-healthy-50 text-healthy-700 ring-healthy-600/25', dot: 'bg-healthy-600' },
-  upsize: { label: 'Upsize', cls: 'bg-upsize-50 text-upsize-700 ring-upsize-600/25', dot: 'bg-upsize-600' },
+export const VERDICT_META: Record<Verdict, { label: string; tone: 'save' | 'kept' | 'review' | 'neutral' | 'healthy' | 'upsize' }> = {
+  recommend: { label: 'Save', tone: 'save' },
+  reject: { label: 'Checked & kept', tone: 'kept' },
+  flag: { label: 'Review', tone: 'review' },
+  exclude: { label: 'Excluded', tone: 'neutral' },
+  healthy: { label: 'Healthy', tone: 'healthy' },
+  upsize: { label: 'Upsize', tone: 'upsize' },
 }
 
 export const REASON_LABEL: Record<ReasonCode, string> = {

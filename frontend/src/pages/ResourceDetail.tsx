@@ -52,19 +52,19 @@ export default function ResourceDetail() {
         </>
       }
     >
-      <div className="grid grid-cols-5 gap-4">
-        <div className="card card-pad col-span-3">{r ? <ChartsTab r={r} /> : <p className="text-sm text-slate-500">No recommendation for this resource.</p>}</div>
-        <div className="col-span-2 space-y-4">
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="card p-4 lg:col-span-3">{r ? <ChartsTab r={r} /> : <p className="text-sm text-slate-500">No recommendation for this resource.</p>}</div>
+        <div className="space-y-4 lg:col-span-2">
           {r && (
-            <div className="card card-pad">
+            <div className="card p-4">
               <p className="mb-3 text-sm text-slate-700">{r.reason}</p>
               <EvidenceTable r={r} />
             </div>
           )}
           <Features d={d} />
           <DqReport d={d} />
-          <div className="card card-pad">
-            <h3 className="mb-2 text-sm font-semibold text-slate-800">Decision trace (Default preset)</h3>
+          <div className="card p-4">
+            <h3 className="h-sec mb-2">Decision trace (Default preset)</h3>
             <TraceList steps={d.trace} />
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function ResourceDetail() {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-3 border-b border-slate-100 py-1 text-sm last:border-0">
+    <div className="flex justify-between gap-3 border-b border-slate-100 py-1.5 text-sm last:border-0">
       <span className="text-slate-600">{label}</span>
       <span className="num text-right text-slate-900">{value}</span>
     </div>
@@ -86,8 +86,8 @@ function Features({ d }: { d: Detail }) {
   const f = d.features
   if (!f) return null
   return (
-    <div className="card card-pad" data-testid="features">
-      <h3 className="mb-2 text-sm font-semibold text-slate-800">Engine features</h3>
+    <div className="card p-4" data-testid="features">
+      <h3 className="h-sec mb-2">Engine features</h3>
       {f.cpu_slope != null && <Row label="CPU daily-p95 trend" value={`${f.cpu_slope >= 0 ? '+' : ''}${f.cpu_slope.toFixed(2)} pts/day`} />}
       {f.disk_slope != null && <Row label="Disk used trend" value={`${f.disk_slope >= 0 ? '+' : ''}${f.disk_slope.toFixed(2)} pts/day`} />}
       {f.level_shift_up != null && <Row label="Last 48 h ÷ prior mean" value={`${f.level_shift_up.toFixed(2)}×`} />}
@@ -104,8 +104,8 @@ function DqReport({ d }: { d: Detail }) {
   const q = d.dq
   if (!q) return null
   return (
-    <div className="card card-pad" data-testid="dq-report">
-      <h3 className="mb-2 text-sm font-semibold text-slate-800">Data-quality report</h3>
+    <div className="card p-4" data-testid="dq-report">
+      <h3 className="h-sec mb-2">Data-quality report</h3>
       <Row label="Coverage" value={q.coverage != null ? formatPct(q.coverage * 100) : '—'} />
       <Row label="Worst hour-of-week coverage" value={q.peak_window_coverage != null ? formatPct(q.peak_window_coverage * 100, 0) : '—'} />
       <Row label="Days of data" value={q.days_of_data ?? '—'} />

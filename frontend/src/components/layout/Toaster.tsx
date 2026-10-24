@@ -11,15 +11,15 @@ export function Toaster() {
   const toasts = useToasts((s) => s.toasts)
   const dismiss = useToasts((s) => s.dismiss)
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[90] flex w-96 flex-col gap-2" aria-live="polite">
+    <div className="pointer-events-none fixed bottom-4 right-4 z-[90] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2" aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} role="status" className={clsx('pointer-events-auto rounded-xl border bg-white px-4 py-3 shadow-lg', t.tone === 'warn' ? 'border-review-600/40' : 'border-slate-200')} data-testid="toast">
+        <div key={t.id} role="status" className={clsx('pointer-events-auto animate-rise-in rounded-xl border bg-white px-4 py-3 shadow-pop', t.tone === 'warn' ? 'border-review-600/40' : 'border-slate-200')} data-testid="toast">
           <div className="flex items-start gap-2">
             <div className="flex-1">
               <div className="text-sm font-semibold text-slate-900">{t.title}</div>
               {t.body && <div className="mt-0.5 text-xs leading-relaxed text-slate-600">{t.body}</div>}
             </div>
-            <button className="text-slate-400 hover:text-slate-700" onClick={() => dismiss(t.id)} aria-label="Dismiss">
+            <button className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800" onClick={() => dismiss(t.id)} aria-label="Dismiss">
               <X size={14} />
             </button>
           </div>

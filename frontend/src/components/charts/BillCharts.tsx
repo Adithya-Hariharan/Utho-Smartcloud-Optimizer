@@ -8,13 +8,13 @@ import { formatCompactINR, formatDayIST, formatINR, titleCase } from '../../lib/
 const ENV_ORDER = ['prod', 'staging', 'dev', 'untagged']
 
 /** Daily billed cost stacked by environment, 180 days. Fixed colour per env. */
-export function BillTrendChart({ trend, height = 260 }: { trend: Summary['bill_trend_6m']; height?: number }) {
+export function BillTrendChart({ trend, height = 300 }: { trend: Summary['bill_trend_6m']; height?: number }) {
   const option = useMemo<EChartsCoreOption>(() => {
     const billing = trend
     const envs = ENV_ORDER.filter((e) => billing.by_env[e])
     return {
       grid: { ...baseGrid, left: 56, top: 32 },
-      legend: { top: 0, left: 0, itemWidth: 12, itemHeight: 8, textStyle: { color: INK.secondary, fontSize: 11 }, data: envs.map(titleCase) },
+      legend: { type: 'scroll', top: 0, left: 0, itemWidth: 12, itemHeight: 8, textStyle: { color: INK.secondary, fontSize: 11 }, data: envs.map(titleCase) },
       tooltip: {
         ...tooltipBase,
         formatter: (ps: { axisValue: string; seriesName: string; value: number; marker: string }[]) => {
@@ -57,17 +57,17 @@ export function GrowthWaterfall({ growth, by }: { growth: Summary['growth_waterf
     const cats = ['First 30 days', ...deltas.map((x) => titleCase(x.k)), 'Last 30 days']
     let run = billing.first30.total
     const base: number[] = [0]
-    const val: { value: number; itemStyle: { color: string } }[] = [{ value: billing.first30.total, itemStyle: { color: '#64748b' } }]
+    const val: { value: number; itemStyle: { color: string } }[] = [{ value: billing.first30.total, itemStyle: { color: INK.secondary } }]
     for (const x of deltas) {
       base.push(x.d >= 0 ? run : run + x.d)
       val.push({ value: Math.abs(x.d), itemStyle: { color: color(x.k) } })
       run += x.d
     }
     base.push(0)
-    val.push({ value: billing.last30.total, itemStyle: { color: '#334155' } })
+    val.push({ value: billing.last30.total, itemStyle: { color: INK.primary } })
     const signed = [billing.first30.total, ...deltas.map((x) => x.d), billing.last30.total]
     const isTotal = (i: number) => i === 0 || i === cats.length - 1
-    const min = Math.floor((billing.first30.total * 0.85) / 50000) * 50000
+    const min = Math.floor((billing.first30.total * 0.85) / 100000) * 100000
     const option: EChartsCoreOption = {
       grid: { left: 96, right: 78, top: 8, bottom: 28 },
       tooltip: {
@@ -86,7 +86,7 @@ export function GrowthWaterfall({ growth, by }: { growth: Summary['growth_waterf
         type: 'value',
         ...axisCommon,
         min,
-        splitNumber: 3,
+        splitNumber: 4,
         axisLabel: { ...axisCommon.axisLabel, formatter: (v: number) => formatCompactINR(v) },
       },
       yAxis: {

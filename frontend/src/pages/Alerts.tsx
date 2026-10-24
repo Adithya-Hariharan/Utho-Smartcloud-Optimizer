@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { AlertOctagon, AlertTriangle, Info, Lightbulb } from 'lucide-react'
 import { Page } from '../components/layout/AppShell'
 import { FilterBar, useUrlFilters } from '../components/common/FilterBar'
-import { Empty, ErrorNote, Loading } from '../components/common/ui'
+import { Badge, Empty, ErrorNote, Loading } from '../components/common/ui'
 import { TimeSeriesChart } from '../components/charts/TimeSeriesChart'
 import { SERIES } from '../components/charts/theme'
 import { useAlerts, useMetric, useResources } from '../api/data'
@@ -15,9 +15,9 @@ import type { Alert } from '../types/api'
 
 // Status colours are reserved for severity and always paired with an icon and a word.
 const SEV = {
-  critical: { label: 'Critical', icon: AlertOctagon, cls: 'border-l-danger-600', chip: 'bg-danger-50 text-danger-700 ring-danger-600/25' },
-  warning: { label: 'Warning', icon: AlertTriangle, cls: 'border-l-review-600', chip: 'bg-review-50 text-review-700 ring-review-600/25' },
-  info: { label: 'Info', icon: Info, cls: 'border-l-slate-400', chip: 'bg-slate-100 text-slate-600 ring-slate-400/30' },
+  critical: { label: 'Critical', icon: AlertOctagon, tone: 'danger', chip: 'bg-danger-50 text-danger-700 ring-danger-600/25 hover:bg-danger-100' },
+  warning: { label: 'Warning', icon: AlertTriangle, tone: 'review', chip: 'bg-review-50 text-review-700 ring-review-600/25 hover:bg-review-100' },
+  info: { label: 'Info', icon: Info, tone: 'neutral', chip: 'bg-slate-100 text-slate-600 ring-slate-400/30 hover:bg-slate-200' },
 } as const
 
 const METRIC_SERIES: Record<string, { metric: MetricName; label: string; color: string; unit?: string }> = {
@@ -51,7 +51,7 @@ export default function Alerts() {
 
   return (
     <Page title="Alerts" subtitle="One alert per resource and type, each with the numbers behind it. Baselines are hour-of-week, so a batch at its usual hour never alerts.">
-      <div className="mb-3 flex gap-2">
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Severity">
         {(['critical', 'warning', 'info'] as const).map((s) => {
           const Icon = SEV[s].icon
           return (
@@ -59,7 +59,7 @@ export default function Alerts() {
               key={s}
               onClick={() => filters.set('severity', f.severity === s ? '' : s)}
               aria-pressed={f.severity === s}
-              className={clsx('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset', SEV[s].chip, f.severity && f.severity !== s && 'opacity-40')}
+              className={clsx('inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold ring-1 ring-inset transition duration-150', SEV[s].chip, f.severity === s && 'ring-2', f.severity && f.severity !== s && 'opacity-50')}
               data-testid={`sev-${s}`}
             >
               <Icon size={13} /> {SEV[s].label} <span className="num">{count(s)}</span>
@@ -77,7 +77,7 @@ export default function Alerts() {
         {shown.map((a) => (
           <AlertCard key={a.alert_id} a={a} />
         ))}
-        {!shown.length && <Empty>No alerts match.</Empty>}
+        {!shown.length && <div className="card"><Empty hint="Clear the severity or type filter to see every alert.">No alerts match</Empty></div>}
       </div>
     </Page>
   )
@@ -94,25 +94,25 @@ function AlertCard({ a }: { a: Alert }) {
   const band = a.window && !['capacity', 'memory_leak', 'under_provisioned'].includes(a.type) ? [{ start: a.window.start, end: a.window.end, label: a.title, tone: 'alert' as const }] : []
   return (
     <article id={a.alert_id} className="card scroll-mt-4" data-testid={`alert-${a.type}-${a.name}`}>
-      <div className="grid grid-cols-[1fr_380px] gap-4 p-4">
+      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className={clsx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold ring-1 ring-inset', s.chip)}>
-              <Icon size={12} /> {s.label}
-            </span>
-            <span className="font-mono text-2xs text-slate-400">{a.alert_id}</span>
+            <Badge tone={s.tone} icon={<Icon size={12} aria-hidden />}>
+              {s.label}
+            </Badge>
+            <span className="font-mono text-2xs text-slate-500">{a.alert_id}</span>
             <span className="text-2xs text-slate-500">{titleCase(a.type)}</span>
           </div>
-          <h2 className="mt-1.5 text-base font-semibold text-slate-900">{a.title}</h2>
+          <h2 className="mt-2 text-base font-semibold leading-snug text-slate-900">{a.title}</h2>
           {a.resource_id ? (
-            <button className="text-sm font-medium text-sky-700 hover:underline" onClick={() => drawer.open(a.resource_id!)}>
+            <button className="text-left text-sm font-medium text-sky-700 hover:underline" onClick={() => drawer.open(a.resource_id!)}>
               {a.name}
             </button>
           ) : (
             <span className="text-sm text-slate-500">Team-level</span>
           )}
-          <p className="mt-2 text-sm leading-relaxed text-slate-700" data-testid="alert-why">{a.why}</p>
-          <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+          <p className="mt-2 max-w-[75ch] text-sm leading-relaxed text-slate-700" data-testid="alert-why">{a.why}</p>
+          <dl className="mt-3 grid gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
             <div>
               <dt className="label">Evidence</dt>
               <dd className="num text-slate-800">
@@ -131,7 +131,7 @@ function AlertCard({ a }: { a: Alert }) {
               </dd>
             </div>
           </dl>
-          <p className="mt-3 flex items-start gap-1.5 text-sm text-slate-700">
+          <p className="mt-3 flex max-w-[75ch] items-start gap-1.5 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
             <Lightbulb size={14} className="mt-0.5 shrink-0 text-review-600" /> {a.suggested_action}
           </p>
         </div>
@@ -139,7 +139,7 @@ function AlertCard({ a }: { a: Alert }) {
           {hasMetrics && metrics.data ? (
             <TimeSeriesChart series={metrics.data} label={chart.label} unit={chart.unit} color={chart.color} bands={band} height={180} testId="alert-chart" yMax={chart.unit ? undefined : 100} />
           ) : (
-            <div className="flex h-full items-center justify-center rounded-lg bg-slate-50 text-xs text-slate-400">{hasMetrics ? 'Loading chart…' : 'No chart for this alert'}</div>
+            <div className="flex h-full items-center justify-center rounded-lg bg-slate-50 text-xs text-slate-500">{hasMetrics ? 'Loading chart…' : 'No chart for this alert'}</div>
           )}
         </div>
       </div>

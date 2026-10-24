@@ -4,9 +4,9 @@
 export const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'] as const
 export const SEQ_BLUE = ['#f1f5fb', '#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'] as const
 export const STATUS = { good: '#0ca30c', warning: '#fab219', serious: '#ec835a', critical: '#d03b3b' } as const
-export const INK = { primary: '#0d253d', secondary: '#425466', muted: '#8898aa', grid: '#e9eef5', axis: '#cdd6e1', surface: '#ffffff' } as const
+export const INK = { primary: '#171717', secondary: '#4d4d4d', muted: '#a1a1a1', grid: '#ededed', axis: '#d4d4d4', surface: '#ffffff' } as const
 /** actual (observed) vs projected in Peak Replay */
-export const ACTUAL = '#8898aa'
+export const ACTUAL = '#a1a1a1'
 export const PROJECTED = SERIES[0]
 
 /** Fixed colour per environment, so filters never repaint survivors. */
@@ -25,12 +25,14 @@ export function fmtIst(shifted: number, withTime = true) {
   return withTime ? `${day}, ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} IST` : day
 }
 
+export const FONT = "Inter, ui-sans-serif, system-ui, 'Segoe UI', sans-serif"
+
 export const baseGrid = { left: 44, right: 16, top: 28, bottom: 28, containLabel: false }
 
 export const axisCommon = {
   axisLine: { lineStyle: { color: INK.axis } },
   axisTick: { show: false },
-  axisLabel: { color: INK.secondary, fontSize: 11 },
+  axisLabel: { color: INK.secondary, fontSize: 11, fontFamily: FONT },
   splitLine: { lineStyle: { color: INK.grid } },
 }
 
@@ -41,6 +43,7 @@ export const timeAxis = {
   axisLabel: {
     color: INK.secondary,
     fontSize: 11,
+    fontFamily: FONT,
     hideOverlap: true,
     formatter: (v: number) => {
       const d = new Date(v)
@@ -51,9 +54,10 @@ export const timeAxis = {
 
 export const tooltipBase = {
   trigger: 'axis' as const,
-  backgroundColor: '#1c1e54',
+  backgroundColor: '#171717',
   borderWidth: 0,
   padding: [8, 10],
-  textStyle: { color: '#f6f9fc', fontSize: 12 },
+  textStyle: { color: '#fafafa', fontSize: 12, fontFamily: FONT, lineHeight: 18 },
+  extraCssText: 'border-radius:6px;box-shadow:0 8px 16px -4px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.08);font-variant-numeric:tabular-nums;',
   axisPointer: { type: 'line' as const, lineStyle: { color: INK.muted, type: 'dashed' as const } },
 }

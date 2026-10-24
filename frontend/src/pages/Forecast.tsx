@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Leaf } from 'lucide-react'
 import { Page } from '../components/layout/AppShell'
-import { ErrorNote, Loading, Stat } from '../components/common/ui'
+import { ChartPanel, ErrorNote, Loading, Panel, Stat, StatRow } from '../components/common/ui'
 import { ForecastChart } from '../components/charts/ForecastChart'
 import { useForecast } from '../api/data'
 import { useRecs } from '../api/recs'
@@ -41,7 +41,7 @@ export default function Forecast() {
 
   return (
     <Page title="Forecast & Green" subtitle={`Next 90 days of billed cost (${f.method}), with and without the actions you accepted.`}>
-      <div className="mb-4 grid grid-cols-4 gap-3">
+      <StatRow className="md:grid-cols-4">
         <Stat
           label="Next 90 days, as is"
           value={formatCompactINR(next90)}
@@ -72,24 +72,20 @@ export default function Forecast() {
           tone="save"
           testId="fc-co2"
         />
-      </div>
+      </StatRow>
 
-      <section className="card card-pad mb-4">
-        <h2 className="mb-2 text-sm font-semibold text-slate-800">Daily billed cost: last 60 days and next 90</h2>
+      <ChartPanel title="Daily billed cost: last 60 days and next 90" sub="Dashed line is the engine forecast; the green line removes what you accepted; the shaded band is the 95% range." className="mb-4">
         <ForecastChart forecast={f} acceptedMonthlySaving={accepted.monthlySaving} />
-      </section>
+      </ChartPanel>
 
-      <section className="card card-pad text-sm text-slate-700">
-        <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-          <Leaf size={15} className="text-save-600" /> How the carbon figures are computed
-        </h2>
-        <ul className="list-inside list-disc space-y-1 text-slate-600">
+      <Panel title={<span className="flex items-center gap-2"><Leaf size={15} className="text-save-600" aria-hidden /> How the carbon figures are computed</span>}>
+        <ul className="max-w-[75ch] list-outside list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-slate-600 marker:text-slate-400">
           <li>Power per VM: {c.coefficients.w_per_vcpu_min}–{c.coefficients.w_per_vcpu_max} W per vCPU scaled by CPU utilisation, plus {c.coefficients.w_per_gb_ram} W per GB of RAM.</li>
           <li>Data-centre overhead: PUE {c.coefficients.pue}. Grid intensity: {c.coefficients.kg_co2_per_kwh} kg CO₂ per kWh (India, CEA).</li>
           <li>Resizing keeps the work and removes idle capacity; scheduling scales by on-hours; stop and delete remove the VM's power entirely. Storage and network energy are not modelled.</li>
           <li>Source: {c.coefficients.source}. Today the fleet draws about {formatNum(c.fleet_kwh_month)} kWh ({formatNum(c.fleet_kg_co2_month)} kg CO₂) a month.</li>
         </ul>
-      </section>
+      </Panel>
     </Page>
   )
 }

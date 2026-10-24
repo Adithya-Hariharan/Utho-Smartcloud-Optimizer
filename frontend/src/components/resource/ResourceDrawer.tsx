@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
-import { AlertTriangle, Bell, CheckCircle2, ExternalLink, ShieldCheck, X, XCircle, MinusCircle, Info } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCircle2, ExternalLink, Flag, ShieldCheck, X, XCircle, MinusCircle, Info } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useAlerts, useMetric, useReplay, useResourceDetail, useResources } from '../../api/data'
 import { postFile } from '../../api/client'
@@ -12,7 +12,7 @@ import { formatDateTimeIST, formatINR, formatPct, titleCase } from '../../lib/fo
 import { REASON_LABEL, optionLabel, titleEnv } from '../../lib/labels'
 import { actionsOf } from '../../lib/cost'
 import type { MetricName, MetricStats, Recommendation, Step, TraceStep } from '../../types/contract'
-import { ErrorNote, Loading, RiskChip, VerdictBadge } from '../common/ui'
+import { Badge, ErrorNote, Loading, RiskChip, Segmented, VerdictBadge } from '../common/ui'
 import { DecideControl } from '../recs/DecideControl'
 import { ReplayChart } from '../charts/ReplayChart'
 import { TimeSeriesChart } from '../charts/TimeSeriesChart'
@@ -47,12 +47,12 @@ export function ResourceDrawer() {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-slate-900/30" onClick={close} aria-hidden />
+      <div className="absolute inset-0 animate-fade-in bg-brand-950/40" onClick={close} aria-hidden />
       <aside
         role="dialog"
         aria-modal="true"
         aria-label={r ? `Resource ${r.resource.name}` : 'Resource'}
-        className="relative flex h-full w-[min(780px,100vw)] flex-col bg-white shadow-2xl"
+        className="relative flex h-full w-[min(780px,100vw)] animate-slide-in flex-col bg-white shadow-pop"
         data-testid="resource-drawer"
       >
         {!r ? (
@@ -60,28 +60,46 @@ export function ResourceDrawer() {
         ) : (
           <>
             <DrawerHeader r={r} onClose={close} />
-            <div className="flex gap-1 border-b border-slate-200 px-5" role="tablist">
+            <div className="flex gap-1 overflow-x-auto border-b border-slate-200 px-3 sm:px-5" role="tablist">
               {TABS.map((t) => (
                 <button
                   key={t}
                   role="tab"
                   aria-selected={tab === t}
                   onClick={() => setTab(t)}
-                  className={clsx('-mb-px border-b-2 px-3 py-2 text-sm capitalize', tab === t ? 'border-slate-900 font-medium text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-800')}
+                  className={clsx('-mb-px border-b-2 px-3 py-2.5 text-sm capitalize transition-colors duration-150', tab === t ? 'border-brand font-medium text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-800')}
                 >
                   {t}
                 </button>
               ))}
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
+            <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
               {tab === 'decision' && <DecisionTab r={r} />}
               {tab === 'charts' && <ChartsTab r={r} />}
               {tab === 'trace' && <TraceTab r={r} />}
               {tab === 'script' && <ScriptTab r={r} />}
             </div>
+            <DecisionBar r={r} />
           </>
         )}
       </aside>
+    </div>
+  )
+}
+
+/** The decision lives in one sticky place: what we recommend, what it saves, and the two buttons. */
+function DecisionBar({ r }: { r: Recommendation }) {
+  if (Object.keys(r.options).filter((k) => k !== 'none').length < 1) return null
+  const o = r.options[r.default_option]
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-slate-200 bg-white px-4 py-3 sm:px-5" data-testid="decision-bar">
+      <div className="min-w-0 text-sm">
+        <div className="font-medium text-slate-900">{optionLabel(r.default_option, r)}</div>
+        <div className="num text-[13px] text-slate-600">
+          {o.saving_inr >= 0 ? 'saves' : 'costs'} <span className={clsx('font-semibold', o.saving_inr >= 0 ? 'text-save-700' : 'text-upsize-700')}>{formatINR(Math.abs(o.saving_inr))}/mo</span> · {r.risk ? `${r.risk.level} risk` : 'no risk score'}
+        </div>
+      </div>
+      <DecideControl r={r} />
     </div>
   )
 }
@@ -90,34 +108,34 @@ function DrawerHeader({ r, onClose }: { r: Recommendation; onClose: () => void }
   const c = r.current
   const spec = r.resource.type === 'vm' ? `${c.plan ?? '—'} · ${c.vcpu ?? '—'} vCPU / ${c.ram_gb ?? '—'} GB · ${c.disk_gb ?? '—'} GB disk` : r.resource.type === 'volume' ? `${c.disk_gb} GB volume` : 'Public IP'
   return (
-    <div className="border-b border-slate-200 px-5 py-4">
+    <div className="border-b border-slate-200 px-4 py-4 sm:px-5">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold text-slate-900">{r.resource.name}</h2>
+            <h2 className="text-xl font-normal text-slate-900" style={{ letterSpacing: '-0.015em' }}>{r.resource.name}</h2>
             <VerdictBadge verdict={r.verdict} />
             <span className="text-xs text-slate-500">{REASON_LABEL[r.reason_code]}</span>
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1.5 text-xs leading-relaxed text-slate-500">
             {r.resource.resource_id} · {titleEnv(r.resource.env)} · {titleCase(r.resource.owner)} · {titleCase(r.resource.region)} · {spec} · {formatINR(c.monthly_inr)}/mo
             {r.resource.state && r.resource.state !== 'running' && <> · <span className="font-medium text-slate-700">{r.resource.state}</span></>}
           </div>
           {(r.flags.length > 0 || r.resource.tags.length > 0) && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {r.resource.tags.map((t) => (
-                <span key={t} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-2xs text-slate-600">
+                <span key={t} className="rounded-full bg-slate-100 px-2 py-0.5 font-mono text-2xs text-slate-600">
                   {t}
                 </span>
               ))}
               {r.flags.map((f) => (
-                <span key={f.code} className="rounded bg-review-50 px-1.5 py-0.5 text-2xs font-medium text-review-700" title={f.code}>
-                  ⚑ {f.message}
-                </span>
+                <Badge key={f.code} tone="review" icon={<Flag size={11} aria-hidden />} className="whitespace-normal" title={f.code}>
+                  {f.message}
+                </Badge>
               ))}
             </div>
           )}
         </div>
-        <button className="btn-ghost p-1.5" onClick={onClose} aria-label="Close">
+        <button className="btn-ghost h-9 w-9 p-0" onClick={onClose} aria-label="Close">
           <X size={18} />
         </button>
       </div>
@@ -142,7 +160,7 @@ function DecisionTab({ r }: { r: Recommendation }) {
 
   return (
     <div className="space-y-5">
-      <div className={clsx('rounded-xl border px-4 py-3 text-sm', CALLOUT[r.verdict])} data-testid="drawer-reason">
+      <div className={clsx('rounded-lg border px-4 py-3 text-sm', CALLOUT[r.verdict])} data-testid="drawer-reason">
         <div className="flex gap-2">
           {r.verdict === 'reject' ? <ShieldCheck size={18} className="mt-0.5 shrink-0" /> : <Info size={18} className="mt-0.5 shrink-0" />}
           <p className="leading-relaxed">{r.reason}</p>
@@ -150,7 +168,7 @@ function DecisionTab({ r }: { r: Recommendation }) {
       </div>
 
       {naive && naive.action !== 'none' && (
-        <div className="rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm" data-testid="naive-box">
+        <div className="rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm" data-testid="naive-box">
           <div className="label mb-1">An average-based tool would have…</div>
           <p className="text-slate-700">
             {naive.action === 'resize' ? `Resized ${r.current.plan} → ${naive.target_plan}` : titleCase(naive.action)} because {naive.basis}, saving{' '}
@@ -166,20 +184,18 @@ function DecisionTab({ r }: { r: Recommendation }) {
       )}
 
       {r.veto && (
-        <div className="grid grid-cols-3 gap-3 text-sm" data-testid="veto">
+        <div className="grid gap-3 text-sm sm:grid-cols-3" data-testid="veto">
           <Fact label="Vetoing signal" value={titleCase(r.veto.signal)} />
           <Fact label={r.veto.metric} value={typeof r.veto.value === 'number' ? r.veto.value.toLocaleString('en-IN', { maximumFractionDigits: 1 }) : String(r.veto.value)} />
           <Fact label="Rule" value={`${r.veto.comparator} ${r.veto.threshold} blocks shrinking`} />
         </div>
       )}
 
-      <ReplaySection r={r} />
-
       {choices.length > 1 && <OptionsTable r={r} />}
 
       {r.schedule && (
         <section>
-          <h3 className="mb-2 text-sm font-semibold text-slate-800">Schedule (IST)</h3>
+          <h3 className="h-sec mb-2">Schedule (IST)</h3>
           <div className="text-sm text-slate-700">
             Off <span className="num font-semibold">{r.schedule.off_hours_per_week} h/week</span>, on {r.schedule.on_hours_per_week} h/week:
             <ul className="mt-1 list-inside list-disc text-slate-600" data-testid="schedule-windows">
@@ -198,13 +214,13 @@ function DecisionTab({ r }: { r: Recommendation }) {
 
       {r.risk && (
         <section>
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <h3 className="h-sec mb-2 flex flex-wrap items-center gap-2">
             Risk <RiskChip risk={r.risk} /> <span className="text-xs font-normal text-slate-500">confidence {r.risk.confidence}: {r.risk.confidence_basis}</span>
           </h3>
           <div className="flex flex-wrap gap-1.5">
             {r.risk.points.map((p) => (
-              <span key={p.factor} className="rounded-full bg-slate-100 px-2 py-0.5 text-2xs text-slate-700">
-                +{p.points} {p.factor} <span className="text-slate-400">· {p.detail}</span>
+              <span key={p.factor} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-2xs text-slate-700">
+                +{p.points} {p.factor} <span className="text-slate-500">· {p.detail}</span>
               </span>
             ))}
           </div>
@@ -213,9 +229,11 @@ function DecisionTab({ r }: { r: Recommendation }) {
 
       <EvidenceTable r={r} />
 
+      <ReplaySection r={r} />
+
       {r.actions.length > 0 && (
         <section>
-          <h3 className="mb-2 text-sm font-semibold text-slate-800">Runbook</h3>
+          <h3 className="h-sec mb-2">Runbook</h3>
           <ol className="space-y-1.5 text-sm">
             {r.actions.map((a, i) => (
               <li key={a.type} className="flex gap-2">
@@ -232,7 +250,7 @@ function DecisionTab({ r }: { r: Recommendation }) {
 
       {linked.length > 0 && (
         <section>
-          <h3 className="mb-2 text-sm font-semibold text-slate-800">Alerts</h3>
+          <h3 className="h-sec mb-2">Alerts</h3>
           {linked.map((a) => (
             <Link key={a.alert_id} to={`/alerts#${a.alert_id}`} className="flex items-center gap-2 text-sm text-sky-700 hover:underline">
               <Bell size={14} /> {a.title} <ExternalLink size={12} />
@@ -258,9 +276,8 @@ function OptionsTable({ r }: { r: Recommendation }) {
   const applied = decision?.status === 'accepted' ? decision.optionKey : null
   return (
     <section>
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-800">Options: cost after, per combination (never added together)</h3>
-        <DecideControl r={r} />
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="h-sec">Options: cost after, per combination (never added together)</h3>
       </div>
       <table className="w-full text-sm" data-testid="options-table">
         <thead>
@@ -282,7 +299,7 @@ function OptionsTable({ r }: { r: Recommendation }) {
                 <div className="mt-0.5 font-mono text-2xs leading-relaxed text-slate-500" data-testid="formula">{o.formula}</div>
               </td>
               <td className="num py-2 text-right text-slate-700">{formatINR(o.monthly_inr_after)}</td>
-              <td className={clsx('num py-2 text-right font-semibold', o.saving_inr > 0 ? 'text-save-700' : o.saving_inr < 0 ? 'text-upsize-700' : 'text-slate-400')}>
+              <td className={clsx('num py-2 text-right font-semibold', o.saving_inr > 0 ? 'text-save-700' : o.saving_inr < 0 ? 'text-upsize-700' : 'text-slate-500')}>
                 {formatINR(o.saving_inr)}
               </td>
             </tr>
@@ -307,24 +324,20 @@ function ReplaySection({ r }: { r: Recommendation }) {
   if (!r.replay || r.resource.type !== 'vm') return null
   return (
     <section data-testid="replay-section">
-      <div className="mb-1 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-slate-800">Peak Replay</h3>
+      <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3">
+        <h3 className="h-sec">Peak Replay</h3>
         <span className="text-2xs text-slate-500">
           30 days replayed on the new size · limit {r.replay.limit_minutes_above_90} min &gt; 90%, memory ≤ {r.replay.mem_cap_pct}%
         </span>
       </div>
       <div className="mb-2 flex flex-wrap gap-1.5" data-testid="replay-attempts">
         {r.replay.attempts.map((a) => (
-          <span
-            key={a.plan}
-            className={clsx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold ring-1 ring-inset', a.passed ? 'bg-save-50 text-save-700 ring-save-600/25' : 'bg-danger-50 text-danger-700 ring-danger-600/25')}
-          >
-            {a.passed ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+          <Badge key={a.plan} tone={a.passed ? 'save' : 'danger'} icon={a.passed ? <CheckCircle2 size={12} aria-hidden /> : <XCircle size={12} aria-hidden />} className="whitespace-normal">
             {a.plan}: {a.minutes_above_90.toLocaleString('en-IN')} min &gt; 90% · peak {a.max_cpu_pct}% CPU / {a.max_mem_pct}% mem
-          </span>
+          </Badge>
         ))}
       </div>
-      {!show ? null : replay.error ? <ErrorNote error={replay.error} /> : replay.data ? <ReplayChart replay={replay.data} /> : <Loading label="Loading replay…" />}
+      {!show ? null : replay.error ? <ErrorNote error={replay.error} /> : replay.data ? <ReplayChart replay={replay.data} /> : <Loading label="Loading replay…" block />}
     </section>
   )
 }
@@ -338,13 +351,13 @@ export function EvidenceTable({ r }: { r: Recommendation }) {
   const ev = r.evidence
   return (
     <section>
-      <h3 className="mb-2 text-sm font-semibold text-slate-800">
+      <h3 className="h-sec mb-2">
         Evidence <span className="text-xs font-normal text-slate-500">· {ev.days_of_data} days of data · coverage {formatPct(ev.coverage * 100, 0)} · percentile used {ev.percentile_used}</span>
       </h3>
       {!m ? (
         <p className="text-sm text-slate-500">No usable metrics for this resource.</p>
       ) : (
-        <table className="w-full text-sm" data-testid="evidence-table">
+        <div className="overflow-x-auto"><table className="w-full text-sm" data-testid="evidence-table">
           <thead>
             <tr className="border-b border-slate-200">
               <th className="th pl-0">Metric</th>
@@ -366,7 +379,7 @@ export function EvidenceTable({ r }: { r: Recommendation }) {
               )
             })}
           </tbody>
-        </table>
+        </table></div>
       )}
       {ev.recurring_peak && (
         <p className="mt-2 text-xs text-slate-600">
@@ -396,15 +409,9 @@ export function ChartsTab({ r }: { r: Recommendation }) {
   const common = { id: r.resource.resource_id, step, group }
   return (
     <div className="space-y-4" data-testid="charts-tab">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">IST. Shaded bands are gaps (missing ≠ 0) or alert windows; dotted lines are the p50 / p95 / p99 from the engine. Scroll to zoom; the charts move together.</p>
-        <div className="flex shrink-0 rounded-lg bg-slate-100 p-0.5 text-xs" role="group" aria-label="Resolution">
-          {(['1h', '5m'] as const).map((s_) => (
-            <button key={s_} className={clsx('rounded-md px-2.5 py-1', step === s_ ? 'bg-white font-medium shadow-sm' : 'text-slate-500')} onClick={() => setStep(s_)} aria-pressed={step === s_}>
-              {s_ === '1h' ? 'Hourly' : '5-minute'}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-[60ch] text-xs leading-relaxed text-slate-500">IST. Shaded bands are gaps (missing ≠ 0) or alert windows; dotted lines are the p50 / p95 / p99 from the engine. Scroll to zoom; the charts move together.</p>
+        <Segmented label="Resolution" value={step} onChange={setStep} options={[{ value: '1h', label: 'Hourly' }, { value: '5m', label: '5-minute' }]} />
       </div>
       {gaps.length > 0 && (
         <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600" data-testid="gap-list">
@@ -443,7 +450,7 @@ function MetricChart({ id, metric, step, title, testId, ...rest }: { id: string;
       title={title}
       note={p ? <span data-testid={`${testId}-percentiles`}>dotted: p50 {p.p50.toFixed(1)} · p95 {p.p95.toFixed(1)} · p99 {p.p99.toFixed(1)}</span> : undefined}
     >
-      {q.error ? <ErrorNote error={q.error} /> : q.data ? <TimeSeriesChart series={q.data} label={title.replace(/ (.*)$/, '')} testId={testId} {...rest} /> : <Loading />}
+      {q.error ? <ErrorNote error={q.error} /> : q.data ? <TimeSeriesChart series={q.data} label={title.replace(/ (.*)$/, '')} testId={testId} {...rest} /> : <Loading label={`Loading ${title}…`} block />}
     </ChartBlock>
   )
 }
@@ -451,7 +458,7 @@ function MetricChart({ id, metric, step, title, testId, ...rest }: { id: string;
 function ChartBlock({ title, note, children }: { title: string; note?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-1 flex items-baseline gap-2 text-sm font-semibold text-slate-800">
+      <h3 className="h-sec mb-1 flex flex-wrap items-baseline gap-x-2">
         {title}
         {note && <span className="num text-2xs font-normal text-slate-500">{note}</span>}
       </h3>
@@ -483,16 +490,16 @@ export function TraceList({ steps }: { steps: TraceStep[] }) {
         {steps.map((s) => (
           <li
             key={s.step}
-            className={clsx('grid grid-cols-[20px_1fr_auto] items-start gap-2 rounded-lg px-2 py-1.5 text-sm', s.terminal && 'bg-slate-900 text-white', s.result === 'skip' && 'opacity-50')}
+            className={clsx('grid grid-cols-[20px_1fr_auto] items-start gap-2 rounded-lg px-2 py-1.5 text-sm', s.terminal && 'bg-brand-900 text-white', s.result === 'skip' && 'opacity-50')}
             data-testid={s.terminal ? 'trace-terminal' : undefined}
           >
             <span className="mt-0.5">{s.terminal && s.result === 'fail' ? <AlertTriangle size={15} className="text-review-100" /> : icon[s.result]}</span>
             <span>
-              <span className={clsx('font-mono text-2xs', s.terminal ? 'text-slate-300' : 'text-slate-400')}>{s.step}</span>
+              <span className={clsx('font-mono text-2xs', s.terminal ? 'text-slate-300' : 'text-slate-500')}>{s.step}</span>
               <span className="ml-2">{s.check}</span>
             </span>
             <span className={clsx('num text-right text-xs', s.terminal ? 'text-white' : 'text-slate-600')}>
-              {s.value} <span className={s.terminal ? 'text-slate-300' : 'text-slate-400'}>· rule {s.threshold}</span>
+              {s.value} <span className={s.terminal ? 'text-slate-300' : 'text-slate-500'}>· rule {s.threshold}</span>
             </span>
           </li>
         ))}
@@ -516,20 +523,14 @@ function ScriptTab({ r }: { r: Recommendation }) {
   if (key === 'none') return <p className="text-sm text-slate-500">Nothing to apply: this resource has no recommended change.</p>
   return (
     <div className="space-y-3" data-testid="script-tab">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-slate-500">
           {optionLabel(key, r)}{decision?.status === 'accepted' ? ' (your accepted option)' : ' (default option)'}. Dry run by default; review before applying.
         </p>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg bg-slate-100 p-0.5 text-xs" role="group" aria-label="Script format">
-            {(['sh', 'tf'] as const).map((f) => (
-              <button key={f} className={clsx('rounded-md px-2.5 py-1', format === f ? 'bg-white font-medium shadow-sm' : 'text-slate-500')} onClick={() => setFormat(f)} aria-pressed={format === f}>
-                {f === 'sh' ? 'apply.sh' : 'Terraform'}
-              </button>
-            ))}
-          </div>
+          <Segmented label="Script format" value={format} onChange={setFormat} options={[{ value: 'sh', label: 'apply.sh' }, { value: 'tf', label: 'Terraform' }]} />
           <button
-            className="btn-outline py-1 text-xs"
+            className="btn-outline btn-sm"
             disabled={!script.data}
             onClick={() => {
               void navigator.clipboard?.writeText(script.data ?? '')
@@ -544,9 +545,9 @@ function ScriptTab({ r }: { r: Recommendation }) {
       {script.error ? (
         <ErrorNote error={script.error} />
       ) : script.data === undefined ? (
-        <Loading label="Generating script…" />
+        <Loading label="Generating script…" block />
       ) : (
-        <pre className="max-h-[60vh] overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-xs leading-relaxed text-slate-100" data-testid="script-text">
+        <pre className="max-h-[60vh] overflow-auto rounded-lg bg-brand-900 p-3 font-mono text-xs leading-relaxed text-slate-100" data-testid="script-text">
           {script.data}
         </pre>
       )}

@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { Page } from '../components/layout/AppShell'
 import { FilterBar, distinct, useUrlFilters } from '../components/common/FilterBar'
-import { Empty, ErrorNote, Loading, VerdictBadge } from '../components/common/ui'
+import { Empty, ErrorNote, Loading, Panel, Segmented, VerdictBadge } from '../components/common/ui'
 import { Sparkline } from '../components/charts/Sparkline'
+import { SERIES } from '../components/charts/theme'
 import { FleetHeatmap } from '../components/charts/FleetHeatmap'
 import { useAssumptions, useResources } from '../api/data'
 import { useRecs } from '../api/recs'
@@ -50,7 +51,7 @@ export default function Utilization() {
 
   const heatRows = rows.filter((r) => r.type === 'vm' && r.daily_p95)
   const head = (key: typeof sort.key, label: string, right = false) => (
-    <th className={clsx('th cursor-pointer select-none hover:text-slate-800', right && 'text-right')} onClick={() => setSort((s) => ({ key, dir: s.key === key ? ((-s.dir) as 1 | -1) : -1 }))} aria-sort={sort.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
+    <th className={clsx('th cursor-pointer select-none transition-colors hover:text-slate-800', right && 'text-right')} onClick={() => setSort((s) => ({ key, dir: s.key === key ? ((-s.dir) as 1 | -1) : -1 }))} aria-sort={sort.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
       {label} {sort.key === key ? (sort.dir === 1 ? '↑' : '↓') : ''}
     </th>
   )
@@ -60,13 +61,7 @@ export default function Utilization() {
       title="Utilization"
       subtitle={`${all.length} resources · 30 days at 5-minute resolution · ${meta.data?.counts.metric_rows.toLocaleString('en-IN') ?? ''} metric rows`}
       actions={
-        <div className="flex rounded-lg bg-slate-100 p-0.5 text-xs" role="group" aria-label="View">
-          {(['table', 'heatmap'] as const).map((v) => (
-            <button key={v} className={clsx('rounded-md px-3 py-1 capitalize', view === v ? 'bg-white font-medium shadow-sm' : 'text-slate-500')} onClick={() => setView(v)} aria-pressed={view === v}>
-              {v}
-            </button>
-          ))}
-        </div>
+        <Segmented label="View" value={view} onChange={setView} options={[{ value: 'table', label: 'table' }, { value: 'heatmap', label: 'heatmap' }]} />
       }
     >
       <div className="mb-3">
@@ -79,63 +74,62 @@ export default function Utilization() {
             { key: 'type', label: 'Type', options: distinct(all, (r) => r.type, (v) => v.toUpperCase()) },
             { key: 'verdict', label: 'Verdict', options: (Object.keys(VERDICT_META) as Verdict[]).map((v) => ({ value: v, label: VERDICT_META[v].label })) },
           ]}
-          right={<span className="text-xs text-slate-500" data-testid="util-count">{rows.length} shown</span>}
+          right={<span className="num text-xs text-slate-500" data-testid="util-count">{rows.length} shown</span>}
         />
       </div>
 
       {view === 'table' ? (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm" data-testid="fleet-table">
-            <thead className="border-b border-slate-200 bg-slate-50">
+        <div className="card overflow-clip">
+          <table className="tbl tbl-stack-lg tbl-compact" data-testid="fleet-table">
+            <thead className="sticky top-0 z-10">
               <tr>
                 {head('name', 'Resource')}
-                <th className="th">Plan</th>
+                <th className="th" data-m="hide">Plan</th>
                 {head('cpu', 'CPU p95', true)}
-                <th className="th text-right">CPU p99</th>
+                <th className="th text-right" data-m="hide">CPU p99</th>
                 {head('mem', 'Mem p95', true)}
-                <th className="th text-right">Mem p99</th>
-                <th className="th text-right">Coverage</th>
+                <th className="th text-right" data-m="hide">Mem p99</th>
+                <th className="th text-right" data-m="hide">Coverage</th>
                 <th className="th">Daily p95 · 30 d</th>
                 <th className="th">Verdict</th>
                 {head('cost', '₹ / mo', true)}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {rows.map((r) => {
                 const rec = verdictOf[r.resource_id]
                 return (
-                  <tr key={r.resource_id} className="cursor-pointer hover:bg-slate-50" onClick={() => navigate(`/utilization/${r.resource_id}`)} data-testid={`util-row-${r.name}`}>
-                    <td className="td">
+                  <tr key={r.resource_id} className="row-link" onClick={() => navigate(`/utilization/${r.resource_id}`)} data-testid={`util-row-${r.name}`}>
+                    <td className="td" data-m="main">
                       <div className="font-medium text-slate-900">{r.name}</div>
                       <div className="text-2xs text-slate-500">
                         {r.type.toUpperCase()} · {titleEnv(r.env)} · {titleCase(r.owner_team ?? 'unowned')} · {titleCase(r.region)}
                       </div>
                     </td>
-                    <td className="td text-xs text-slate-600">{r.plan_id ?? (r.type === 'volume' ? `${r.disk_gb} GB` : '—')}</td>
-                    <td className="td num text-right">{formatPct(r.stats?.cpu_p95)}</td>
-                    <td className="td num text-right">{formatPct(r.stats?.cpu_p99)}</td>
-                    <td className="td num text-right">{formatPct(r.stats?.mem_p95)}</td>
-                    <td className="td num text-right">{formatPct(r.stats?.mem_p99)}</td>
-                    <td className={clsx('td num text-right', r.stats?.coverage != null && r.stats.coverage < 0.8 && 'font-semibold text-danger-700')}>
+                    <td className="td text-xs text-slate-600" data-m="hide">{r.plan_id ?? (r.type === 'volume' ? `${r.disk_gb} GB` : '—')}</td>
+                    <td className="td num text-right" data-m="end"><span className="label mr-1 lg:hidden">CPU p95</span>{formatPct(r.stats?.cpu_p95)}</td>
+                    <td className="td num text-right" data-m="hide">{formatPct(r.stats?.cpu_p99)}</td>
+                    <td className="td num text-right" data-m="end"><span className="label mr-1 lg:hidden">Mem p95</span>{formatPct(r.stats?.mem_p95)}</td>
+                    <td className="td num text-right" data-m="hide">{formatPct(r.stats?.mem_p99)}</td>
+                    <td data-m="hide" className={clsx('td num text-right', r.stats?.coverage != null && r.stats.coverage < 0.8 && 'font-semibold text-danger-700')}>
                       {r.stats?.coverage != null ? formatPct(r.stats.coverage * 100, 0) : '—'}
                     </td>
-                    <td className="td">
-                      {r.daily_p95 ? <Sparkline values={r.daily_p95} label={`${r.name} daily p95`} color={r.type === 'vm' ? '#2a78d6' : '#eb6834'} /> : <span className="text-2xs text-slate-400">{r.type === 'ip' ? 'no metrics (IP)' : 'no metrics'}</span>}
+                    <td className="td" data-m="full">
+                      {r.daily_p95 ? <Sparkline values={r.daily_p95} label={`${r.name} daily p95`} color={r.type === 'vm' ? SERIES[0] : SERIES[1]} /> : <span className="text-2xs text-slate-500">{r.type === 'ip' ? 'no metrics (IP)' : 'no metrics'}</span>}
                     </td>
-                    <td className="td">{rec && <VerdictBadge verdict={rec.verdict} label={REASON_LABEL[rec.reason_code]} />}</td>
-                    <td className="td num text-right text-slate-700">{formatINR(r.monthly_inr)}</td>
+                    <td className="td" data-m="full">{rec && <VerdictBadge verdict={rec.verdict} label={REASON_LABEL[rec.reason_code]} />}</td>
+                    <td className="td num text-right text-slate-700" data-m="aside">{formatINR(r.monthly_inr)}</td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
-          {!rows.length && <Empty>No resources match these filters.</Empty>}
+          {!rows.length && <Empty hint="Clear a filter to see the full fleet.">No resources match these filters</Empty>}
         </div>
       ) : (
-        <div className="card card-pad">
-          <p className="mb-2 text-xs text-slate-500">Daily p95 CPU per VM (IST days). Click a row to drill down. Blank cells are days with no data.</p>
-          {heatRows.length ? <FleetHeatmap rows={heatRows} start={meta.data!.data_window.start} onPick={(id) => navigate(`/utilization/${id}`)} /> : <Empty>No VMs with metrics match these filters.</Empty>}
-        </div>
+        <Panel title="Daily p95 CPU per VM" sub="IST days, darker is busier. Click a row to drill down. Blank cells are days with no data.">
+          {heatRows.length ? <FleetHeatmap rows={heatRows} start={meta.data!.data_window.start} onPick={(id) => navigate(`/utilization/${id}`)} /> : <Empty hint="Clear a filter to bring VMs back.">No VMs with metrics match these filters</Empty>}
+        </Panel>
       )}
     </Page>
   )

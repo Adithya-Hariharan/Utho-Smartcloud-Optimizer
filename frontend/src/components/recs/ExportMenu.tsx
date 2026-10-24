@@ -54,13 +54,13 @@ export function ExportMenu({ env }: { env: RecEnvelope }) {
 
   return (
     <div className="relative" ref={ref}>
-      <button className="btn-outline py-1 text-xs" disabled={!accepted.length || busy} onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} data-testid="export-button">
-        {busy ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Export {accepted.length ? `(${accepted.length})` : ''}
+      <button className="btn-outline btn-sm" disabled={!accepted.length || busy} onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} data-testid="export-button">
+        {busy ? <Loader2 size={13} className="animate-spin" aria-hidden /> : <Download size={13} />} Export {accepted.length ? `(${accepted.length})` : ''}
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 z-30 mt-1 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+        <div role="menu" className="absolute right-0 z-30 mt-1.5 w-52 animate-fade-in overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-pop">
           {FORMATS.map((f) => (
-            <button key={f.format} role="menuitem" className="block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-50" onClick={() => run(f.format)}>
+            <button key={f.format} role="menuitem" className="block w-full px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-sky-50 hover:text-slate-900" onClick={() => run(f.format)}>
               {f.label}
             </button>
           ))}

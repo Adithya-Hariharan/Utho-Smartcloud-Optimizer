@@ -6,7 +6,10 @@ import { useDecisions } from '../../store/decisions'
 import { formatINR } from '../../lib/format'
 import { optionLabel } from '../../lib/labels'
 
-/** Accept (with a choice of option when a card has several) / reject / undo. */
+/**
+ * Accept / Reject with words, never bare icons, so the two choices are obvious at a glance.
+ * A card with several options adds a selector and the buttons shrink to icons to fit the row.
+ */
 export function DecideControl({ r, compact = false }: { r: Recommendation; compact?: boolean }) {
   const decision = useDecisions((s) => s.decisions[r.resource.resource_id])
   const accept = useDecisions((s) => s.accept)
@@ -15,34 +18,31 @@ export function DecideControl({ r, compact = false }: { r: Recommendation; compa
   const choices = Object.keys(r.options).filter((k) => k !== 'none')
   const [choice, setChoice] = useState(decision?.status === 'accepted' ? decision.optionKey : r.default_option)
   const stop = (e: React.SyntheticEvent) => e.stopPropagation()
+  const multi = choices.length > 1
 
   if (decision) {
     const accepted = decision.status === 'accepted'
     return (
-      <div className="flex items-center justify-end gap-2" onClick={stop}>
+      <div className="flex items-center justify-end gap-1.5" onClick={stop}>
         <span
-          className={clsx('truncate rounded-full px-2 py-0.5 text-2xs font-semibold', accepted ? 'bg-save-600 text-white' : 'bg-slate-200 text-slate-600')}
+          className={clsx('inline-flex h-7 min-w-0 animate-fade-in items-center gap-1 rounded-md px-2.5 text-xs font-medium', accepted ? 'bg-save-600 text-white' : 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-300')}
           data-testid="decision-status"
         >
-          {accepted ? `Accepted${choices.length > 1 ? ` · ${optionLabel(decision.optionKey)}` : ''}` : 'Rejected'}
+          {accepted ? <Check size={13} aria-hidden className="shrink-0" /> : <X size={13} aria-hidden className="shrink-0" />}
+          <span className="truncate">{accepted ? `Accepted${multi ? ` · ${optionLabel(decision.optionKey)}` : ''}` : 'Rejected'}</span>
         </span>
-        <button className="btn-ghost px-1.5 py-1" onClick={() => clear(r.resource.resource_id)} aria-label={`Undo decision for ${r.resource.name}`} title="Undo">
-          <RotateCcw size={14} />
+        <button className="btn-ghost btn-sm px-2" onClick={() => clear(r.resource.resource_id)} aria-label={`Undo decision for ${r.resource.name}`} title="Undo">
+          <RotateCcw size={13} aria-hidden /> <span className="max-sm:hidden">Undo</span>
         </button>
       </div>
     )
   }
 
+  const words = !multi && !compact
   return (
     <div className="flex items-center justify-end gap-1.5" onClick={stop}>
-      {choices.length > 1 && (
-        <select
-          className={clsx('input w-0 min-w-0 flex-1 py-1 text-xs', 'max-w-[170px]')}
-          value={choice}
-          onChange={(e) => setChoice(e.target.value)}
-          aria-label={`Option for ${r.resource.name}`}
-          data-testid="option-select"
-        >
+      {multi && (
+        <select className="input input-sm w-0 min-w-[8rem] max-w-[170px] flex-1" value={choice} onChange={(e) => setChoice(e.target.value)} aria-label={`Option for ${r.resource.name}`} data-testid="option-select">
           {choices.map((k) => (
             <option key={k} value={k}>
               {optionLabel(k)} · {formatINR(r.options[k].saving_inr)}
@@ -50,16 +50,11 @@ export function DecideControl({ r, compact = false }: { r: Recommendation; compa
           ))}
         </select>
       )}
-      <button
-        className="btn border border-save-600/40 bg-save-50 px-2 py-1 text-save-700 hover:bg-save-100"
-        onClick={() => accept(r, choice)}
-        aria-label={`Accept ${r.resource.name}`}
-        title="Accept"
-      >
-        <Check size={14} /> {!compact && choices.length <= 1 && 'Accept'}
+      <button className={clsx('btn-accept btn-sm', !words && 'w-8 px-0')} onClick={() => accept(r, choice)} aria-label={`Accept ${r.resource.name}`} title="Accept">
+        <Check size={14} aria-hidden /> {words && 'Accept'}
       </button>
-      <button className="btn-outline px-2 py-1" onClick={() => reject(r)} aria-label={`Reject ${r.resource.name}`} title="Reject">
-        <X size={14} />
+      <button className={clsx('btn-outline btn-sm', !words && 'w-8 px-0')} onClick={() => reject(r)} aria-label={`Reject ${r.resource.name}`} title="Reject">
+        <X size={14} aria-hidden /> {words && 'Reject'}
       </button>
     </div>
   )

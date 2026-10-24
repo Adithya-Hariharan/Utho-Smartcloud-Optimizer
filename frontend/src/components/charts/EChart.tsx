@@ -2,13 +2,14 @@ import { useEffect, useRef } from 'react'
 import * as echarts from 'echarts/core'
 import { BarChart, HeatmapChart, LineChart } from 'echarts/charts'
 import {
-  DataZoomComponent, GridComponent, LegendComponent, MarkAreaComponent, MarkLineComponent, TooltipComponent, VisualMapComponent,
+  DataZoomComponent, GridComponent, LegendComponent, LegendScrollComponent, MarkAreaComponent, MarkLineComponent, TooltipComponent, VisualMapComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import type { EChartsCoreOption } from 'echarts/core'
+import { FONT } from './theme'
 
 echarts.use([
-  LineChart, BarChart, HeatmapChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent,
+  LineChart, BarChart, HeatmapChart, GridComponent, TooltipComponent, LegendComponent, LegendScrollComponent, DataZoomComponent,
   MarkLineComponent, MarkAreaComponent, VisualMapComponent, CanvasRenderer,
 ])
 
@@ -34,7 +35,7 @@ export function EChart({ option, height = 240, group, testId, ariaLabel, onClick
   }, [])
 
   useEffect(() => {
-    chart.current?.setOption({ useUTC: true, animation: false, ...option }, true)
+    chart.current?.setOption({ useUTC: true, animation: false, textStyle: { fontFamily: FONT }, ...option }, true)
   }, [option])
 
   useEffect(() => {

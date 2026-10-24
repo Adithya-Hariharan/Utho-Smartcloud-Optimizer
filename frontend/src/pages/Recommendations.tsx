@@ -6,7 +6,7 @@ import { SummaryBar } from '../components/recs/SummaryBar'
 import { DecideControl } from '../components/recs/DecideControl'
 import { ExportMenu } from '../components/recs/ExportMenu'
 import { FilterBar, distinct, matches, useUrlFilters, type FilterDef } from '../components/common/FilterBar'
-import { Empty, ErrorNote, Loading, RiskChip, Tip } from '../components/common/ui'
+import { Badge, Empty, ErrorNote, Loading, RiskChip, Tip } from '../components/common/ui'
 import { useRecs } from '../api/recs'
 import { useDecisions } from '../store/decisions'
 import { actionsOf } from '../lib/cost'
@@ -101,16 +101,16 @@ export default function Recommendations() {
           filters={filters}
           right={
             <>
-              <select className="input py-1 text-xs" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort">
+              <select className="input input-sm" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort">
                 <option value="monday">Sort: low risk, high saving</option>
                 <option value="saving">Sort: saving</option>
                 <option value="name">Sort: name</option>
               </select>
-              <button className="btn-outline py-1 text-xs" disabled={!lowRiskPending.length} onClick={() => acceptMany(lowRiskPending)} data-testid="accept-low-risk">
+              <button className="btn-outline btn-sm" disabled={!lowRiskPending.length} onClick={() => acceptMany(lowRiskPending)} data-testid="accept-low-risk">
                 <CheckCheck size={14} /> Accept {lowRiskPending.length} low-risk
               </button>
               <ExportMenu env={recs.data!} />
-              <button className="btn-ghost py-1 text-xs" onClick={resetAll} disabled={!Object.keys(decisions).length} data-testid="reset-decisions">
+              <button className="btn-ghost btn-sm" onClick={resetAll} disabled={!Object.keys(decisions).length} data-testid="reset-decisions">
                 <RotateCcw size={14} /> Reset
               </button>
             </>
@@ -118,20 +118,20 @@ export default function Recommendations() {
         />
       </div>
 
-      <div className="card overflow-hidden">
-        <table className="w-full table-fixed text-sm" data-testid="recs-table">
+      <div className="card overflow-clip">
+        <table className="tbl tbl-stack-xl table-fixed" data-testid="recs-table">
           <RecCols />
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead>
             <tr>
-              <th className="th">Resource</th>
-              <th className="th">Action</th>
-              <th className="th">Why</th>
-              <th className="th whitespace-nowrap text-right">Saving / mo</th>
-              <th className="th">Risk</th>
-              <th className="th text-right">Decision</th>
+              <th className="th sticky top-[var(--summary-h,0px)] z-10 bg-slate-50">Resource</th>
+              <th className="th sticky top-[var(--summary-h,0px)] z-10 bg-slate-50">Action</th>
+              <th className="th sticky top-[var(--summary-h,0px)] z-10 bg-slate-50">Why</th>
+              <th className="th sticky top-[var(--summary-h,0px)] z-10 whitespace-nowrap bg-slate-50 text-right">Saving / mo</th>
+              <th className="th sticky top-[var(--summary-h,0px)] z-10 bg-slate-50">Risk</th>
+              <th className="th sticky top-[var(--summary-h,0px)] z-10 bg-slate-50 text-right">Decision</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody>
             {blocks.map((b) =>
               b.kind === 'single' ? (
                 <RecRow key={b.r.rec_id} r={b.r} />
@@ -141,18 +141,23 @@ export default function Recommendations() {
             )}
           </tbody>
         </table>
-        {!rows.length && <Empty>No recommendations match these filters.</Empty>}
+        {!rows.length && (
+          <Empty hint={filters.active ? 'Clear a filter to see more.' : 'Nothing passed every safety check for this preset.'}>
+            {filters.active ? 'No recommendations match these filters' : 'No recommendations yet'}
+          </Empty>
+        )}
       </div>
 
       {upsizes.length > 0 && (
-        <section className="mt-6" data-testid="risk-fixes">
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <TriangleAlert size={15} className="text-upsize-600" /> Risk fixes: these cost money
+        <section className="mt-8" data-testid="risk-fixes" aria-labelledby="risk-fixes-h">
+          <h2 id="risk-fixes-h" className="h-sec mb-1 flex items-center gap-2">
+            <TriangleAlert size={15} className="text-upsize-600" aria-hidden /> Risk fixes: these cost money
           </h2>
-          <div className="card overflow-hidden">
-            <table className="w-full table-fixed text-sm">
+          <p className="h-sub mb-2.5">Under-provisioned resources that need a bigger plan. They add cost and are never netted against savings.</p>
+          <div className="card overflow-clip">
+            <table className="tbl tbl-stack-xl table-fixed">
               <RecCols />
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {upsizes.map((r) => (
                   <RecRow key={r.rec_id} r={r} />
                 ))}
@@ -186,7 +191,7 @@ function ResourceCell({ r }: { r: Recommendation }) {
         {titleEnv(r.resource.env)} · {titleCase(r.resource.team ?? 'unowned')} · {titleCase(r.resource.region)}
         {r.flags.length > 0 && (
           <Tip content={r.flags.map((x) => <div key={x.code}>{x.message}</div>)}>
-            <span className="ml-1.5 rounded bg-review-50 px-1 font-semibold text-review-700">{r.flags.length} flag{r.flags.length > 1 ? 's' : ''}</span>
+            <Badge tone="review" className="ml-1.5 py-0">{r.flags.length} flag{r.flags.length > 1 ? 's' : ''}</Badge>
           </Tip>
         )}
       </div>
@@ -202,26 +207,26 @@ function RecRow({ r, indent = false }: { r: Recommendation; indent?: boolean }) 
   return (
     <tr
       className={clsx(
-        'cursor-pointer transition-colors hover:bg-slate-50',
-        decision?.status === 'accepted' && 'bg-save-50/60',
-        decision?.status === 'rejected' && 'opacity-50',
+        'row-link',
+        decision?.status === 'accepted' && 'bg-save-50/60 hover:bg-save-50',
+        decision?.status === 'rejected' && 'opacity-60 hover:opacity-100',
       )}
       onClick={() => drawer.open(r.resource.resource_id)}
       data-testid={`rec-row-${r.resource.name}`}
     >
-      <td className={clsx('td', indent && 'pl-8')}>
+      <td className={clsx('td', indent && 'pl-8')} data-m="main">
         <ResourceCell r={r} />
       </td>
-      <td className="td">
+      <td className="td" data-m="full">
         <div className="truncate font-medium text-slate-800">{optionLabel(r.default_option, r)}</div>
         <div className="text-2xs text-slate-500">{REASON_LABEL[r.reason_code]}</div>
       </td>
-      <td className="td">
-        <div className="line-clamp-2 text-xs text-slate-600">{r.reason}</div>
+      <td className="td" data-m="full">
+        <div className="line-clamp-2 text-[13px] leading-snug text-slate-600">{r.reason}</div>
       </td>
-      <td className="td text-right">
+      <td className="td text-right" data-m="aside">
         <Tip content={<span className="font-mono">{opt.formula}</span>}>
-          <span className={clsx('num cursor-help font-semibold', saving >= 0 ? 'text-save-700' : 'text-upsize-700')} data-testid="row-saving">
+          <span className={clsx('num cursor-help text-[15px] font-semibold', saving >= 0 ? 'text-save-700' : 'text-upsize-700')} data-testid="row-saving">
             {formatINR(saving)}
           </span>
         </Tip>
@@ -229,7 +234,7 @@ function RecRow({ r, indent = false }: { r: Recommendation; indent?: boolean }) 
       <td className="td">
         <RiskChip risk={r.risk} />
       </td>
-      <td className="td">
+      <td className="td" data-m="end">
         <DecideControl r={r} compact={indent} />
       </td>
     </tr>
@@ -244,19 +249,19 @@ function GroupRows({ name, members }: { name: string; members: Recommendation[] 
   const sizedOn = members[0].trace.find((t) => t.step === 'sizing')?.value.match(/sized on ([\w-]+)/)?.[1]
   return (
     <>
-      <tr className="bg-slate-50/80" data-testid={`group-row-${name}`}>
-        <td className="td" colSpan={3}>
-          <div className="flex items-center gap-2 font-medium text-slate-900">
-            <Layers size={14} className="text-slate-500" /> Service group <span className="font-mono text-xs">{name}</span>
+      <tr className="bg-slate-50" data-testid={`group-row-${name}`}>
+        <td className="td" colSpan={3} data-m="main">
+          <div className="flex flex-wrap items-center gap-x-2 font-medium text-slate-900">
+            <Layers size={14} className="shrink-0 text-slate-500" aria-hidden /> Service group <span className="font-mono text-xs">{name}</span>
             <span className="text-2xs font-normal text-slate-500">
               {members.length} VMs · one target for all{sizedOn ? `, sized on the busiest member (${sizedOn})` : ''}
             </span>
           </div>
         </td>
-        <td className="td num text-right font-semibold text-save-700">{formatINR(total)}</td>
-        <td className="td" />
-        <td className="td text-right">
-          <button className="btn-outline py-1 text-xs" disabled={!pending.length} onClick={() => acceptMany(pending)}>
+        <td className="td num text-right font-semibold text-save-700" data-m="aside">{formatINR(total)}</td>
+        <td className="td" data-m="hide" />
+        <td className="td text-right" data-m="full">
+          <button className="btn-outline btn-sm" disabled={!pending.length} onClick={() => acceptMany(pending)}>
             <CheckCheck size={13} /> Accept group
           </button>
         </td>

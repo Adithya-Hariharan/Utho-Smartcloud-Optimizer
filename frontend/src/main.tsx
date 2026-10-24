@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { ApiError } from './api/client'
+import './theme.css'
 import './index.css'
 
 // retry once on network trouble; a 4xx from the backend is an answer, not a glitch

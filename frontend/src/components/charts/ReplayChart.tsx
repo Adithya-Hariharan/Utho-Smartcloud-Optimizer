@@ -21,7 +21,7 @@ export function ReplayChart({ replay, height = 230 }: { replay: ReplaySeries; he
     const over = replay.projected_cpu.map((v, i) => [at(i), v !== null && (v > 90 || above(i - 1) || above(i + 1)) ? v : null])
     return {
       grid: { ...baseGrid, top: 30, bottom: 52 },
-      legend: { top: 0, left: 0, itemWidth: 14, itemHeight: 2, textStyle: { color: INK.secondary, fontSize: 11 } },
+      legend: { type: 'scroll', top: 0, left: 0, itemWidth: 14, itemHeight: 2, textStyle: { color: INK.secondary, fontSize: 11 } },
       tooltip: {
         ...tooltipBase,
         formatter: (ps: { value: [number, number | null]; seriesName: string; marker: string }[]) =>

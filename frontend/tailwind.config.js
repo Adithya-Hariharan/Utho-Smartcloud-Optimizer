@@ -1,31 +1,47 @@
 /** @type {import('tailwindcss').Config} */
+// Every colour comes from CSS variables in src/theme.css (generated from DESIGN.md), as r g b channels.
+const c = (name) => `rgb(var(--c-${name}) / <alpha-value>)`
+const scale = (name, keys) => Object.fromEntries(keys.map((k) => [k, c(`${name}-${k}`)]))
+
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'Consolas', 'monospace'],
+        sans: ['var(--font-sans)'],
+        mono: ['var(--font-mono)'],
       },
       colors: {
-        // DESIGN.md (Stripe-inspired): navy-tinted ink and neutrals instead of Tailwind's grey slate
-        slate: { 50: '#f6f9fc', 100: '#eef2f8', 200: '#e3e8ee', 300: '#cdd6e1', 400: '#8898aa', 500: '#64748d', 600: '#425466', 700: '#273951', 800: '#1a2f47', 900: '#0d253d' },
-        // brand indigo replaces the sky accent (focus rings, links, active states)
-        sky: { 50: '#f1f0ff', 100: '#e4e2ff', 400: '#8f86ff', 500: '#665efd', 700: '#4434d4' },
-        brand: { DEFAULT: '#533afd', deep: '#4434d4', press: '#2e2b8c', 900: '#1c1e54', 950: '#15173f' },
+        slate: scale('slate', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900']),
+        canvas: c('canvas'),
+        surface: c('surface'),
+        'on-brand': c('on-brand'),
+        ring: c('ring'),
+        brand: { DEFAULT: c('brand-DEFAULT'), deep: c('brand-deep'), press: c('brand-press'), 900: c('brand-900'), 950: c('brand-950') },
+        sky: scale('sky', ['50', '100', '400', '500', '700']),
         // verdict + risk semantics; every colour is always paired with a word in the UI
-        save: { 50: '#ecfdf5', 100: '#d1fae5', 600: '#059669', 700: '#047857' },
-        kept: { 50: '#eef2ff', 100: '#e0e7ff', 600: '#4f46e5', 700: '#4338ca' },
-        review: { 50: '#fffbeb', 100: '#fef3c7', 600: '#d97706', 700: '#b45309' },
-        healthy: { 50: '#f0fdfa', 100: '#ccfbf1', 600: '#0d9488', 700: '#0f766e' },
-        upsize: { 50: '#fff7ed', 100: '#ffedd5', 600: '#ea580c', 700: '#c2410c' },
-        danger: { 50: '#fff1f2', 100: '#ffe4e6', 600: '#e11d48', 700: '#be123c' },
+        save: scale('save', ['50', '100', '300', '600', '700']),
+        kept: scale('kept', ['50', '100', '600', '700']),
+        review: scale('review', ['50', '100', '600', '700']),
+        healthy: scale('healthy', ['50', '100', '600', '700']),
+        upsize: scale('upsize', ['50', '100', '300', '600', '700']),
+        danger: scale('danger', ['50', '100', '600', '700']),
       },
+      borderRadius: { sm: 'var(--r-sm)', md: 'var(--r-md)', lg: 'var(--r-lg)', xl: 'var(--r-xl)' },
       fontSize: { '2xs': ['0.6875rem', '1rem'] },
-      // soft, blue-tinted depth (offset + blur), never a hard edge
-      boxShadow: {
-        card: '0 1px 1px rgba(13,37,61,0.04), 0 2px 6px -1px rgba(50,50,93,0.07)',
-        pop: '0 13px 27px -5px rgba(50,50,93,0.20), 0 8px 16px -8px rgba(0,0,0,0.12)',
+      boxShadow: { card: 'var(--shadow-card)', pop: 'var(--shadow-pop)' },
+      transitionTimingFunction: { out: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+      keyframes: {
+        'rise-in': { from: { opacity: '0', transform: 'translateY(6px)' }, to: { opacity: '1', transform: 'none' } },
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'slide-in': { from: { transform: 'translateX(24px)', opacity: '0' }, to: { transform: 'none', opacity: '1' } },
+        shimmer: { from: { backgroundPosition: '200% 0' }, to: { backgroundPosition: '-200% 0' } },
+      },
+      animation: {
+        'rise-in': 'rise-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'fade-in': 'fade-in 160ms ease-out both',
+        'slide-in': 'slide-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        shimmer: 'shimmer 1.6s linear infinite',
       },
     },
   },

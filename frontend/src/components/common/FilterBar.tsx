@@ -36,11 +36,11 @@ export function useUrlFilters(keys: string[]) {
 
 export function FilterBar({ defs, filters, search = true, right }: { defs: FilterDef[]; filters: ReturnType<typeof useUrlFilters>; search?: boolean; right?: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2" role="search" aria-label="Filters">
       {defs.map((d) => (
         <select
           key={d.key}
-          className="input max-w-[150px] py-1 text-xs"
+          className="input input-sm max-w-[150px] max-sm:min-w-[calc(50%-4px)] max-sm:max-w-none max-sm:flex-1"
           aria-label={d.label}
           data-testid={`filter-${d.key}`}
           value={filters.values[d.key]}
@@ -55,10 +55,10 @@ export function FilterBar({ defs, filters, search = true, right }: { defs: Filte
         </select>
       ))}
       {search && (
-        <label className="relative">
-          <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <label className="relative max-sm:w-full">
+          <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden />
           <input
-            className="input w-44 py-1 pl-8 text-xs"
+            className="input input-sm w-44 pl-8 max-sm:w-full"
             placeholder="Search name…"
             aria-label="Search by name"
             value={filters.values.q ?? ''}
@@ -67,11 +67,11 @@ export function FilterBar({ defs, filters, search = true, right }: { defs: Filte
         </label>
       )}
       {filters.active && (
-        <button className="btn-ghost py-1 text-xs" onClick={filters.clear}>
+        <button className="btn-ghost btn-sm" onClick={filters.clear}>
           <X size={12} /> Clear filters
         </button>
       )}
-      <div className="flex-1" />
+      <div className="flex-1 max-sm:hidden" />
       {right}
     </div>
   )

@@ -22,7 +22,7 @@ export function ForecastChart({ forecast, acceptedMonthlySaving, height = 300 }:
     const band = [...pad(h), ...forecast.forecast.upper.map((u, i) => Math.round((u - forecast.forecast.lower[i]) * 100) / 100)]
     return {
       grid: { ...baseGrid, left: 60, top: 32 },
-      legend: { top: 0, left: 0, itemWidth: 14, itemHeight: 2, textStyle: { color: INK.secondary, fontSize: 11 }, data: ['Billed', 'Forecast', 'With accepted actions', '95% band'] },
+      legend: { type: 'scroll', top: 0, left: 0, itemWidth: 14, itemHeight: 2, textStyle: { color: INK.secondary, fontSize: 11 }, data: ['Billed', 'Forecast', 'With accepted actions', '95% band'] },
       tooltip: {
         ...tooltipBase,
         formatter: (ps: { axisValue: string; seriesName: string; value: number | null; marker: string }[]) =>
