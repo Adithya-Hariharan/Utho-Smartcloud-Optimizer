@@ -1635,7 +1635,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0021"
+    "ALT-0019"
    ]
   },
   {
@@ -2176,7 +2176,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0022"
+    "ALT-0020"
    ]
   },
   {
@@ -2919,7 +2919,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0019"
+    "ALT-0017"
    ]
   },
   {
@@ -3195,7 +3195,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0023"
+    "ALT-0021"
    ]
   },
   {
@@ -3761,21 +3761,10 @@
     "members": [],
     "tags": []
    },
-   "verdict": "upsize",
-   "reason_code": "UNDER_PROVISIONED",
-   "actions": [
-    {
-     "type": "upsize",
-     "order": 3,
-     "description": "Upsize B3 (6 vCPU/16 GB) -> B4 (8 vCPU/32 GB)",
-     "requires": [
-      "maintenance_window"
-     ],
-     "reversible": true,
-     "rollback": "Resize back to B3"
-    }
-   ],
-   "default_option": "upsize",
+   "verdict": "healthy",
+   "reason_code": "RIGHT_SIZED",
+   "actions": [],
+   "default_option": null,
    "flags": [],
    "current": {
     "plan": "B3",
@@ -3787,27 +3776,13 @@
     "ip_inr": 0,
     "monthly_inr": 5578
    },
-   "target": {
-    "plan": "B4",
-    "vcpu": 8,
-    "ram_gb": 32.0,
-    "disk_gb": 200.0,
-    "compute_inr": 6690,
-    "storage_inr": 1600,
-    "ip_inr": 0,
-    "monthly_inr": 8290
-   },
+   "target": null,
    "schedule": null,
    "options": {
     "none": {
      "monthly_inr_after": 5578,
      "saving_inr": 0,
      "formula": "no change"
-    },
-    "upsize": {
-     "monthly_inr_after": 8290,
-     "saving_inr": -2712,
-     "formula": "Rs 5,578 - Rs 8,290 = Rs -2,712/month"
     }
    },
    "evidence": {
@@ -3818,61 +3793,50 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 33.5,
-      "p50": 28.7,
-      "p95": 78.2,
-      "p99": 100.0,
-      "max": 100.0
+      "mean": 36.4,
+      "p50": 35.2,
+      "p95": 61.1,
+      "p99": 69.0,
+      "max": 75.4
      },
      "mem": {
-      "mean": 30.9,
-      "p50": 30.9,
-      "p95": 36.4,
-      "p99": 38.7,
-      "max": 43.1
+      "mean": 39.1,
+      "p50": 38.8,
+      "p95": 45.5,
+      "p99": 48.1,
+      "max": 51.9
      },
      "iops_pct": {
-      "p95": 55.5
+      "p95": 24.8
      },
      "net_pct": {
-      "p95": 26.2
+      "p95": 12.3
      },
      "disk_used": {
       "pct": 22.0
      }
     },
-    "recurring_peak": {
-     "days": 4,
-     "second_day_peak": 93.4,
-     "acf_24h": 0.2,
-     "acf_168h": 0.01
-    },
-    "naive": null
+    "recurring_peak": null,
+    "naive": {
+     "method": "mean CPU at the CPU target",
+     "target_plan": "B2",
+     "saving_inr": 1152,
+     "replay_minutes_above_90": 2450
+    }
    },
    "replay": {
     "limit_minutes_above_90": 0,
     "mem_cap_pct": 95,
     "attempts": [],
-    "passed": true,
-    "chosen_plan": "B4",
-    "projected": {
-     "minutes_above_90": 0,
-     "max_cpu_pct": 75.0,
-     "max_mem_pct": 21.5
-    }
+    "passed": false,
+    "chosen_plan": null,
+    "projected": null
    },
    "veto": null,
-   "risk": {
-    "level": "Medium",
-    "score": 0.0,
-    "probability": 0.0,
-    "points": [],
-    "confidence": "High",
-    "confidence_basis": "coverage 100%, 30 days"
-   },
-   "reason": "saturated: upsize to B4",
+   "risk": null,
+   "reason": "change needed: no vs no",
    "explanation_ai": null,
-   "formula": "Rs 5,578 - Rs 8,290 = Rs -2,712/month",
+   "formula": "-",
    "trace": [
     {
      "step": "clean.duplicates_dropped",
@@ -3925,7 +3889,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.4579,
+     "value": 1.559,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -3949,7 +3913,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 84.1694,
+     "value": 67.9652,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -3957,7 +3921,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.7084,
+     "value": 1.6337,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -3965,7 +3929,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.2337,
+     "value": 3.6093,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -3973,7 +3937,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 100.0%, mem 39%, net 6.849% bw, IO 55.47%",
+     "value": "CPU 69.0%, mem 48%, net 10.086% bw, IO 24.77%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -3981,22 +3945,22 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "100.0 / 38.7",
+     "value": "69.0 / 48.1",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "sizing.CPU p99",
-     "check": "CPU p99",
-     "value": 100.0,
-     "threshold": 90,
-     "result": "fail",
+     "step": "sizing.change needed",
+     "check": "change needed",
+     "value": "no",
+     "threshold": "no",
+     "result": "pass",
      "terminal": true
     }
    ],
    "alert_ids": [
-    "ALT-0012"
+    "ALT-0014"
    ]
   },
   {
@@ -4249,8 +4213,8 @@
     }
    ],
    "alert_ids": [
-    "ALT-0013",
-    "ALT-0024"
+    "ALT-0011",
+    "ALT-0022"
    ]
   },
   {
@@ -4476,7 +4440,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0025"
+    "ALT-0023"
    ]
   },
   {
@@ -5860,13 +5824,28 @@
     "region": "mumbai",
     "purpose": "web",
     "service_group": "web-frontend",
-    "members": [],
+    "members": [
+     "vm-0023",
+     "vm-0024",
+     "vm-0025"
+    ],
     "tags": []
    },
-   "verdict": "reject",
-   "reason_code": "PEAK_REPLAY_FAILED",
-   "actions": [],
-   "default_option": null,
+   "verdict": "recommend",
+   "reason_code": "UNDERUSED",
+   "actions": [
+    {
+     "type": "resize",
+     "order": 3,
+     "description": "Resize B3 (6 vCPU/16 GB) -> B2 (4 vCPU/8 GB)",
+     "requires": [
+      "maintenance_window"
+     ],
+     "reversible": true,
+     "rollback": "Resize back to B3"
+    }
+   ],
+   "default_option": "resize",
    "flags": [],
    "current": {
     "plan": "B3",
@@ -5878,13 +5857,27 @@
     "ip_inr": 0,
     "monthly_inr": 5178
    },
-   "target": null,
+   "target": {
+    "plan": "B2",
+    "vcpu": 4,
+    "ram_gb": 8.0,
+    "disk_gb": 150.0,
+    "compute_inr": 2826,
+    "storage_inr": 1200,
+    "ip_inr": 0,
+    "monthly_inr": 4026
+   },
    "schedule": null,
    "options": {
     "none": {
      "monthly_inr_after": 5178,
      "saving_inr": 0,
      "formula": "no change"
+    },
+    "resize": {
+     "monthly_inr_after": 4026,
+     "saving_inr": 1152,
+     "formula": "Rs 5,178 - Rs 4,026 = Rs 1,152/month"
     }
    },
    "evidence": {
@@ -5895,24 +5888,24 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 11.9,
-      "p50": 9.6,
-      "p95": 26.2,
-      "p99": 46.0,
-      "max": 61.4
-     },
-     "mem": {
-      "mean": 12.4,
-      "p50": 12.3,
-      "p95": 17.7,
-      "p99": 20.1,
+      "mean": 11.8,
+      "p50": 10.0,
+      "p95": 20.5,
+      "p99": 22.4,
       "max": 24.9
      },
+     "mem": {
+      "mean": 14.9,
+      "p50": 14.9,
+      "p95": 18.2,
+      "p99": 19.4,
+      "max": 22.9
+     },
      "iops_pct": {
-      "p95": 50.0
+      "p95": 10.3
      },
      "net_pct": {
-      "p95": 19.1
+      "p95": 4.7
      },
      "disk_used": {
       "pct": 43.6
@@ -5923,7 +5916,7 @@
      "method": "mean CPU at the CPU target",
      "target_plan": "B1",
      "saving_inr": 2568,
-     "replay_minutes_above_90": 1605
+     "replay_minutes_above_90": 0
     }
    },
    "replay": {
@@ -5932,28 +5925,32 @@
     "attempts": [
      {
       "plan": "B2",
-      "minutes_above_90": 70,
-      "max_cpu_pct": 92.1,
-      "max_mem_pct": 49.8,
-      "passed": false
+      "minutes_above_90": 0,
+      "max_cpu_pct": 37.3,
+      "max_mem_pct": 45.8,
+      "passed": true
      }
     ],
-    "passed": false,
-    "chosen_plan": null,
-    "projected": null
+    "passed": true,
+    "chosen_plan": "B2",
+    "projected": {
+     "minutes_above_90": 0,
+     "max_cpu_pct": 37.3,
+     "max_mem_pct": 45.8
+    }
    },
-   "veto": {
-    "signal": "peak_replay_failed",
-    "metric": "cheapest passing plan",
-    "value": "none",
-    "threshold": "a cheaper plan that passes",
-    "comparator": ">",
-    "message": "an average-based tool would move to B1 (saves Rs 2,568); Peak Replay shows 1605 min above 90% there"
+   "veto": null,
+   "risk": {
+    "level": "Medium",
+    "score": 0.0,
+    "probability": 0.0,
+    "points": [],
+    "confidence": "High",
+    "confidence_basis": "coverage 100%, 30 days"
    },
-   "risk": null,
-   "reason": "an average-based tool would move to B1 (saves Rs 2,568); Peak Replay shows 1605 min above 90% there",
+   "reason": "resize B3 -> B2",
    "explanation_ai": null,
-   "formula": "-",
+   "formula": "Rs 5,178 - Rs 4,026 = Rs 1,152/month",
    "trace": [
     {
      "step": "clean.duplicates_dropped",
@@ -6006,7 +6003,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.4067,
+     "value": 1.0399,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -6022,7 +6019,7 @@
     {
      "step": "peaks.autocorrelation at 24 h / 168 h",
      "check": "autocorrelation at 24 h / 168 h",
-     "value": 0.257,
+     "value": 0.8906,
      "threshold": 0.3,
      "result": "pass",
      "terminal": false
@@ -6038,7 +6035,7 @@
     {
      "step": "vetoes.memory at sizing percentile",
      "check": "memory at sizing percentile",
-     "value": 20.1087,
+     "value": 19.43,
      "threshold": 70,
      "result": "pass",
      "terminal": false
@@ -6046,7 +6043,7 @@
     {
      "step": "vetoes.IOPS p95 % of provisioned",
      "check": "IOPS p95 % of provisioned",
-     "value": 50.0338,
+     "value": 10.3238,
      "threshold": 70,
      "result": "pass",
      "terminal": false
@@ -6054,7 +6051,7 @@
     {
      "step": "vetoes.network p95 % of bandwidth",
      "check": "network p95 % of bandwidth",
-     "value": 19.102,
+     "value": 4.722,
      "threshold": 60,
      "result": "pass",
      "terminal": false
@@ -6062,7 +6059,7 @@
     {
      "step": "vetoes.days until CPU reaches 85%",
      "check": "days until CPU reaches 85%",
-     "value": 257.911,
+     "value": 23519.3179,
      "threshold": 60,
      "result": "pass",
      "terminal": false
@@ -6070,7 +6067,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 38.56,
+     "value": 22.17,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -6078,7 +6075,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.1649,
+     "value": 1.0175,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -6086,7 +6083,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.2317,
+     "value": 1.9008,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -6094,7 +6091,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 46.0%, mem 20%, net 5.346% bw, IO 50.03%",
+     "value": "CPU 22.4%, mem 19%, net 3.877% bw, IO 10.32%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -6102,24 +6099,24 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "46.0 / 20.1",
+     "value": "22.4 / 19.4",
      "threshold": "40 / 50",
-     "result": "pass",
+     "result": "fail",
      "terminal": false
     },
     {
      "step": "sizing.Peak Replay on B2",
      "check": "Peak Replay on B2",
-     "value": 70,
+     "value": 0,
      "threshold": 0.0,
-     "result": "fail",
+     "result": "pass",
      "terminal": false
     },
     {
-     "step": "sizing.cheapest passing plan",
-     "check": "cheapest passing plan",
-     "value": "none",
-     "threshold": "a cheaper plan that passes",
+     "step": "sizing.cheapest plan passing replay",
+     "check": "cheapest plan passing replay",
+     "value": "B2",
+     "threshold": "B3",
      "result": "fail",
      "terminal": true
     }
@@ -6138,13 +6135,28 @@
     "region": "mumbai",
     "purpose": "web",
     "service_group": "web-frontend",
-    "members": [],
+    "members": [
+     "vm-0023",
+     "vm-0024",
+     "vm-0025"
+    ],
     "tags": []
    },
-   "verdict": "reject",
-   "reason_code": "PEAK_REPLAY_FAILED",
-   "actions": [],
-   "default_option": null,
+   "verdict": "recommend",
+   "reason_code": "UNDERUSED",
+   "actions": [
+    {
+     "type": "resize",
+     "order": 3,
+     "description": "Resize B3 (6 vCPU/16 GB) -> B2 (4 vCPU/8 GB)",
+     "requires": [
+      "maintenance_window"
+     ],
+     "reversible": true,
+     "rollback": "Resize back to B3"
+    }
+   ],
+   "default_option": "resize",
    "flags": [],
    "current": {
     "plan": "B3",
@@ -6156,13 +6168,27 @@
     "ip_inr": 0,
     "monthly_inr": 4618
    },
-   "target": null,
+   "target": {
+    "plan": "B2",
+    "vcpu": 4,
+    "ram_gb": 8.0,
+    "disk_gb": 80.0,
+    "compute_inr": 2826,
+    "storage_inr": 640,
+    "ip_inr": 0,
+    "monthly_inr": 3466
+   },
    "schedule": null,
    "options": {
     "none": {
      "monthly_inr_after": 4618,
      "saving_inr": 0,
      "formula": "no change"
+    },
+    "resize": {
+     "monthly_inr_after": 3466,
+     "saving_inr": 1152,
+     "formula": "Rs 4,618 - Rs 3,466 = Rs 1,152/month"
     }
    },
    "evidence": {
@@ -6173,24 +6199,24 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 13.3,
-      "p50": 11.1,
-      "p95": 28.1,
-      "p99": 47.7,
-      "max": 69.2
+      "mean": 14.8,
+      "p50": 12.1,
+      "p95": 25.9,
+      "p99": 27.9,
+      "max": 32.4
      },
      "mem": {
-      "mean": 12.3,
-      "p50": 12.4,
-      "p95": 17.5,
-      "p99": 19.5,
-      "max": 23.2
+      "mean": 15.7,
+      "p50": 15.6,
+      "p95": 19.4,
+      "p99": 20.7,
+      "max": 24.1
      },
      "iops_pct": {
-      "p95": 49.7
+      "p95": 12.4
      },
      "net_pct": {
-      "p95": 18.7
+      "p95": 5.6
      },
      "disk_used": {
       "pct": 48.3
@@ -6201,29 +6227,41 @@
      "method": "mean CPU at the CPU target",
      "target_plan": "B1",
      "saving_inr": 2568,
-     "replay_minutes_above_90": 1715
+     "replay_minutes_above_90": 85
     }
    },
    "replay": {
     "limit_minutes_above_90": 0,
     "mem_cap_pct": 95,
-    "attempts": [],
-    "passed": false,
-    "chosen_plan": null,
-    "projected": null
+    "attempts": [
+     {
+      "plan": "B2",
+      "minutes_above_90": 0,
+      "max_cpu_pct": 48.6,
+      "max_mem_pct": 48.3,
+      "passed": true
+     }
+    ],
+    "passed": true,
+    "chosen_plan": "B2",
+    "projected": {
+     "minutes_above_90": 0,
+     "max_cpu_pct": 48.6,
+     "max_mem_pct": 48.3
+    }
    },
-   "veto": {
-    "signal": "peak_replay_failed",
-    "metric": "cheapest passing plan",
-    "value": "none",
-    "threshold": "a cheaper plan that passes",
-    "comparator": ">",
-    "message": "an average-based tool would move to B1 (saves Rs 2,568); Peak Replay shows 1715 min above 90% there"
+   "veto": null,
+   "risk": {
+    "level": "Medium",
+    "score": 0.0,
+    "probability": 0.0,
+    "points": [],
+    "confidence": "High",
+    "confidence_basis": "coverage 100%, 30 days"
    },
-   "risk": null,
-   "reason": "an average-based tool would move to B1 (saves Rs 2,568); Peak Replay shows 1715 min above 90% there",
+   "reason": "resize B3 -> B2",
    "explanation_ai": null,
-   "formula": "-",
+   "formula": "Rs 4,618 - Rs 3,466 = Rs 1,152/month",
    "trace": [
     {
      "step": "clean.duplicates_dropped",
@@ -6276,7 +6314,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.7088,
+     "value": 0.9596,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -6292,7 +6330,7 @@
     {
      "step": "peaks.autocorrelation at 24 h / 168 h",
      "check": "autocorrelation at 24 h / 168 h",
-     "value": 0.3692,
+     "value": 0.9265,
      "threshold": 0.3,
      "result": "pass",
      "terminal": false
@@ -6308,7 +6346,7 @@
     {
      "step": "vetoes.memory at sizing percentile",
      "check": "memory at sizing percentile",
-     "value": 19.51,
+     "value": 20.7184,
      "threshold": 70,
      "result": "pass",
      "terminal": false
@@ -6316,7 +6354,7 @@
     {
      "step": "vetoes.IOPS p95 % of provisioned",
      "check": "IOPS p95 % of provisioned",
-     "value": 49.7338,
+     "value": 12.4228,
      "threshold": 70,
      "result": "pass",
      "terminal": false
@@ -6324,7 +6362,7 @@
     {
      "step": "vetoes.network p95 % of bandwidth",
      "check": "network p95 % of bandwidth",
-     "value": 18.7036,
+     "value": 5.5842,
      "threshold": 60,
      "result": "pass",
      "terminal": false
@@ -6340,7 +6378,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 33.2271,
+     "value": 27.7,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -6348,7 +6386,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 0.9016,
+     "value": 0.997,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -6356,7 +6394,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1273,
+     "value": 2.1498,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -6364,7 +6402,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 47.7%, mem 20%, net 5.384% bw, IO 49.73%",
+     "value": "CPU 27.9%, mem 21%, net 4.637% bw, IO 12.42%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -6372,23 +6410,29 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "47.7 / 19.5",
+     "value": "27.9 / 20.7",
      "threshold": "40 / 50",
+     "result": "fail",
+     "terminal": false
+    },
+    {
+     "step": "sizing.Peak Replay on B2",
+     "check": "Peak Replay on B2",
+     "value": 0,
+     "threshold": 0.0,
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "sizing.cheapest passing plan",
-     "check": "cheapest passing plan",
-     "value": "none",
-     "threshold": "a cheaper plan that passes",
+     "step": "sizing.cheapest plan passing replay",
+     "check": "cheapest plan passing replay",
+     "value": "B2",
+     "threshold": "B3",
      "result": "fail",
      "terminal": true
     }
    ],
-   "alert_ids": [
-    "ALT-0026"
-   ]
+   "alert_ids": []
   },
   {
    "rec_id": "REC-vm-0025-default",
@@ -6402,13 +6446,28 @@
     "region": "mumbai",
     "purpose": "web",
     "service_group": "web-frontend",
-    "members": [],
+    "members": [
+     "vm-0023",
+     "vm-0024",
+     "vm-0025"
+    ],
     "tags": []
    },
-   "verdict": "reject",
-   "reason_code": "PEAK_REPLAY_FAILED",
-   "actions": [],
-   "default_option": null,
+   "verdict": "recommend",
+   "reason_code": "UNDERUSED",
+   "actions": [
+    {
+     "type": "resize",
+     "order": 3,
+     "description": "Resize B3 (6 vCPU/16 GB) -> B2 (4 vCPU/8 GB)",
+     "requires": [
+      "maintenance_window"
+     ],
+     "reversible": true,
+     "rollback": "Resize back to B3"
+    }
+   ],
+   "default_option": "resize",
    "flags": [],
    "current": {
     "plan": "B3",
@@ -6420,41 +6479,55 @@
     "ip_inr": 0,
     "monthly_inr": 4778
    },
-   "target": null,
+   "target": {
+    "plan": "B2",
+    "vcpu": 4,
+    "ram_gb": 8.0,
+    "disk_gb": 100.0,
+    "compute_inr": 2826,
+    "storage_inr": 800,
+    "ip_inr": 0,
+    "monthly_inr": 3626
+   },
    "schedule": null,
    "options": {
     "none": {
      "monthly_inr_after": 4778,
      "saving_inr": 0,
      "formula": "no change"
+    },
+    "resize": {
+     "monthly_inr_after": 3626,
+     "saving_inr": 1152,
+     "formula": "Rs 4,778 - Rs 3,626 = Rs 1,152/month"
     }
    },
    "evidence": {
     "window_days": 30,
     "days_of_data": 30,
     "coverage": 0.997,
-    "peak_window_coverage": 0.996,
+    "peak_window_coverage": 0.999,
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 8.8,
-      "p50": 7.6,
-      "p95": 19.9,
-      "p99": 27.7,
-      "max": 32.8
+      "mean": 11.1,
+      "p50": 9.6,
+      "p95": 18.7,
+      "p99": 20.8,
+      "max": 24.2
      },
      "mem": {
-      "mean": 12.3,
-      "p50": 12.2,
-      "p95": 17.3,
-      "p99": 19.2,
-      "max": 22.0
+      "mean": 14.8,
+      "p50": 14.7,
+      "p95": 17.9,
+      "p99": 19.0,
+      "max": 21.6
      },
      "iops_pct": {
-      "p95": 49.5
+      "p95": 9.9
      },
      "net_pct": {
-      "p95": 18.0
+      "p95": 4.5
      },
      "disk_used": {
       "pct": 59.6
@@ -6465,7 +6538,7 @@
      "method": "mean CPU at the CPU target",
      "target_plan": "S1",
      "saving_inr": 3273,
-     "replay_minutes_above_90": 5070
+     "replay_minutes_above_90": 10165
     }
    },
    "replay": {
@@ -6475,31 +6548,31 @@
      {
       "plan": "B2",
       "minutes_above_90": 0,
-      "max_cpu_pct": 49.1,
-      "max_mem_pct": 44.1,
+      "max_cpu_pct": 36.3,
+      "max_mem_pct": 43.2,
       "passed": true
      }
     ],
-    "passed": false,
-    "chosen_plan": null,
+    "passed": true,
+    "chosen_plan": "B2",
     "projected": {
      "minutes_above_90": 0,
-     "max_cpu_pct": 49.1,
-     "max_mem_pct": 44.1
+     "max_cpu_pct": 36.3,
+     "max_mem_pct": 43.2
     }
    },
-   "veto": {
-    "signal": "peak_replay_failed",
-    "metric": "cheapest passing plan",
-    "value": "none",
-    "threshold": "a cheaper plan that passes",
-    "comparator": ">",
-    "message": "an average-based tool would move to S1 (saves Rs 3,273); Peak Replay shows 5070 min above 90% there"
+   "veto": null,
+   "risk": {
+    "level": "Medium",
+    "score": 0.0,
+    "probability": 0.0,
+    "points": [],
+    "confidence": "High",
+    "confidence_basis": "coverage 100%, 30 days"
    },
-   "risk": null,
-   "reason": "an average-based tool would move to S1 (saves Rs 3,273); Peak Replay shows 5070 min above 90% there",
+   "reason": "resize B3 -> B2",
    "explanation_ai": null,
-   "formula": "-",
+   "formula": "Rs 4,778 - Rs 3,626 = Rs 1,152/month",
    "trace": [
     {
      "step": "clean.duplicates_dropped",
@@ -6552,15 +6625,15 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.0845,
+     "value": 0.9999,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "gates_data.coverage of peak hours [14, 15]",
-     "check": "coverage of peak hours [14, 15]",
-     "value": 0.9958,
+     "step": "gates_data.coverage of peak hours [13, 14]",
+     "check": "coverage of peak hours [13, 14]",
+     "value": 0.9986,
      "threshold": 0.5,
      "result": "pass",
      "terminal": false
@@ -6568,7 +6641,7 @@
     {
      "step": "peaks.autocorrelation at 24 h / 168 h",
      "check": "autocorrelation at 24 h / 168 h",
-     "value": 0.3824,
+     "value": 0.8526,
      "threshold": 0.3,
      "result": "pass",
      "terminal": false
@@ -6584,7 +6657,7 @@
     {
      "step": "vetoes.memory at sizing percentile",
      "check": "memory at sizing percentile",
-     "value": 19.2274,
+     "value": 19.0387,
      "threshold": 70,
      "result": "pass",
      "terminal": false
@@ -6592,7 +6665,7 @@
     {
      "step": "vetoes.IOPS p95 % of provisioned",
      "check": "IOPS p95 % of provisioned",
-     "value": 49.5326,
+     "value": 9.8807,
      "threshold": 70,
      "result": "pass",
      "terminal": false
@@ -6600,7 +6673,7 @@
     {
      "step": "vetoes.network p95 % of bandwidth",
      "check": "network p95 % of bandwidth",
-     "value": 18.0269,
+     "value": 4.454,
      "threshold": 60,
      "result": "pass",
      "terminal": false
@@ -6616,7 +6689,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 27.0475,
+     "value": 20.5575,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -6624,7 +6697,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 0.8281,
+     "value": 0.995,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -6632,7 +6705,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.0485,
+     "value": 1.8103,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -6640,7 +6713,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 27.7%, mem 19%, net 5.202% bw, IO 49.53%",
+     "value": "CPU 20.8%, mem 19%, net 3.718% bw, IO 9.88%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -6648,7 +6721,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "27.7 / 19.2",
+     "value": "20.8 / 19.0",
      "threshold": "40 / 50",
      "result": "fail",
      "terminal": false
@@ -6662,10 +6735,10 @@
      "terminal": false
     },
     {
-     "step": "sizing.cheapest passing plan",
-     "check": "cheapest passing plan",
-     "value": "none",
-     "threshold": "a cheaper plan that passes",
+     "step": "sizing.cheapest plan passing replay",
+     "check": "cheapest plan passing replay",
+     "value": "B2",
+     "threshold": "B3",
      "result": "fail",
      "terminal": true
     }
@@ -11699,7 +11772,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0020"
+    "ALT-0018"
    ]
   },
   {
@@ -13022,7 +13095,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0010"
+    "ALT-0009"
    ]
   },
   {
@@ -13040,21 +13113,10 @@
     "members": [],
     "tags": []
    },
-   "verdict": "upsize",
-   "reason_code": "UNDER_PROVISIONED",
-   "actions": [
-    {
-     "type": "upsize",
-     "order": 3,
-     "description": "Upsize B3 (6 vCPU/16 GB) -> B4 (8 vCPU/32 GB)",
-     "requires": [
-      "maintenance_window"
-     ],
-     "reversible": true,
-     "rollback": "Resize back to B3"
-    }
-   ],
-   "default_option": "upsize",
+   "verdict": "healthy",
+   "reason_code": "RIGHT_SIZED",
+   "actions": [],
+   "default_option": null,
    "flags": [],
    "current": {
     "plan": "B3",
@@ -13066,27 +13128,13 @@
     "ip_inr": 0,
     "monthly_inr": 4378
    },
-   "target": {
-    "plan": "B4",
-    "vcpu": 8,
-    "ram_gb": 32.0,
-    "disk_gb": 50.0,
-    "compute_inr": 6690,
-    "storage_inr": 400,
-    "ip_inr": 0,
-    "monthly_inr": 7090
-   },
+   "target": null,
    "schedule": null,
    "options": {
     "none": {
      "monthly_inr_after": 4378,
      "saving_inr": 0,
      "formula": "no change"
-    },
-    "upsize": {
-     "monthly_inr_after": 7090,
-     "saving_inr": -2712,
-     "formula": "Rs 4,378 - Rs 7,090 = Rs -2,712/month"
     }
    },
    "evidence": {
@@ -13097,61 +13145,50 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 37.3,
-      "p50": 32.1,
-      "p95": 89.4,
-      "p99": 100.0,
-      "max": 100.0
+      "mean": 34.3,
+      "p50": 29.4,
+      "p95": 55.8,
+      "p99": 59.8,
+      "max": 65.4
      },
      "mem": {
-      "mean": 40.9,
-      "p50": 40.9,
-      "p95": 46.3,
-      "p99": 48.5,
-      "max": 52.7
+      "mean": 48.6,
+      "p50": 47.8,
+      "p95": 54.6,
+      "p99": 56.2,
+      "max": 58.9
      },
      "iops_pct": {
-      "p95": 57.2
+      "p95": 23.2
      },
      "net_pct": {
-      "p95": 31.0
+      "p95": 11.6
      },
      "disk_used": {
       "pct": 52.7
      }
     },
-    "recurring_peak": {
-     "days": 7,
-     "second_day_peak": 100.0,
-     "acf_24h": 0.07,
-     "acf_168h": 0.23
-    },
-    "naive": null
+    "recurring_peak": null,
+    "naive": {
+     "method": "mean CPU at the CPU target",
+     "target_plan": "B2",
+     "saving_inr": 1152,
+     "replay_minutes_above_90": 370
+    }
    },
    "replay": {
     "limit_minutes_above_90": 0,
     "mem_cap_pct": 95,
     "attempts": [],
-    "passed": true,
-    "chosen_plan": "B4",
-    "projected": {
-     "minutes_above_90": 0,
-     "max_cpu_pct": 75.0,
-     "max_mem_pct": 26.4
-    }
+    "passed": false,
+    "chosen_plan": null,
+    "projected": null
    },
    "veto": null,
-   "risk": {
-    "level": "Medium",
-    "score": 0.0,
-    "probability": 0.0,
-    "points": [],
-    "confidence": "High",
-    "confidence_basis": "coverage 99%, 30 days"
-   },
-   "reason": "saturated: upsize to B4",
+   "risk": null,
+   "reason": "change needed: no vs no",
    "explanation_ai": null,
-   "formula": "Rs 4,378 - Rs 7,090 = Rs -2,712/month",
+   "formula": "-",
    "trace": [
     {
      "step": "clean.duplicates_dropped",
@@ -13204,14 +13241,14 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.4874,
+     "value": 1.0543,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "gates_data.coverage of peak hours [14, 15]",
-     "check": "coverage of peak hours [14, 15]",
+     "step": "gates_data.coverage of peak hours [13, 15]",
+     "check": "coverage of peak hours [13, 15]",
      "value": 0.9639,
      "threshold": 0.5,
      "result": "pass",
@@ -13228,7 +13265,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 100.0,
+     "value": 59.2343,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -13236,7 +13273,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.2971,
+     "value": 1.042,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -13244,7 +13281,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.2564,
+     "value": 3.3243,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -13252,7 +13289,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 100.0%, mem 49%, net 7.750% bw, IO 57.25%",
+     "value": "CPU 59.8%, mem 56%, net 9.679% bw, IO 23.22%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -13260,25 +13297,21 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "100.0 / 48.5",
+     "value": "59.8 / 56.2",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "sizing.CPU p99",
-     "check": "CPU p99",
-     "value": 100.0,
-     "threshold": 90,
-     "result": "fail",
+     "step": "sizing.change needed",
+     "check": "change needed",
+     "value": "no",
+     "threshold": "no",
+     "result": "pass",
      "terminal": true
     }
    ],
-   "alert_ids": [
-    "ALT-0004",
-    "ALT-0014",
-    "ALT-0027"
-   ]
+   "alert_ids": []
   },
   {
    "rec_id": "REC-vm-0051-default",
@@ -14215,7 +14248,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0029"
+    "ALT-0027"
    ]
   },
   {
@@ -14759,7 +14792,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0011"
+    "ALT-0010"
    ]
   },
   {
@@ -14809,40 +14842,35 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 32.8,
-      "p50": 31.7,
-      "p95": 62.6,
-      "p99": 88.0,
-      "max": 88.4
+      "mean": 28.1,
+      "p50": 26.9,
+      "p95": 41.5,
+      "p99": 56.3,
+      "max": 70.2
      },
      "mem": {
-      "mean": 47.0,
-      "p50": 47.1,
-      "p95": 52.2,
-      "p99": 54.4,
+      "mean": 46.9,
+      "p50": 46.9,
+      "p95": 52.0,
+      "p99": 54.1,
       "max": 60.1
      },
      "iops_pct": {
-      "p95": 55.6
+      "p95": 54.0
      },
      "net_pct": {
-      "p95": 25.9
+      "p95": 23.9
      },
      "disk_used": {
       "pct": 87.1
      }
     },
-    "recurring_peak": {
-     "days": 2,
-     "second_day_peak": 82.2,
-     "acf_24h": 0.09,
-     "acf_168h": 0.07
-    },
+    "recurring_peak": null,
     "naive": {
      "method": "mean CPU at the CPU target",
      "target_plan": "B2",
      "saving_inr": 1152,
-     "replay_minutes_above_90": 2815
+     "replay_minutes_above_90": 315
     }
    },
    "replay": {
@@ -14910,14 +14938,14 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.9102,
+     "value": 0.8932,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "gates_data.coverage of peak hours [11, 14]",
-     "check": "coverage of peak hours [11, 14]",
+     "step": "gates_data.coverage of peak hours [13, 14]",
+     "check": "coverage of peak hours [13, 14]",
      "value": 0.9986,
      "threshold": 0.5,
      "result": "pass",
@@ -14934,7 +14962,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 88.0,
+     "value": 56.412,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -14942,7 +14970,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 0.9195,
+     "value": 0.9545,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -14950,7 +14978,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1873,
+     "value": 3.1353,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -14958,7 +14986,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 88.0%, mem 54%, net 6.889% bw, IO 55.63%",
+     "value": "CPU 56.3%, mem 54%, net 6.530% bw, IO 54.04%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -14966,7 +14994,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "88.0 / 54.4",
+     "value": "56.3 / 54.1",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -14981,7 +15009,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0005"
+    "ALT-0004"
    ]
   },
   {
@@ -15027,44 +15055,44 @@
     "window_days": 30,
     "days_of_data": 30,
     "coverage": 0.996,
-    "peak_window_coverage": 0.994,
+    "peak_window_coverage": 0.996,
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 27.9,
-      "p50": 24.6,
-      "p95": 65.1,
-      "p99": 88.0,
-      "max": 98.9
+      "mean": 39.6,
+      "p50": 38.2,
+      "p95": 64.3,
+      "p99": 87.2,
+      "max": 88.0
      },
      "mem": {
-      "mean": 42.3,
-      "p50": 42.3,
-      "p95": 47.4,
-      "p99": 49.3,
-      "max": 52.6
+      "mean": 42.6,
+      "p50": 42.7,
+      "p95": 47.7,
+      "p99": 49.6,
+      "max": 52.5
      },
      "iops_pct": {
-      "p95": 53.0
+      "p95": 57.4
      },
      "net_pct": {
-      "p95": 23.4
+      "p95": 27.7
      },
      "disk_used": {
       "pct": 83.7
      }
     },
     "recurring_peak": {
-     "days": 4,
-     "second_day_peak": 88.5,
-     "acf_24h": 0.44,
-     "acf_168h": 0.48
+     "days": 2,
+     "second_day_peak": 80.3,
+     "acf_24h": 0.19,
+     "acf_168h": 0.31
     },
     "naive": {
      "method": "mean CPU at the CPU target",
-     "target_plan": "B2",
-     "saving_inr": 3864,
-     "replay_minutes_above_90": 8225
+     "target_plan": "B3",
+     "saving_inr": 2712,
+     "replay_minutes_above_90": 1630
     }
    },
    "replay": {
@@ -15132,15 +15160,15 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.0333,
+     "value": 1.0157,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "gates_data.coverage of peak hours [13, 15]",
-     "check": "coverage of peak hours [13, 15]",
-     "value": 0.9944,
+     "step": "gates_data.coverage of peak hours [14, 15]",
+     "check": "coverage of peak hours [14, 15]",
+     "value": 0.9958,
      "threshold": 0.5,
      "result": "pass",
      "terminal": false
@@ -15156,7 +15184,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 88.0,
+     "value": 87.9454,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -15164,7 +15192,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.0261,
+     "value": 1.0283,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -15172,7 +15200,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1104,
+     "value": 3.094,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -15180,7 +15208,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 88.0%, mem 49%, net 6.672% bw, IO 52.95%",
+     "value": "CPU 87.2%, mem 50%, net 7.706% bw, IO 57.38%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -15188,7 +15216,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "88.0 / 49.3",
+     "value": "87.2 / 49.6",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -15203,7 +15231,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0006"
+    "ALT-0005"
    ]
   },
   {
@@ -15253,40 +15281,35 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 26.3,
-      "p50": 23.5,
-      "p95": 62.6,
-      "p99": 88.0,
-      "max": 92.9
+      "mean": 31.6,
+      "p50": 30.4,
+      "p95": 47.0,
+      "p99": 65.7,
+      "max": 79.3
      },
      "mem": {
-      "mean": 33.5,
-      "p50": 33.5,
+      "mean": 33.6,
+      "p50": 33.6,
       "p95": 38.7,
-      "p99": 40.9,
-      "max": 45.5
+      "p99": 41.0,
+      "max": 45.2
      },
      "iops_pct": {
-      "p95": 55.6
+      "p95": 57.2
      },
      "net_pct": {
-      "p95": 27.7
+      "p95": 29.0
      },
      "disk_used": {
       "pct": 87.6
      }
     },
-    "recurring_peak": {
-     "days": 2,
-     "second_day_peak": 80.1,
-     "acf_24h": 0.39,
-     "acf_168h": 0.42
-    },
+    "recurring_peak": null,
     "naive": {
      "method": "mean CPU at the CPU target",
      "target_plan": "B1",
      "saving_inr": 1416,
-     "replay_minutes_above_90": 7150
+     "replay_minutes_above_90": 2920
     }
    },
    "replay": {
@@ -15354,7 +15377,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.8589,
+     "value": 0.8861,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -15378,7 +15401,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 88.0,
+     "value": 65.5912,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -15386,7 +15409,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.028,
+     "value": 1.0371,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -15394,7 +15417,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1435,
+     "value": 3.1101,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -15402,7 +15425,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 88.0%, mem 41%, net 6.774% bw, IO 55.57%",
+     "value": "CPU 65.7%, mem 41%, net 7.348% bw, IO 57.25%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -15410,7 +15433,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "88.0 / 40.9",
+     "value": "65.7 / 41.0",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -15425,7 +15448,8 @@
     }
    ],
    "alert_ids": [
-    "ALT-0007"
+    "ALT-0006",
+    "ALT-0024"
    ]
   },
   {
@@ -15443,8 +15467,8 @@
     "members": [],
     "tags": []
    },
-   "verdict": "reject",
-   "reason_code": "NO_CHEAPER_PLAN",
+   "verdict": "healthy",
+   "reason_code": "RIGHT_SIZED",
    "actions": [],
    "default_option": null,
    "flags": [],
@@ -15475,24 +15499,24 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 19.3,
-      "p50": 18.3,
-      "p95": 38.8,
-      "p99": 64.1,
-      "max": 83.2
+      "mean": 21.7,
+      "p50": 20.8,
+      "p95": 38.4,
+      "p99": 59.2,
+      "max": 75.2
      },
      "mem": {
-      "mean": 42.0,
-      "p50": 42.0,
-      "p95": 47.1,
-      "p99": 49.4,
-      "max": 53.3
+      "mean": 42.1,
+      "p50": 42.1,
+      "p95": 47.2,
+      "p99": 49.5,
+      "max": 53.4
      },
      "iops_pct": {
-      "p95": 51.0
+      "p95": 52.0
      },
      "net_pct": {
-      "p95": 23.7
+      "p95": 24.9
      },
      "disk_used": {
       "pct": 84.7
@@ -15503,7 +15527,7 @@
      "method": "mean CPU at the CPU target",
      "target_plan": "B2",
      "saving_inr": 3864,
-     "replay_minutes_above_90": 1090
+     "replay_minutes_above_90": 905
     }
    },
    "replay": {
@@ -15514,16 +15538,9 @@
     "chosen_plan": null,
     "projected": null
    },
-   "veto": {
-    "signal": "no_cheaper_plan",
-    "metric": "cheapest passing plan",
-    "value": "none",
-    "threshold": "a cheaper plan that passes",
-    "comparator": ">",
-    "message": "no cheaper plan satisfies CPU and memory together (needs 7.3 vCPU, 21.1 GB)"
-   },
+   "veto": null,
    "risk": null,
-   "reason": "no cheaper plan satisfies CPU and memory together (needs 7.3 vCPU, 21.1 GB)",
+   "reason": "change needed: no vs no",
    "explanation_ai": null,
    "formula": "-",
    "trace": [
@@ -15578,7 +15595,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.9402,
+     "value": 0.9498,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -15592,14 +15609,6 @@
      "terminal": false
     },
     {
-     "step": "peaks.autocorrelation at 24 h / 168 h",
-     "check": "autocorrelation at 24 h / 168 h",
-     "value": 0.127,
-     "threshold": 0.3,
-     "result": "pass",
-     "terminal": false
-    },
-    {
      "step": "vetoes.memory sawtooth resets",
      "check": "memory sawtooth resets",
      "value": 0,
@@ -15608,41 +15617,9 @@
      "terminal": false
     },
     {
-     "step": "vetoes.memory at sizing percentile",
-     "check": "memory at sizing percentile",
-     "value": 49.3986,
-     "threshold": 70,
-     "result": "pass",
-     "terminal": false
-    },
-    {
-     "step": "vetoes.IOPS p95 % of provisioned",
-     "check": "IOPS p95 % of provisioned",
-     "value": 51.007,
-     "threshold": 70,
-     "result": "pass",
-     "terminal": false
-    },
-    {
-     "step": "vetoes.network p95 % of bandwidth",
-     "check": "network p95 % of bandwidth",
-     "value": 23.7061,
-     "threshold": 60,
-     "result": "pass",
-     "terminal": false
-    },
-    {
-     "step": "vetoes.days until CPU reaches 85%",
-     "check": "days until CPU reaches 85%",
-     "value": null,
-     "threshold": 60,
-     "result": "pass",
-     "terminal": false
-    },
-    {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 64.1192,
+     "value": 59.2118,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -15650,7 +15627,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 0.9642,
+     "value": 0.9812,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -15658,7 +15635,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1354,
+     "value": 3.1304,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -15666,7 +15643,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 64.1%, mem 49%, net 6.244% bw, IO 51.01%",
+     "value": "CPU 59.2%, mem 49%, net 6.487% bw, IO 52.01%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -15674,22 +15651,22 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "64.1 / 49.4",
+     "value": "59.2 / 49.5",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "sizing.cheapest passing plan",
-     "check": "cheapest passing plan",
-     "value": "none",
-     "threshold": "a cheaper plan that passes",
-     "result": "fail",
+     "step": "sizing.change needed",
+     "check": "change needed",
+     "value": "no",
+     "threshold": "no",
+     "result": "pass",
      "terminal": true
     }
    ],
    "alert_ids": [
-    "ALT-0008"
+    "ALT-0007"
    ]
   },
   {
@@ -15954,36 +15931,31 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 22.1,
-      "p50": 21.0,
-      "p95": 36.0,
-      "p99": 52.7,
-      "max": 66.1
+      "mean": 37.0,
+      "p50": 36.0,
+      "p95": 54.2,
+      "p99": 75.1,
+      "max": 88.0
      },
      "mem": {
-      "mean": 46.6,
-      "p50": 46.7,
-      "p95": 51.8,
-      "p99": 53.7,
-      "max": 57.3
+      "mean": 47.1,
+      "p50": 47.2,
+      "p95": 52.2,
+      "p99": 54.1,
+      "max": 57.7
      },
      "iops_pct": {
-      "p95": 51.6
+      "p95": 56.4
      },
      "net_pct": {
-      "p95": 22.5
+      "p95": 28.3
      },
      "disk_used": {
       "pct": 38.3
      }
     },
     "recurring_peak": null,
-    "naive": {
-     "method": "mean CPU at the CPU target",
-     "target_plan": "B1",
-     "saving_inr": 1416,
-     "replay_minutes_above_90": 715
-    }
+    "naive": null
    },
    "replay": {
     "limit_minutes_above_90": 0,
@@ -16050,7 +16022,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.086,
+     "value": 1.0872,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -16074,7 +16046,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 52.674,
+     "value": 75.074,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -16082,7 +16054,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.0167,
+     "value": 1.0153,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -16090,7 +16062,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1184,
+     "value": 3.1215,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -16098,7 +16070,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 52.7%, mem 54%, net 6.060% bw, IO 51.65%",
+     "value": "CPU 75.1%, mem 54%, net 7.364% bw, IO 56.39%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -16106,7 +16078,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "52.7 / 53.7",
+     "value": "75.1 / 54.1",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -16169,40 +16141,35 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 25.3,
-      "p50": 23.0,
-      "p95": 60.1,
-      "p99": 88.0,
-      "max": 92.5
+      "mean": 37.6,
+      "p50": 36.0,
+      "p95": 55.4,
+      "p99": 72.3,
+      "max": 88.0
      },
      "mem": {
-      "mean": 44.5,
-      "p50": 44.5,
-      "p95": 49.5,
-      "p99": 51.8,
-      "max": 56.6
+      "mean": 44.8,
+      "p50": 44.8,
+      "p95": 49.8,
+      "p99": 52.2,
+      "max": 57.1
      },
      "iops_pct": {
-      "p95": 51.8
+      "p95": 55.2
      },
      "net_pct": {
-      "p95": 25.6
+      "p95": 30.6
      },
      "disk_used": {
       "pct": 58.2
      }
     },
-    "recurring_peak": {
-     "days": 4,
-     "second_day_peak": 83.9,
-     "acf_24h": 0.28,
-     "acf_168h": 0.26
-    },
+    "recurring_peak": null,
     "naive": {
      "method": "mean CPU at the CPU target",
      "target_plan": "B2",
      "saving_inr": 1152,
-     "replay_minutes_above_90": 2170
+     "replay_minutes_above_90": 1200
     }
    },
    "replay": {
@@ -16270,14 +16237,14 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.9675,
+     "value": 1.0187,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "gates_data.coverage of peak hours [12, 13]",
-     "check": "coverage of peak hours [12, 13]",
+     "step": "gates_data.coverage of peak hours [13, 14]",
+     "check": "coverage of peak hours [13, 14]",
      "value": 0.9958,
      "threshold": 0.5,
      "result": "pass",
@@ -16294,7 +16261,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 88.0,
+     "value": 71.7904,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -16302,7 +16269,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 0.8552,
+     "value": 0.9621,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -16310,7 +16277,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.0804,
+     "value": 3.0539,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -16318,7 +16285,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 88.0%, mem 52%, net 6.849% bw, IO 51.82%",
+     "value": "CPU 72.3%, mem 52%, net 8.034% bw, IO 55.25%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -16326,7 +16293,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "88.0 / 51.8",
+     "value": "72.3 / 52.2",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -16340,7 +16307,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0025"
+   ]
   },
   {
    "rec_id": "REC-vm-0063-default",
@@ -16771,7 +16740,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0028"
+    "ALT-0026"
    ]
   },
   {
@@ -16821,40 +16790,40 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 29.0,
-      "p50": 26.7,
-      "p95": 62.7,
+      "mean": 25.1,
+      "p50": 22.4,
+      "p95": 60.0,
       "p99": 88.0,
       "max": 100.0
      },
      "mem": {
-      "mean": 32.3,
-      "p50": 32.3,
-      "p95": 37.5,
-      "p99": 39.7,
-      "max": 44.6
+      "mean": 32.2,
+      "p50": 32.2,
+      "p95": 37.4,
+      "p99": 39.6,
+      "max": 44.4
      },
      "iops_pct": {
-      "p95": 53.8
+      "p95": 52.5
      },
      "net_pct": {
-      "p95": 25.5
+      "p95": 23.7
      },
      "disk_used": {
       "pct": 54.0
      }
     },
     "recurring_peak": {
-     "days": 2,
-     "second_day_peak": 82.3,
-     "acf_24h": 0.31,
-     "acf_168h": 0.35
+     "days": 1,
+     "second_day_peak": 77.7,
+     "acf_24h": 0.23,
+     "acf_168h": 0.27
     },
     "naive": {
      "method": "mean CPU at the CPU target",
      "target_plan": "B2",
      "saving_inr": 1152,
-     "replay_minutes_above_90": 2585
+     "replay_minutes_above_90": 2150
     }
    },
    "replay": {
@@ -16922,7 +16891,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.058,
+     "value": 1.06,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -16954,7 +16923,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.112,
+     "value": 1.1528,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -16962,7 +16931,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1499,
+     "value": 3.1522,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -16970,7 +16939,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 88.0%, mem 40%, net 6.832% bw, IO 53.83%",
+     "value": "CPU 88.0%, mem 40%, net 6.476% bw, IO 52.51%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -16978,7 +16947,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "88.0 / 39.7",
+     "value": "88.0 / 39.6",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -17041,36 +17010,31 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 23.0,
-      "p50": 21.7,
-      "p95": 42.2,
-      "p99": 65.1,
-      "max": 85.7
+      "mean": 38.3,
+      "p50": 36.7,
+      "p95": 61.1,
+      "p99": 87.7,
+      "max": 88.0
      },
      "mem": {
-      "mean": 42.4,
-      "p50": 42.4,
-      "p95": 47.5,
-      "p99": 49.7,
-      "max": 54.8
+      "mean": 42.8,
+      "p50": 42.8,
+      "p95": 48.0,
+      "p99": 50.1,
+      "max": 55.3
      },
      "iops_pct": {
-      "p95": 52.3
+      "p95": 56.9
      },
      "net_pct": {
-      "p95": 23.2
+      "p95": 29.7
      },
      "disk_used": {
       "pct": 45.4
      }
     },
     "recurring_peak": null,
-    "naive": {
-     "method": "mean CPU at the CPU target",
-     "target_plan": "B1",
-     "saving_inr": 1416,
-     "replay_minutes_above_90": 1420
-    }
+    "naive": null
    },
    "replay": {
     "limit_minutes_above_90": 0,
@@ -17137,7 +17101,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.9229,
+     "value": 0.9438,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -17161,7 +17125,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 65.2184,
+     "value": 87.8566,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -17169,7 +17133,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.0592,
+     "value": 1.0515,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -17177,7 +17141,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1185,
+     "value": 3.1224,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -17185,7 +17149,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 65.1%, mem 50%, net 6.402% bw, IO 52.27%",
+     "value": "CPU 87.7%, mem 50%, net 7.777% bw, IO 56.94%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -17193,7 +17157,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "65.1 / 49.7",
+     "value": "87.7 / 50.1",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -17471,24 +17435,24 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 39.1,
-      "p50": 37.7,
-      "p95": 61.5,
-      "p99": 84.0,
-      "max": 88.0
+      "mean": 32.0,
+      "p50": 30.9,
+      "p95": 48.0,
+      "p99": 63.4,
+      "max": 80.7
      },
      "mem": {
-      "mean": 41.3,
-      "p50": 41.3,
-      "p95": 46.3,
-      "p99": 48.4,
-      "max": 52.5
+      "mean": 41.1,
+      "p50": 41.1,
+      "p95": 46.1,
+      "p99": 48.2,
+      "max": 52.3
      },
      "iops_pct": {
-      "p95": 53.6
+      "p95": 51.6
      },
      "net_pct": {
-      "p95": 31.6
+      "p95": 28.7
      },
      "disk_used": {
       "pct": 39.0
@@ -17499,7 +17463,7 @@
      "method": "mean CPU at the CPU target",
      "target_plan": "B2",
      "saving_inr": 1152,
-     "replay_minutes_above_90": 2555
+     "replay_minutes_above_90": 535
     }
    },
    "replay": {
@@ -17567,7 +17531,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.9889,
+     "value": 0.9875,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -17591,7 +17555,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 84.0469,
+     "value": 63.3869,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -17599,7 +17563,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.0195,
+     "value": 1.0123,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -17607,7 +17571,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1139,
+     "value": 3.1034,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -17615,7 +17579,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 84.0%, mem 48%, net 8.091% bw, IO 53.58%",
+     "value": "CPU 63.4%, mem 48%, net 7.471% bw, IO 51.57%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -17623,7 +17587,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "84.0 / 48.4",
+     "value": "63.4 / 48.2",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -17686,40 +17650,40 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 46.0,
-      "p50": 45.1,
-      "p95": 63.8,
-      "p99": 84.0,
-      "max": 88.0
+      "mean": 35.3,
+      "p50": 33.4,
+      "p95": 65.6,
+      "p99": 88.0,
+      "max": 95.2
      },
      "mem": {
-      "mean": 49.1,
-      "p50": 49.1,
-      "p95": 54.2,
-      "p99": 56.2,
-      "max": 59.5
+      "mean": 48.8,
+      "p50": 48.8,
+      "p95": 53.9,
+      "p99": 55.9,
+      "max": 59.3
      },
      "iops_pct": {
-      "p95": 60.0
+      "p95": 56.4
      },
      "net_pct": {
-      "p95": 33.7
+      "p95": 28.7
      },
      "disk_used": {
       "pct": 30.2
      }
     },
     "recurring_peak": {
-     "days": 1,
-     "second_day_peak": 76.3,
-     "acf_24h": 0.24,
-     "acf_168h": 0.24
+     "days": 5,
+     "second_day_peak": 83.9,
+     "acf_24h": 0.44,
+     "acf_168h": 0.46
     },
     "naive": {
      "method": "mean CPU at the CPU target",
      "target_plan": "B3",
      "saving_inr": 2712,
-     "replay_minutes_above_90": 1365
+     "replay_minutes_above_90": 1845
     }
    },
    "replay": {
@@ -17787,7 +17751,7 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 1.0195,
+     "value": 1.0113,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
@@ -17811,7 +17775,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 84.162,
+     "value": 88.0,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -17819,7 +17783,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 0.9969,
+     "value": 1.0276,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -17827,7 +17791,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1298,
+     "value": 3.1469,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -17835,7 +17799,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 84.0%, mem 56%, net 8.490% bw, IO 60.05%",
+     "value": "CPU 88.0%, mem 56%, net 7.566% bw, IO 56.38%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -17843,7 +17807,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "84.0 / 56.2",
+     "value": "88.0 / 55.9",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -17906,30 +17870,35 @@
     "percentile_used": "p99",
     "metrics": {
      "cpu": {
-      "mean": 47.5,
-      "p50": 46.7,
-      "p95": 65.5,
-      "p99": 86.0,
-      "max": 88.0
+      "mean": 36.2,
+      "p50": 33.6,
+      "p95": 68.4,
+      "p99": 88.0,
+      "max": 91.4
      },
      "mem": {
-      "mean": 47.9,
-      "p50": 47.9,
-      "p95": 52.9,
-      "p99": 55.0,
-      "max": 58.9
+      "mean": 47.5,
+      "p50": 47.6,
+      "p95": 52.5,
+      "p99": 54.6,
+      "max": 58.6
      },
      "iops_pct": {
-      "p95": 62.1
+      "p95": 58.2
      },
      "net_pct": {
-      "p95": 30.4
+      "p95": 26.4
      },
      "disk_used": {
       "pct": 35.5
      }
     },
-    "recurring_peak": null,
+    "recurring_peak": {
+     "days": 5,
+     "second_day_peak": 85.3,
+     "acf_24h": 0.56,
+     "acf_168h": 0.56
+    },
     "naive": null
    },
    "replay": {
@@ -17997,14 +17966,14 @@
     {
      "step": "gates_data.last 48 h mean / earlier mean",
      "check": "last 48 h mean / earlier mean",
-     "value": 0.9889,
+     "value": 1.0133,
      "threshold": 3.0,
      "result": "pass",
      "terminal": false
     },
     {
-     "step": "gates_data.coverage of peak hours [13, 16]",
-     "check": "coverage of peak hours [13, 16]",
+     "step": "gates_data.coverage of peak hours [13, 14]",
+     "check": "coverage of peak hours [13, 14]",
      "value": 0.9972,
      "threshold": 0.5,
      "result": "pass",
@@ -18021,7 +17990,7 @@
     {
      "step": "patterns.p99 without the busiest day",
      "check": "p99 without the busiest day",
-     "value": 86.0269,
+     "value": 88.0,
      "threshold": 40,
      "result": "pass",
      "terminal": false
@@ -18029,7 +17998,7 @@
     {
      "step": "patterns.last-7-day mean / earlier mean",
      "check": "last-7-day mean / earlier mean",
-     "value": 1.0455,
+     "value": 1.0749,
      "threshold": 0.2,
      "result": "pass",
      "terminal": false
@@ -18037,7 +18006,7 @@
     {
      "step": "patterns.memory std at >= 75%",
      "check": "memory std at >= 75%",
-     "value": 3.1045,
+     "value": 3.1226,
      "threshold": 1,
      "result": "pass",
      "terminal": false
@@ -18045,7 +18014,7 @@
     {
      "step": "candidates.idle test",
      "check": "idle test",
-     "value": "CPU 86.0%, mem 55%, net 8.261% bw, IO 62.10%",
+     "value": "CPU 88.0%, mem 55%, net 7.262% bw, IO 58.19%",
      "threshold": "all below idle lines",
      "result": "pass",
      "terminal": false
@@ -18053,7 +18022,7 @@
     {
      "step": "candidates.underused (CPU P < 40 and mem P < 50)",
      "check": "underused (CPU P < 40 and mem P < 50)",
-     "value": "86.0 / 55.0",
+     "value": "88.0 / 54.6",
      "threshold": "40 / 50",
      "result": "pass",
      "terminal": false
@@ -26642,7 +26611,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0030"
+    "ALT-0028"
    ]
   },
   {
@@ -27300,7 +27269,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0031"
+    "ALT-0029"
    ]
   },
   {
@@ -33154,7 +33123,7 @@
     }
    ],
    "alert_ids": [
-    "ALT-0009"
+    "ALT-0008"
    ]
   },
   {

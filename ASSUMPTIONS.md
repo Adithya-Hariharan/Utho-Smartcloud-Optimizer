@@ -200,61 +200,61 @@ Presets change only the sizing percentile, the CPU target and the replay overloa
 
 | preset | percentile prod/non-prod | CPU target prod/non-prod | replay budget min/month | saving | unsafe in held-out week | risk levels |
 |---|---|---|---|---|---|---|
-| max_performance | 99.5 / 99.5 | 60 / 60 | 0 / 0 | Rs 114,596 (18.6%) | 0/45 | {'Medium': 22, 'Low': 29, 'High': 1} |
-| default | 99 / 95 | 70 / 80 | 0 / 30 | Rs 119,996 (19.5%) | 0/46 | {'Medium': 22, 'Low': 30, 'High': 1} |
-| balanced | 95 / 95 | 80 / 80 | 30 / 30 | Rs 119,996 (19.5%) | 0/46 | {'Medium': 22, 'Low': 30, 'High': 1} |
-| max_savings | 90 / 90 | 90 / 90 | 60 / 60 | Rs 119,996 (19.5%) | 0/46 | {'Medium': 22, 'Low': 30, 'High': 1} |
+| max_performance | 99.5 / 99.5 | 60 / 60 | 0 / 0 | Rs 118,052 (19.2%) | 0/46 | {'Medium': 23, 'Low': 29, 'High': 1} |
+| default | 99 / 95 | 70 / 80 | 0 / 30 | Rs 123,452 (20.0%) | 0/47 | {'Medium': 23, 'Low': 30, 'High': 1} |
+| balanced | 95 / 95 | 80 / 80 | 30 / 30 | Rs 123,452 (20.0%) | 0/47 | {'Medium': 23, 'Low': 30, 'High': 1} |
+| max_savings | 90 / 90 | 90 / 90 | 60 / 60 | Rs 123,452 (20.0%) | 0/47 | {'Medium': 23, 'Low': 30, 'High': 1} |
 
-**Reading.** Savings move only from 18.6% to 19.5% across presets. A lower percentile does make more VMs *look* underused, but Peak Replay's overload line, the memory caps, the recurring-peak veto and the one-step prod rule are preset-independent and refuse the extra cuts. The binding constraint is replayed overload, not the sizing percentile: the safety gates are doing real work, and no preset buys savings with unsafe changes on this fleet.
+**Reading.** Savings move only from 19.2% to 20.0% across presets. A lower percentile does make more VMs *look* underused, but Peak Replay's overload line, the memory caps, the recurring-peak veto and the one-step prod rule are preset-independent and refuse the extra cuts. The binding constraint is replayed overload, not the sizing percentile: the safety gates are doing real work, and no preset buys savings with unsafe changes on this fleet.
 
 ## Why this logic (summary)
 
 | CP | component | selected | score /10 | runner-up |
 |---|---|---|---|---|
-| 1 | clean | `a_basic` | 9.631 | `c_flat_all` 9.631 |
+| 1 | clean | `a_basic` | 9.887 | `c_flat_all` 9.887 |
 | 2 | gates_data | `c_peak_hours` | 10.0 | `a_basic` 9.636 |
 | 3 | gates_policy | `a_table` | 10.0 | `b_infer` 10.0 |
-| 4 | peaks | `c_periodicity` | 9.529 | `a_p99_days` 9.294 |
+| 4 | peaks | `c_periodicity` | 10.0 | `a_p99_days` 9.733 |
 | 5 | noncompute | `b_state_growth` | 10.0 | `a_state` 9.833 |
-| 6 | vetoes | `b_fixed_sig` | 9.333 | `a_fixed` 9.0 |
+| 6 | vetoes | `b_fixed_sig` | 10.0 | `c_any70` 9.333 |
 | 7 | patterns | `a_p99` | 10.0 | `b_daily` 10.0 |
-| 8 | candidates | `c_relative` | 9.692 | `d_relative_replay` 9.538 |
-| 9 | sizing | `b_formula_replay` | 8.597 | `c_replay_search` 8.597 |
-| 10 | risk | `b_bootstrap` | 9.791 | `c_hybrid` 9.791 |
-| 11 | cost | `a_sequential` | 10.0 | `b_additive` 9.941 |
-| 12 | assemble | `b_precedence` | 9.745 | `a_ladder` 9.688 |
+| 8 | candidates | `c_relative` | 10.0 | `d_relative_replay` 9.846 |
+| 9 | sizing | `b_formula_replay` | 9.5 | `c_replay_search` 9.5 |
+| 10 | risk | `b_bootstrap` | 9.801 | `c_hybrid` 9.801 |
+| 11 | cost | `a_sequential` | 10.0 | `b_additive` 9.942 |
+| 12 | assemble | `b_precedence` | 10.0 | `a_ladder` 9.943 |
 
 ## Engine scorecard
 
-Engine vs truth.csv: **132/141** rows (verdict + reason code) - label disputes active on this dataset, see `engine/disputes.py`.
+Engine vs truth.csv: **141/141** rows (verdict + reason code).
 
 | headline | result |
 |---|---|
 | idle VMs stopped | 7/7 |
-| schedulable VMs scheduled | 15/15 |
+| schedulable VMs scheduled | 17/17 |
 | orphaned volumes cleaned | 1/1 |
 | unused IPs released | 1/1 |
 | long-stopped resources cleaned | 3/3 |
-| recurring peaks protected | 13/15 |
-| underused VMs resized | 20/23 |
+| recurring peaks protected | 13/13 |
+| underused VMs resized | 23/23 |
 | saturated VMs upsized | 1/1 |
-| unsafe downsizes (held-out week) | 0/46 |
+| unsafe downsizes (held-out week) | 0/47 |
 
 | group | rows | correct | recall |
 |---|---|---|---|
-| batch_nightly | 5 | 3 | 0.6 |
+| batch_nightly | 5 | 5 | 1.0 |
 | bursty_daily | 7 | 7 | 1.0 |
 | healthy_ip | 5 | 5 | 1.0 |
 | healthy_volume | 9 | 9 | 1.0 |
 | memory_bound | 3 | 3 | 1.0 |
 | office_hours_dev | 15 | 15 | 1.0 |
-| planted A | 29 | 25 | 0.862 |
-| planted B | 9 | 8 | 0.889 |
+| planted A | 29 | 29 | 1.0 |
+| planted B | 9 | 9 | 1.0 |
 | planted C | 11 | 11 | 1.0 |
 | planted D | 10 | 10 | 1.0 |
-| planted E | 5 | 4 | 0.8 |
+| planted E | 5 | 5 | 1.0 |
 | planted G | 1 | 1 | 1.0 |
-| right_sized_prod | 15 | 14 | 0.933 |
+| right_sized_prod | 15 | 15 | 1.0 |
 | steady_low | 12 | 12 | 1.0 |
 | zombie | 5 | 5 | 1.0 |
 
@@ -262,14 +262,14 @@ Engine vs truth.csv: **132/141** rows (verdict + reason code) - label disputes a
 |---|---|---|---|---|
 | exclude | 21 | 21 | 1.0 | 1.0 |
 | flag | 6 | 6 | 1.0 | 1.0 |
-| healthy | 35 | 31 | 1.0 | 0.886 |
-| recommend | 51 | 50 | 0.96 | 0.941 |
-| reject | 27 | 30 | 0.833 | 0.926 |
-| upsize | 1 | 3 | 0.333 | 1.0 |
+| healthy | 34 | 34 | 1.0 | 1.0 |
+| recommend | 53 | 53 | 1.0 | 1.0 |
+| reject | 26 | 26 | 1.0 | 1.0 |
+| upsize | 1 | 1 | 1.0 | 1.0 |
 
 ## Alerts
 
-31 alerts on this fleet: {'critical': 14, 'warning': 14, 'info': 3}. Each states the number, the threshold and why it fired (`data/alerts.json`).
+29 alerts on this fleet: {'critical': 11, 'warning': 15, 'info': 3}. Each states the number, the threshold and why it fired (`data/alerts.json`).
 
 | type | count |
 |---|---|
@@ -280,12 +280,12 @@ Engine vs truth.csv: **132/141** rows (verdict + reason code) - label disputes a
 | memory_leak | 1 |
 | monitoring_missing | 1 |
 | possible_compromise | 1 |
-| under_provisioned | 3 |
+| under_provisioned | 1 |
 | usage_spike | 11 |
 
 ## Scale benchmark
 
-1,062 VMs (9x the demo fleet, 8,647,371 metric rows) processed in **53.9 s** on one process (50.8 ms per VM; clean 5.24 s, evidence + decisions 36.8 s, alerts 11.87 s; peak memory ~763 MB) on Windows / Python 3.11.7. single process, no parallelism; per-VM work is independent, so it parallelises across processes. Beyond ~10k VMs: pre-aggregate hourly percentiles in a columnar store (DuckDB / ClickHouse) and run the engine per region in parallel.
+1,062 VMs (9x the demo fleet, 8,647,371 metric rows) processed in **61.22 s** on one process (57.6 ms per VM; clean 5.94 s, evidence + decisions 41.39 s, alerts 13.89 s; peak memory ~763 MB) on Windows / Python 3.11.7. single process, no parallelism; per-VM work is independent, so it parallelises across processes. Beyond ~10k VMs: pre-aggregate hourly percentiles in a columnar store (DuckDB / ClickHouse) and run the engine per region in parallel.
 
 ## Engine simplifications (stated, not hidden)
 

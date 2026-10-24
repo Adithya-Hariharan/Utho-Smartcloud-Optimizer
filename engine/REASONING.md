@@ -24,18 +24,18 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | CP | component | selected logic | total |
 |---|---|---|---|
-| 1 | clean | `a_basic` | 9.631 |
+| 1 | clean | `a_basic` | 9.887 |
 | 2 | gates_data | `c_peak_hours` | 10.0 |
 | 3 | gates_policy | `a_table` | 10.0 |
-| 4 | peaks | `c_periodicity` | 9.529 |
+| 4 | peaks | `c_periodicity` | 10.0 |
 | 5 | noncompute | `b_state_growth` | 10.0 |
-| 6 | vetoes | `b_fixed_sig` | 9.333 |
+| 6 | vetoes | `b_fixed_sig` | 10.0 |
 | 7 | patterns | `a_p99` | 10.0 |
-| 8 | candidates | `c_relative` | 9.692 |
-| 9 | sizing | `b_formula_replay` | 8.597 |
-| 10 | risk | `b_bootstrap` | 9.791 |
+| 8 | candidates | `c_relative` | 10.0 |
+| 9 | sizing | `b_formula_replay` | 9.5 |
+| 10 | risk | `b_bootstrap` | 9.801 |
 | 11 | cost | `a_sequential` | 10.0 |
-| 12 | assemble | `b_precedence` | 9.745 |
+| 12 | assemble | `b_precedence` | 10.0 |
 
 ### Engine-wide design decisions (apply to every candidate)
 
@@ -59,12 +59,12 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **a_basic** — snap to grid + de-duplicate + out-of-range -> NaN | 6 | 3.631 | 3 | 2 | 1 | **9.631** | 128/141 rows right; 2 contested; 0 unsafe / 46; flip 0.0 |
-| c_flat_all — a + mask flatlines where CPU and memory are both frozen >= 2 h | 8 | 3.631 | 3 | 2 | 1 | **9.631** | 128/141 rows right; 2 contested; 0 unsafe / 46; flip 0.0 |
-| d_flat_all_interp — c + bridge gaps <= 15 min by interpolation | 6 | 3.631 | 3 | 2 | 1 | **9.631** | 128/141 rows right; 2 contested; 0 unsafe / 46; flip 0.0 |
-| b_flat_cpu — a + mask CPU-only flatlines >= 2 h | 7 | 3.603 | 3 | 2 | 1 | **9.603** | 127/141 rows right; 2 contested; 0 unsafe / 45; flip 0.0 |
+| **a_basic** — snap to grid + de-duplicate + out-of-range -> NaN | 6 | 3.887 | 3 | 2 | 1 | **9.887** | 137/141 rows right; 2 contested; 0 unsafe / 48; flip 0.0 |
+| c_flat_all — a + mask flatlines where CPU and memory are both frozen >= 2 h | 8 | 3.887 | 3 | 2 | 1 | **9.887** | 137/141 rows right; 2 contested; 0 unsafe / 48; flip 0.0 |
+| d_flat_all_interp — c + bridge gaps <= 15 min by interpolation | 6 | 3.887 | 3 | 2 | 1 | **9.887** | 137/141 rows right; 2 contested; 0 unsafe / 48; flip 0.0 |
+| b_flat_cpu — a + mask CPU-only flatlines >= 2 h | 7 | 3.858 | 3 | 2 | 1 | **9.858** | 136/141 rows right; 2 contested; 0 unsafe / 47; flip 0.0 |
 
-**Why `a_basic`.** Tie with `c_flat_all` at 9.631: the simpler logic wins (1 vs 2 parameters). Flatline detection on CPU alone masks the rate-limited plateau of staging-api-09 (exactly 40.00 % for 8 h) and flips it; requiring CPU **and** memory to freeze avoids that. On this dataset the frozen agent (dev-api-16) does not change any verdict, so c and a tie and the simpler one is kept.
+**Why `a_basic`.** Tie with `c_flat_all` at 9.887: the simpler logic wins (1 vs 2 parameters). Flatline detection on CPU alone masks the rate-limited plateau of staging-api-09 (exactly 40.00 % for 8 h) and flips it; requiring CPU **and** memory to freeze avoids that. On this dataset the frozen agent (dev-api-16) does not change any verdict, so c and a tie and the simpler one is kept.
 
 **Dependence.** First checkpoint: nothing earlier to re-check.
 
@@ -76,13 +76,13 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **c_peak_hours** — a + flag if the VM's two busiest hours are < 50% observed | 9 | 4.0 | 3 | 2 | 1 | **10.0** | 11/11 rows right; 2 contested; 0 unsafe / 46; flip 0.0035 |
-| a_basic — history >= 14 d, no resize < 14 d, coverage >= 80%, no 3x level shift | 7 | 3.636 | 3 | 2 | 1 | **9.636** | 10/11 rows right; 2 contested; 0 unsafe / 46; flip 0.0035 |
-| b_min_bucket — a + flag if any hour-of-week bucket < 50% observed | 7 | 3.636 | 3 | 2 | 1 | **9.636** | 10/11 rows right; 2 contested; 0 unsafe / 45; flip 0.0035 |
+| **c_peak_hours** — a + flag if the VM's two busiest hours are < 50% observed | 9 | 4.0 | 3 | 2 | 1 | **10.0** | 11/11 rows right; 2 contested; 0 unsafe / 48; flip 0.0035 |
+| a_basic — history >= 14 d, no resize < 14 d, coverage >= 80%, no 3x level shift | 7 | 3.636 | 3 | 2 | 1 | **9.636** | 10/11 rows right; 2 contested; 0 unsafe / 48; flip 0.0035 |
+| b_min_bucket — a + flag if any hour-of-week bucket < 50% observed | 7 | 3.636 | 3 | 2 | 1 | **9.636** | 10/11 rows right; 2 contested; 0 unsafe / 47; flip 0.0035 |
 
 **Why `c_peak_hours`.** Beats `a_basic` by 0.36; the decisive part is correctness (+0.36). Only the VM's own peak hours matter: a random 12 % gap (staging-flaky-19) leaves some hour-of-week bucket thin and wrongly flags it under b, while the batch VM whose 01:00-04:00 window was missed on 18 nights (prod-batch-20) is caught by c but missed by a.
 
-**Dependence.** `clean` (rows that change: prod-batch-20) re-scored: a_basic 9.631, b_flat_cpu 9.603, c_flat_all 9.631, d_flat_all_interp 9.631 -> kept.
+**Dependence.** `clean` (rows that change: prod-batch-20) re-scored: a_basic 9.887, b_flat_cpu 9.858, c_flat_all 9.887, d_flat_all_interp 9.887 -> kept.
 
 ### CP3 - gates_policy
 
@@ -92,8 +92,8 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **a_table** — tag/policy table, price check, missing env treated as prod | 9 | 4.0 | 3 | 2 | 1 | **10.0** | 11/11 rows right; 0 unsafe / 46; flip 0.0 |
-| b_infer — a + guess a missing env from the name prefix | 5 | 4.0 | 3 | 2 | 1 | **10.0** | 11/11 rows right; 0 unsafe / 46; flip 0.0 |
+| **a_table** — tag/policy table, price check, missing env treated as prod | 9 | 4.0 | 3 | 2 | 1 | **10.0** | 11/11 rows right; 0 unsafe / 48; flip 0.0 |
+| b_infer — a + guess a missing env from the name prefix | 5 | 4.0 | 3 | 2 | 1 | **10.0** | 11/11 rows right; 0 unsafe / 48; flip 0.0 |
 
 **Why `a_table`.** Tie with `b_infer` at 10.0: the simpler logic wins (1 vs 2 parameters). 
 
@@ -107,13 +107,13 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **c_periodicity** — autocorrelation at 24 h/168 h >= 0.3 AND p99 >= 80 | 6 | 3.529 | 3 | 2 | 1 | **9.529** | 15/17 rows right; 2 contested; 0 unsafe / 46; flip 0.0284 |
-| a_p99_days — PLAN.md 7: >= 4 peak days AND p99 >= 80 | 6 | 3.294 | 3 | 2 | 1 | **9.294** | 14/17 rows right; 2 contested; 0 unsafe / 46; flip 0.0284 |
-| b_daily_peaks — >= 4 days with a 30-min peak above 80% | 8 | 3.059 | 3 | 2 | 1 | **9.059** | 13/17 rows right; 2 contested; 0 unsafe / 46; flip 0.0213 |
+| **c_periodicity** — autocorrelation at 24 h/168 h >= 0.3 AND p99 >= 80 | 6 | 4.0 | 3 | 2 | 1 | **10.0** | 15/15 rows right; 2 contested; 0 unsafe / 48; flip 0.0284 |
+| a_p99_days — PLAN.md 7: >= 4 peak days AND p99 >= 80 | 6 | 3.733 | 3 | 2 | 1 | **9.733** | 14/15 rows right; 2 contested; 0 unsafe / 48; flip 0.0284 |
+| b_daily_peaks — >= 4 days with a 30-min peak above 80% | 8 | 3.467 | 3 | 2 | 1 | **9.467** | 13/15 rows right; 2 contested; 0 unsafe / 48; flip 0.0213 |
 
-**Why `c_periodicity`.** Beats `a_p99_days` by 0.23; the decisive part is correctness (+0.23). Periodicity is the only rule that separates *scheduled* peaks (batch, weekly billing, daily checkout: acf 0.9+) from *random* bursts (queue: acf ~0), which must fall through to replay.
+**Why `c_periodicity`.** Beats `a_p99_days` by 0.27; the decisive part is correctness (+0.27). Periodicity is the only rule that separates *scheduled* peaks (batch, weekly billing, daily checkout: acf 0.9+) from *random* bursts (queue: acf ~0), which must fall through to replay.
 
-**Dependence.** `clean` (rows that change: prod-queue-02) re-scored: a_basic 9.688, b_flat_cpu 9.66, c_flat_all 9.688, d_flat_all_interp 9.688 -> kept.
+**Dependence.** `clean` (rows that change: prod-queue-02) re-scored: a_basic 9.943, b_flat_cpu 9.915, c_flat_all 9.943, d_flat_all_interp 9.943 -> kept.
 
 ### CP5 - noncompute
 
@@ -123,12 +123,12 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **b_state_growth** — a + growth veto: reject if full within 30 days | 8 | 4.0 | 3 | 2 | 1 | **10.0** | 24/24 rows right; 1 contested; 0 unsafe / 46; flip 0.0 |
-| a_state — unattached > 7 d / attached-to-stopped / zero IOPS / < 20% used | 9 | 3.833 | 3 | 2 | 1 | **9.833** | 23/24 rows right; 1 contested; 0 unsafe / 46; flip 0.0 |
+| **b_state_growth** — a + growth veto: reject if full within 30 days | 8 | 4.0 | 3 | 2 | 1 | **10.0** | 24/24 rows right; 1 contested; 0 unsafe / 48; flip 0.0 |
+| a_state — unattached > 7 d / attached-to-stopped / zero IOPS / < 20% used | 9 | 3.833 | 3 | 2 | 1 | **9.833** | 23/24 rows right; 1 contested; 0 unsafe / 48; flip 0.0 |
 
 **Why `b_state_growth`.** Beats `a_state` by 0.17; the decisive part is correctness (+0.17). 
 
-**Dependence.** `clean` (rows that change: vol-growing-10) re-scored: a_basic 9.716, b_flat_cpu 9.688, c_flat_all 9.716, d_flat_all_interp 9.716 -> kept.
+**Dependence.** `clean` (rows that change: vol-growing-10) re-scored: a_basic 9.972, b_flat_cpu 9.943, c_flat_all 9.972, d_flat_all_interp 9.972 -> kept.
 
 ### CP6 - vetoes
 
@@ -138,13 +138,13 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **b_fixed_sig** — a + growth only if the trend is significant (p < 0.05) | 9 | 3.333 | 3 | 2 | 1 | **9.333** | 10/12 rows right; 5 contested; 0 unsafe / 46; flip 0.0071 |
-| a_fixed — leak >= 3 resets, memory > 70, IOPS > 70, network > 60, growth to 85% < 60 d | 7 | 3.0 | 3 | 2 | 1 | **9.0** | 9/12 rows right; 5 contested; 0 unsafe / 42; flip 0.0213 |
-| c_any70 — any metric > 70% vetoes | 4 | 2.667 | 3 | 2 | 1 | **8.667** | 8/12 rows right; 5 contested; 0 unsafe / 46; flip 0.0035 |
+| **b_fixed_sig** — a + growth only if the trend is significant (p < 0.05) | 9 | 4.0 | 3 | 2 | 1 | **10.0** | 12/12 rows right; 5 contested; 0 unsafe / 48; flip 0.0071 |
+| c_any70 — any metric > 70% vetoes | 4 | 3.333 | 3 | 2 | 1 | **9.333** | 10/12 rows right; 5 contested; 0 unsafe / 48; flip 0.0035 |
+| a_fixed — leak >= 3 resets, memory > 70, IOPS > 70, network > 60, growth to 85% < 60 d | 7 | 3.0 | 3 | 2 | 1 | **9.0** | 9/12 rows right; 5 contested; 0 unsafe / 44; flip 0.0213 |
 
-**Why `b_fixed_sig`.** Beats `a_fixed` by 0.33; the decisive part is correctness (+0.33). With contested rows included, the significance requirement matters: an unscheduled noisy slope on a batch VM is not growth.
+**Why `b_fixed_sig`.** Beats `c_any70` by 0.67; the decisive part is correctness (+0.67). With contested rows included, the significance requirement matters: an unscheduled noisy slope on a batch VM is not growth.
 
-**Dependence.** `clean` (rows that change: staging-batch-68, dev-batch-69, prod-batch-66) re-scored: a_basic 9.716, b_flat_cpu 9.688, c_flat_all 9.716, d_flat_all_interp 9.716 -> kept; `peaks` (rows that change: staging-batch-68, dev-batch-69, prod-batch-66) re-scored: a_p99_days 9.294, b_daily_peaks 9.059, c_periodicity 9.529 -> kept.
+**Dependence.** `clean` (rows that change: prod-search-06, prod-orders-08) re-scored: a_basic 9.972, b_flat_cpu 9.943, c_flat_all 9.972, d_flat_all_interp 9.972 -> kept.
 
 ### CP7 - patterns
 
@@ -154,8 +154,8 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **a_p99** — one-off via p99 without the top day; went quiet; reserved memory | 7 | 4.0 | 3 | 2 | 1 | **10.0** | 3/3 rows right; 0 unsafe / 46; flip 0.0 |
-| b_daily — one-off via the daily-peak profile (2nd day < 50); went quiet; reserved memory | 8 | 4.0 | 3 | 2 | 1 | **10.0** | 3/3 rows right; 0 unsafe / 46; flip 0.0 |
+| **a_p99** — one-off via p99 without the top day; went quiet; reserved memory | 7 | 4.0 | 3 | 2 | 1 | **10.0** | 3/3 rows right; 0 unsafe / 48; flip 0.0 |
+| b_daily — one-off via the daily-peak profile (2nd day < 50); went quiet; reserved memory | 8 | 4.0 | 3 | 2 | 1 | **10.0** | 3/3 rows right; 0 unsafe / 48; flip 0.0 |
 
 **Why `a_p99`.** Tie with `b_daily` at 10.0: the simpler logic wins (5 vs 5 parameters). 
 
@@ -169,14 +169,14 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **c_relative** — 4-metric idle relative to plan size; percentile underused; profile + 30-min wake buffer | 8 | 3.692 | 3 | 2 | 1 | **9.692** | 24/26 rows right; 14 contested; 0 unsafe / 45; flip 0.0035 |
-| d_relative_replay — c with underused decided by replay (no cliff) | 8 | 3.538 | 3 | 2 | 1 | **9.538** | 23/26 rows right; 14 contested; 0 unsafe / 46; flip 0.0 |
-| a_simple — idle on CPU only; percentile underused; fixed 20:00-08:00 + weekend template | 4 | 3.538 | 3 | 2 | 0.5 | **9.038** | 23/26 rows right; 14 contested; 0 unsafe / 40; flip 0.0638 |
-| b_plan7 — 4-metric idle with absolute lines; percentile underused; weekly-profile off-hours | 7 | 2.462 | 3 | 2 | 1 | **8.462** | 16/26 rows right; 14 contested; 0 unsafe / 46; flip 0.0035 |
+| **c_relative** — 4-metric idle relative to plan size; percentile underused; profile + 30-min wake buffer | 8 | 4.0 | 3 | 2 | 1 | **10.0** | 26/26 rows right; 14 contested; 0 unsafe / 47; flip 0.0035 |
+| d_relative_replay — c with underused decided by replay (no cliff) | 8 | 3.846 | 3 | 2 | 1 | **9.846** | 25/26 rows right; 14 contested; 0 unsafe / 48; flip 0.0 |
+| b_plan7 — 4-metric idle with absolute lines; percentile underused; weekly-profile off-hours | 7 | 2.769 | 3 | 2 | 1 | **8.769** | 18/26 rows right; 14 contested; 0 unsafe / 48; flip 0.0035 |
+| a_simple — idle on CPU only; percentile underused; fixed 20:00-08:00 + weekend template | 4 | 3.231 | 3 | 2 | 0.5 | **8.731** | 21/26 rows right; 14 contested; 0 unsafe / 42; flip 0.0638 |
 
 **Why `c_relative`.** Beats `d_relative_replay` by 0.15; the decisive part is correctness (+0.15). Real network and disk IO are lognormal with spreads ~2.0 and ~1.06 (fitted), so absolute idle lines (5 MB/h, 5 IOPS) declare every idle VM busy (b loses all zombies). Lines relative to plan size fix that.
 
-**Dependence.** `clean` (rows that change: staging-api-09) re-scored: a_basic 9.745, b_flat_cpu 9.688, c_flat_all 9.745, d_flat_all_interp 9.745 -> kept.
+**Dependence.** `clean` (rows that change: staging-api-09) re-scored: a_basic 10.0, b_flat_cpu 9.943, c_flat_all 10.0, d_flat_all_interp 10.0 -> kept.
 
 ### CP9 - sizing
 
@@ -186,12 +186,12 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **b_formula_replay** — PLAN.md 7: formula then Peak Replay gate | 7 | 3.097 | 3 | 2 | 0.5 | **8.597** | 24/31 rows right; 1 contested; 0 unsafe / 46; flip 0.0709 |
-| c_replay_search — cheapest plan whose replay passes (incl. 2nd-busiest-day peak) | 8 | 3.097 | 3 | 2 | 0.5 | **8.597** | 24/31 rows right; 1 contested; 0 unsafe / 45; flip 0.0674 |
-| d_replay_core — c + core-count targets + forward replay under significant growth | 7 | 3.097 | 3 | 2 | 0.5 | **8.597** | 24/31 rows right; 1 contested; 0 unsafe / 45; flip 0.0674 |
-| a_formula — percentile formula, round up, prod one step; no replay | 4 | 2.968 | 1 | 2 | 0.5 | **6.468** | 23/31 rows right; 1 contested; 1 unsafe / 47; flip 0.0745 |
+| **b_formula_replay** — PLAN.md 7: formula then Peak Replay gate | 7 | 4.0 | 3 | 2 | 0.5 | **9.5** | 28/28 rows right; 1 contested; 0 unsafe / 47; flip 0.0709 |
+| c_replay_search — cheapest plan whose replay passes (incl. 2nd-busiest-day peak) | 8 | 4.0 | 3 | 2 | 0.5 | **9.5** | 28/28 rows right; 1 contested; 0 unsafe / 47; flip 0.0709 |
+| d_replay_core — c + core-count targets + forward replay under significant growth | 7 | 4.0 | 3 | 2 | 0.5 | **9.5** | 28/28 rows right; 1 contested; 0 unsafe / 47; flip 0.0709 |
+| a_formula — percentile formula, round up, prod one step; no replay | 4 | 3.857 | 1 | 2 | 0.5 | **7.357** | 27/28 rows right; 1 contested; 1 unsafe / 48; flip 0.0745 |
 
-**Why `b_formula_replay`.** Tie with `c_replay_search` at 8.597: the simpler logic wins (6 vs 7 parameters). Formula-only sizing is the only logic with an unsafe cut in the held-out week (dev-report-02's weekly job). The three replay-based logics agree on every verdict, so the one with fewest parameters is kept.
+**Why `b_formula_replay`.** Tie with `c_replay_search` at 9.5: the simpler logic wins (6 vs 7 parameters). Formula-only sizing is the only logic with an unsafe cut in the held-out week (dev-report-02's weekly job). The three replay-based logics agree on every verdict, so the one with fewest parameters is kept.
 
 **Dependence.** Re-checked candidates, clean, gates_data, gates_policy, noncompute, patterns, peaks, vetoes: none of their verdicts change when this component switches logic, so no re-scoring was needed.
 
@@ -203,11 +203,11 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **b_bootstrap** — P(bad month) by resampling observed days; escalate for prod/stateful/stop | 8 | 3.791 | 3 | 2 | 1 | **9.791** | AUC 0.974; 0 unsafe / 46; flip 0.0 |
-| c_hybrid — b decides the level; points listed as contributing factors | 9 | 3.791 | 3 | 2 | 1 | **9.791** | AUC 0.974; 0 unsafe / 46; flip 0.0 |
-| a_points — PLAN.md 7 points table -> Low/Medium/High | 5 | 2.484 | 3 | 2 | 0.5 | **7.984** | AUC 0.811; 0 unsafe / 46; flip 0.0709 |
+| **b_bootstrap** — P(bad month) by resampling observed days; escalate for prod/stateful/stop | 8 | 3.801 | 3 | 2 | 1 | **9.801** | AUC 0.975; 0 unsafe / 47; flip 0.0 |
+| c_hybrid — b decides the level; points listed as contributing factors | 9 | 3.801 | 3 | 2 | 1 | **9.801** | AUC 0.975; 0 unsafe / 47; flip 0.0 |
+| a_points — PLAN.md 7 points table -> Low/Medium/High | 5 | 2.567 | 3 | 2 | 0.5 | **8.067** | AUC 0.821; 0 unsafe / 47; flip 0.0674 |
 
-**Why `b_bootstrap`.** Tie with `c_hybrid` at 9.791: the simpler logic wins (4 vs 16 parameters). The bootstrap probability ranks held-out overloads far better than the points table (AUC 0.97 vs 0.81); b and c produce the same levels, so the simpler b is kept and the points are not needed for the level.
+**Why `b_bootstrap`.** Tie with `c_hybrid` at 9.801: the simpler logic wins (4 vs 16 parameters). The bootstrap probability ranks held-out overloads far better than the points table (AUC 0.97 vs 0.81); b and c produce the same levels, so the simpler b is kept and the points are not needed for the level.
 
 **Dependence.** Re-checked candidates, clean, gates_data, gates_policy, noncompute, patterns, peaks, sizing, vetoes: none of their verdicts change when this component switches logic, so no re-scoring was needed.
 
@@ -219,8 +219,8 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **a_sequential** — sequential cost per action set (no double counting) | 9 | 4.0 | 3 | 2 | 1 | **10.0** | invariant violations: none; 0 unsafe / 46; flip 0.0035 |
-| b_additive — sum of single savings vs the original cost (double counts) | 2 | 3.941 | 3 | 2 | 1 | **9.941** | invariant violations: dev-web-03; 0 unsafe / 46; flip 0.0035 |
+| **a_sequential** — sequential cost per action set (no double counting) | 9 | 4.0 | 3 | 2 | 1 | **10.0** | invariant violations: none; 0 unsafe / 47; flip 0.0035 |
+| b_additive — sum of single savings vs the original cost (double counts) | 2 | 3.942 | 3 | 2 | 1 | **9.942** | invariant violations: dev-web-03; 0 unsafe / 47; flip 0.0035 |
 
 **Why `a_sequential`.** Beats `b_additive` by 0.06; the decisive part is correctness (+0.06). Additive savings exceed the bill for dev-web-03 (resize + schedule would cost less than zero).
 
@@ -234,12 +234,12 @@ Each engine component (12 checkpoints, in dependency order) has 2-4 candidate lo
 
 | candidate | prior | correctness /4 | safety /3 | explain /2 | robust /1 | **total** | evidence |
 |---|---|---|---|---|---|---|---|
-| **b_precedence** — evidence board + published precedence; all fired signals listed | 9 | 3.745 | 3 | 2 | 1 | **9.745** | 132/141 rows right; 2 contested; 0 unsafe / 46; flip 0.0 |
-| a_ladder — first-match ladder in stage order (PLAN.md 7) | 6 | 3.688 | 3 | 2 | 1 | **9.688** | 130/141 rows right; 2 contested; 0 unsafe / 46; flip 0.0 |
+| **b_precedence** — evidence board + published precedence; all fired signals listed | 9 | 4.0 | 3 | 2 | 1 | **10.0** | 141/141 rows right; 2 contested; 0 unsafe / 47; flip 0.0 |
+| a_ladder — first-match ladder in stage order (PLAN.md 7) | 6 | 3.943 | 3 | 2 | 1 | **9.943** | 139/141 rows right; 2 contested; 0 unsafe / 47; flip 0.0 |
 
 **Why `b_precedence`.** Beats `a_ladder` by 0.06; the decisive part is correctness (+0.06). The ladder stops at the first stage that fires, so it hides secondary signals and mis-orders went-quiet vs upsize; the precedence table shows everything.
 
-**Dependence.** `clean` (rows that change: dev-web-03, prod-legacy-06) re-scored: a_basic 9.745, b_flat_cpu 9.688, c_flat_all 9.745, d_flat_all_interp 9.745 -> kept; `patterns` (rows that change: prod-legacy-06) re-scored: a_p99 10.0, b_daily 10.0 -> kept; `sizing` (rows that change: dev-web-03) re-scored: a_formula 6.468, b_formula_replay 8.597, c_replay_search 8.597, d_replay_core 8.597 -> kept; `risk` (rows that change: dev-web-03, prod-legacy-06) re-scored: a_points 7.984, b_bootstrap 9.791, c_hybrid 9.791 -> kept; `cost` (rows that change: dev-web-03, prod-legacy-06) re-scored: a_sequential 10.0, b_additive 9.941 -> kept.
+**Dependence.** `clean` (rows that change: dev-web-03, prod-legacy-06) re-scored: a_basic 10.0, b_flat_cpu 9.943, c_flat_all 10.0, d_flat_all_interp 10.0 -> kept; `patterns` (rows that change: prod-legacy-06) re-scored: a_p99 10.0, b_daily 10.0 -> kept; `sizing` (rows that change: dev-web-03) re-scored: a_formula 7.357, b_formula_replay 9.5, c_replay_search 9.5, d_replay_core 9.5 -> kept; `risk` (rows that change: dev-web-03, prod-legacy-06) re-scored: a_points 8.067, b_bootstrap 9.801, c_hybrid 9.801 -> kept; `cost` (rows that change: dev-web-03, prod-legacy-06) re-scored: a_sequential 10.0, b_additive 9.942 -> kept.
 
 ## 4. Do the score weights decide the outcome?
 
@@ -264,7 +264,7 @@ No selection changes under any alternative weighting: the choices are not an art
 
 ## 5. Label disputes (truth.csv rows the selected engine disagreed with)
 
-Found on the dataset of commit 7b73730. **Resolved on the data branch (b1_adi)**: five planted VMs pinned, right-sized resampling kept busy on average, three contradictory labels corrected. The disputes therefore apply only to that dataset (identified by its fingerprint in `engine/disputes.py`): there they are `xfail(strict=True)` tests; on the corrected dataset every truth row must match, and the engine (same selected logic) gets 141/141. The logic selection re-run on the corrected data is recorded in section 7.
+Found on the dataset of commit 7b73730. **Resolved on the data branch (b1_adi)**: five planted VMs pinned, right-sized resampling kept busy on average, three contradictory labels corrected. The disputes therefore apply only to that dataset (identified by its fingerprint in `engine/disputes.py`): there they are `xfail(strict=True)` tests; on the corrected dataset every truth row must match, and the engine (same selected logic) gets 141/141. Re-running the whole checkpointed selection on the corrected data picks the same logic for all 12 components (on the data it was found on the comparison is section 8; on the merged main branch the selection log above IS the corrected-data run).
 
 | resource | label said | engine said | evidence and reasoning |
 |---|---|---|---|
@@ -281,11 +281,11 @@ Found on the dataset of commit 7b73730. **Resolved on the data branch (b1_adi)**
 ## 6. Alerts, presets, scorecard, benchmark
 
 **Alerts** (`engine/alerts.py`, `data/alerts.json`). Every alert states the number, the threshold and why.
-- *Usage spike*: robust z of the 30-min rolling **log-ratio** to the same hour-of-week median, sigma = `alerts.mad_to_sigma` x MAD. Three decisions, each fixing a measured false-alarm source: (1) rolling the *deviation* instead of the raw value stopped windows straddling an hour boundary from comparing a peak hour with a quiet one (prod-billing-01 at 12:00 was '77% vs 3%'); (2) scaling MAD to sigma makes 4 a real 4-sigma threshold (plain 4 x MAD is ~2.7 sigma); (3) the log scale treats the fitted multiplicative day-to-day drift (Bitbrains sd 0.59) as normal spread. Spike alerts fell 56 -> 36 -> 11, the strongest being the planted one-off (prod-reports-02, z 15) and the random bursts (prod-queue-02).
+- *Usage spike*: robust z of the 30-min rolling **log-ratio** to the same hour-of-week median, sigma = `alerts.mad_to_sigma` x MAD. Three decisions, each fixing a measured false-alarm source: (1) rolling the *deviation* instead of the raw value stopped windows straddling an hour boundary from comparing a peak hour with a quiet one (prod-billing-01 at 12:00 was '77% vs 3%'); (2) scaling MAD to sigma makes 4 a real 4-sigma threshold (plain 4 x MAD is ~2.7 sigma); (3) the log scale treats the fitted multiplicative day-to-day drift (Bitbrains sd 0.59) as normal spread. During development spike alerts fell 56 -> 36 -> 11 on the first dataset, the strongest being the planted one-off (prod-reports-02, z 15) and the random bursts (prod-queue-02).
 - *Cost increase*: alerts on the provisioning **step** only (the day cost changes), not on the following days while the 7-day average catches up. Threshold x1.1 is measured: billing is flat on 87% of team-days and the steps in the window are +12.9% / +12.7% (new VMs) vs +2.4% / -1.7% / -3.4%; the plan's x1.2 missed both new-VM events.
 - *Capacity trend* (CPU p95, memory p95, disk, volumes): significant least-squares slope over the last 14 days reaching 90% within 30 days (critical within 7). *Level shift* / *possible compromise* (CPU and egress both > 3x). *Memory leak*, *under-provisioned*, *monitoring missing*, *budget overrun* (forecast = spent + 7-day run-rate x days left vs 1.25 x first-quarter spend).
 
-**Presets** (`engine/presets_report.json`): savings move only 18.6% -> 19.5% from max-performance to max-savings because Peak Replay, the memory caps, the recurring-peak veto and the one-step prod rule are preset-independent; none of the presets produces an unsafe change in the held-out week.
+**Presets** (`engine/presets_report.json`): savings move only 19.2% -> 20.0% from max-performance to max-savings because Peak Replay, the memory caps, the recurring-peak veto and the one-step prod rule are preset-independent; 0 unsafe changes across all presets in the held-out week.
 
 **Scorecard** (`data/scorecard.json`) and **benchmark** (`engine/benchmark.json`): summarised in ASSUMPTIONS.md.
 
@@ -308,17 +308,17 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `time_units.ms_per_second` | 1000 | D (derived) | unit conversion for the benchmark report (seconds -> milliseconds) | engine/benchmark.py | definition (not a threshold) |
 | `time_units.bytes_per_mb` | 1000000 | D (derived) | unit conversion for the benchmark report (bytes -> MB, decimal) | engine/benchmark.py | definition (not a threshold) |
 | `time_units.mbps_to_mb_per_hour` | 450 | D (derived) | 1 Mbps x 3,600 s / 8 bits = 450 MB per hour | engine/evidence.py | definition (not a threshold) |
-| `percentiles.prod` | 99 | C (cited default) | AWS Compute Optimizer default is P99.5; p99 is the conservative read that still ignores single noisy samples. Used for evidence and the one-off test ('p99 without the busiest day'); sizing reads the same value from the selected preset | engine/evidence.py, engine/pipeline.py | 20, -25.4% / 9, -13.8% / 0, +0.0% / 0, +0.0% |
+| `percentiles.prod` | 99 | C (cited default) | AWS Compute Optimizer default is P99.5; p99 is the conservative read that still ignores single noisy samples. Used for evidence and the one-off test ('p99 without the busiest day'); sizing reads the same value from the selected preset | engine/evidence.py, engine/pipeline.py | 17, -24.7% / 9, -13.4% / 0, +0.0% / 0, +0.0% |
 | `percentiles.nonprod` | 95 | C (cited default) | AWS 'maximum savings' style preset for lower-stakes environments; catalogue doc recommends p95 for dev/staging | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `evidence.report_percentiles` | [50, 95, 99] | D (derived) | the schema's evidence block reports cpu/mem p50, p95 and p99 | engine/evidence.py, engine/output.py, engine/pipeline.py | not perturbed (list / seed) |
-| `evidence.io_net_percentile` | 95 | C (cited default) | catalogue: IOPS and network vetoes are stated on p95 | engine/evidence.py, engine/output.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 66, -72.1% / 66, -72.1% |
+| `evidence.io_net_percentile` | 95 | C (cited default) | catalogue: IOPS and network vetoes are stated on p95 | engine/evidence.py, engine/output.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 62, -70.1% / 62, -70.1% |
 | `evidence.trend_percentile` | 95 | C (cited default) | PLAN.md 6: trend is a linear fit of daily p95 CPU | engine/alerts.py, engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 1, +0.0% / 1, +0.0% |
 | `clean.flatline_hours` | 2 | J (judgement) | a live agent never reports the exact same CPU+memory pair for 24 consecutive 5-min samples; 2 h is long enough to avoid catching brief steady states and short enough to catch a stuck agent within a day | engine/components/clean.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `clean.interp_max_slots` | 3 | J (judgement) | gaps up to 15 min are bridged for replay continuity only; longer gaps stay NaN because interpolating them would invent load | engine/components/clean.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `clean.pct_min` | 0 | D (derived) | physical lower bound of a percentage | engine/components/clean.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.min_history_days` | 14 | C (cited default) | AWS Compute Optimizer requires 14 days before it recommends; below that weekly cycles are seen at most once | engine/components/gates_data.py, engine/components/risk.py, engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.recent_resize_days` | 14 | D (derived) | same as min_history_days: the post-change machine needs its own 14 days of evidence | engine/components/gates_data.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `gates_data.min_coverage` | 0.8 | J (judgement) | catalogue quality gate; at 80% a missing 20% would have to be concentrated in peaks to hide them, which peak-window coverage checks separately | engine/components/gates_data.py | 1, +1.2% / 0, +0.0% / 1, -2.1% / 100, -92.7% |
+| `gates_data.min_coverage` | 0.8 | J (judgement) | catalogue quality gate; at 80% a missing 20% would have to be concentrated in peaks to hide them, which peak-window coverage checks separately | engine/components/gates_data.py | 1, +1.1% / 0, +0.0% / 1, -2.1% / 100, -92.9% |
 | `gates_data.medium_coverage` | 0.95 | J (judgement) | between 80% and 95% the resource is evaluated but flagged MEDIUM_COVERAGE and gets +1 risk point | engine/components/gates_data.py, engine/components/risk.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.day_min_coverage` | 0.5 | J (judgement) | a day counts towards history only if at least half of it was observed | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.anomaly_ratio` | 3.0 | J (judgement) | catalogue: a 3x level shift is far outside daily variation (fitted drift sd is 0.11-0.59), so sizing on it would be sizing on an incident | engine/alerts.py, engine/backtest.py, engine/components/gates_data.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
@@ -332,14 +332,14 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `peaks.recurring_min_days` | 4 | D (derived) | a weekly job appears 4-5 times in 30 days, so >= 4 separates 'weekly or more often' from one-offs | engine/components/peaks.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `peaks.p99_min` | 80 | D (derived) | candidate a: same as peak_level so the p99 condition and the daily-peak condition talk about the same busy level | engine/components/peaks.py | 1, +0.0% / 1, +0.0% / 5, +0.0% / 13, +0.0% |
 | `peaks.autocorr_min` | 0.3 | J (judgement) | candidate c: autocorrelation above 0.3 at a 24 h or 168 h lag is a clear periodic signal on 30 days of data | engine/components/peaks.py | 1, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `peaks.looks_wasteful_mean` | 20 | J (judgement) | PLAN.md 7: an average-based tool would shrink anything averaging under 20% CPU; these are the VMs the Rejections panel must explain | engine/components/sizing.py, engine/pipeline.py | 9, -1.4% / 2, -1.4% / 0, +0.0% / 3, +0.0% |
+| `peaks.looks_wasteful_mean` | 20 | J (judgement) | PLAN.md 7: an average-based tool would shrink anything averaging under 20% CPU; these are the VMs the Rejections panel must explain | engine/components/sizing.py, engine/pipeline.py | 8, -1.3% / 1, -1.3% / 1, +0.0% / 2, +0.0% |
 | `noncompute.orphan_age_days` | 7 | C (cited default) | catalogue / Datadog practice: unattached for > 7 days, so a disk being set up right now is not caught | engine/components/noncompute.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `noncompute.oversized_used_max` | 0.2 | C (cited default) | catalogue: < 20% of provisioned storage used | engine/components/noncompute.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `noncompute.volume_target_used` | 0.7 | J (judgement) | after a shrink the volume should be at most 70% full, leaving 30% growth room | engine/components/noncompute.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.3% |
 | `noncompute.volume_sizes` | [50, 100, 200, 250, 500, 1000] | S (scenario choice) | standard sizes offered by the provider (illustrative) | engine/components/noncompute.py | not perturbed (list / seed) |
 | `noncompute.growth_days_to_full` | 30 | J (judgement) | a volume projected to reach the full line within a month must not be shrunk | engine/components/noncompute.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `noncompute.full_level` | 90 | J (judgement) | disks above 90% are operationally full (alerts, fragmentation) | engine/components/noncompute.py | 1, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `vetoes.mem_p99` | 70 | C (cited default) | catalogue memory veto; leaves 25+ points before the 95% OOM cap | engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 1, +3.3% / 2, +3.3% |
+| `vetoes.mem_p99` | 70 | C (cited default) | catalogue memory veto; leaves 25+ points before the 95% OOM cap | engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 1, +3.2% / 2, +3.2% |
 | `vetoes.iops_p95` | 70 | C (cited default) | catalogue IOPS veto: disk-bound workloads do not recover gracefully when IO is squeezed | engine/components/vetoes.py | 1, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `vetoes.net_p95` | 60 | C (cited default) | catalogue network veto: a proxy is 'quiet by CPU, essential in fact' | engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `vetoes.leak_min_resets` | 3 | J (judgement) | three or more sharp memory drops in 30 days is a repeating restart cycle, not a one-off restart | engine/alerts.py, engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
@@ -361,10 +361,10 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `candidates.idle_iops_abs` | 5 | C (cited default) | candidate b: PLAN.md 7 absolute IOPS idle line | engine/components/candidates.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `candidates.idle_net_pct_bw` | 0.1 | M (measured) | candidate c: real network is lognormal with sigma 1.99 (fitted), so absolute MB/h lines flag idle VMs as busy; 0.1% of plan bandwidth (~1 Mbps on 1 Gbps) scales with plan size | engine/components/candidates.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `candidates.idle_iops_pct` | 1 | M (measured) | candidate c: idle disk IO under 1% of provisioned IOPS at p95; fitted IO spread (sigma 1.06) makes 5 absolute IOPS too strict | engine/components/candidates.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `candidates.underused_cpu` | 40 | C (cited default) | catalogue: CPU P < 40 leaves room after 20-30% headroom | engine/components/candidates.py, engine/pipeline.py | 3, -6.4% / 0, +0.0% / 1, +1.0% / 1, +1.0% |
+| `candidates.underused_cpu` | 40 | C (cited default) | catalogue: CPU P < 40 leaves room after 20-30% headroom | engine/components/candidates.py, engine/pipeline.py | 3, -6.3% / 0, +0.0% / 1, +0.9% / 1, +0.9% |
 | `candidates.underused_mem` | 50 | C (cited default) | catalogue: memory P < 50 | engine/components/candidates.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `candidates.offhour_percentile` | 95 | C (cited default) | PLAN.md 7: an hour is off if its p95 is under the line in every week | engine/backtest.py, engine/components/risk.py, engine/evidence.py, engine/pipeline.py | 0, +1.4% / 0, +0.1% / 0, -0.0% / 0, -0.0% |
-| `candidates.offhour_cpu` | 5 | D (derived) | same as the idle line: an hour is 'off' only if it is idle | engine/evidence.py, engine/pipeline.py | 2, -7.5% / 0, -0.7% / 0, +0.9% / 0, +1.3% |
+| `candidates.offhour_percentile` | 95 | C (cited default) | PLAN.md 7: an hour is off if its p95 is under the line in every week | engine/backtest.py, engine/components/risk.py, engine/evidence.py, engine/pipeline.py | 0, +1.3% / 0, +0.1% / 0, -0.0% / 0, -0.0% |
+| `candidates.offhour_cpu` | 5 | D (derived) | same as the idle line: an hour is 'off' only if it is idle | engine/evidence.py, engine/pipeline.py | 2, -7.2% / 0, -0.7% / 0, +0.9% / 0, +1.3% |
 | `candidates.offhours_min_block_h` | 4 | J (judgement) | stopping and starting for less than 4 hours saves little and adds boot risk | engine/components/candidates.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `candidates.offhours_min_week_h` | 40 | J (judgement) | under 40 h/week (~24%) the schedule's saving is small relative to its operational cost | engine/components/candidates.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `candidates.wake_buffer_min` | 30 | J (judgement) | start the VM 30 min before activity so it is warm (boot + cache warm-up) | engine/components/candidates.py | 0, +0.2% / 0, +0.1% / 0, -0.1% / 0, -0.2% |
@@ -372,13 +372,13 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `candidates.template_off_end_h` | 8 | S (scenario choice) | candidate a: fixed what-if template | engine/components/candidates.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `sizing.target_cpu_prod` | 70 | C (cited default) | AWS default headroom 20-30% -> sized peak at <= 70% in prod | - | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `sizing.target_cpu_nonprod` | 80 | C (cited default) | 20% headroom (AWS default) for lower-stakes environments | - | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `sizing.target_mem` | 75 | J (judgement) | memory p99 after resize <= 75%: OOM crashes, so more room than CPU's 'slows down' | engine/components/sizing.py, engine/replay.py | 1, -5.7% / 0, -1.2% / 0, +0.0% / 1, +2.3% |
-| `sizing.overload_level` | 90 | C (cited default) | catalogue / execution plan: CPU above 90% is overload in Peak Replay | engine/backtest.py, engine/replay.py, engine/score.py | 1, -3.3% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
+| `sizing.target_mem` | 75 | J (judgement) | memory p99 after resize <= 75%: OOM crashes, so more room than CPU's 'slows down' | engine/components/sizing.py, engine/replay.py | 1, -5.5% / 0, -1.1% / 0, +0.0% / 1, +2.2% |
+| `sizing.overload_level` | 90 | C (cited default) | catalogue / execution plan: CPU above 90% is overload in Peak Replay | engine/backtest.py, engine/replay.py, engine/score.py | 1, -3.2% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `sizing.overload_budget_prod_min` | 0 | C (cited default) | execution plan: prod tolerates zero replayed overload minutes | - | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `sizing.overload_budget_nonprod_min` | 30 | C (cited default) | execution plan: dev/staging tolerate 30 min per month of replayed overload | - | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `sizing.mem_cap` | 95 | C (cited default) | execution plan: no replayed memory sample above 95% (OOM territory) | engine/backtest.py, engine/output.py, engine/replay.py | 0, -7.9% / 0, -1.2% / 0, +2.1% / 0, +2.1% |
-| `sizing.prod_max_steps` | 1 | C (cited default) | FinOps practice: one plan step per prod change keeps it small and reversible | engine/components/sizing.py | 9, -19.4% / 9, -19.4% / 0, +0.0% / 0, +0.0% |
-| `sizing.upsize_level` | 90 | D (derived) | same as overload_level: saturated at p99 in normal operation | engine/components/sizing.py | 13, +0.0% / 9, +0.0% / 0, +0.0% / 3, +0.0% |
+| `sizing.mem_cap` | 95 | C (cited default) | execution plan: no replayed memory sample above 95% (OOM territory) | engine/backtest.py, engine/output.py, engine/replay.py | 0, -7.7% / 0, -1.1% / 0, +2.1% / 0, +2.1% |
+| `sizing.prod_max_steps` | 1 | C (cited default) | FinOps practice: one plan step per prod change keeps it small and reversible | engine/components/sizing.py | 12, -21.7% / 12, -21.7% / 0, +0.0% / 0, +0.0% |
+| `sizing.upsize_level` | 90 | D (derived) | same as overload_level: saturated at p99 in normal operation | engine/components/sizing.py | 13, +0.0% / 6, +0.0% / 0, +0.0% / 1, +0.0% |
 | `sizing.core_target_small` | 60 | J (judgement) | candidate d (Erlang-C rule of thumb): 1-2 vCPU queues build earlier, so lower target | engine/components/sizing.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `sizing.core_target_medium` | 70 | J (judgement) | candidate d: 4 vCPU | engine/components/sizing.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `sizing.core_target_large` | 75 | J (judgement) | candidate d: 6+ vCPU absorb bursts better | engine/components/sizing.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
@@ -441,27 +441,6 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `score.max_passes` | 3 | J (judgement) | coordinate ascent cap; selections are expected to settle in 1-2 passes | engine/select.py | selection-level: see the weight sweep |
 | `score.sensitivity_small` | 0.1 | C (cited default) | ledger sensitivity at +/-10% | engine/sensitivity.py | selection-level: see the weight sweep |
 | `score.sensitivity_large` | 0.25 | J (judgement) | ledger sensitivity at +/-25% | engine/sensitivity.py | selection-level: see the weight sweep |
-
-## 8. Selection re-run on the corrected dataset
-
-The full checkpointed selection was re-run on the data branch's corrected dataset (engine code combined with it in a temporary worktree, nothing committed): `engine/selection_log_corrected_data.json`.
-
-| CP | component | selected (this dataset) | total | selected (corrected dataset) | total |
-|---|---|---|---|---|---|
-| 1 | clean | `a_basic` | 9.631 | `a_basic` | 9.887 |
-| 2 | gates_data | `c_peak_hours` | 10.0 | `c_peak_hours` | 10.0 |
-| 3 | gates_policy | `a_table` | 10.0 | `a_table` | 10.0 |
-| 4 | peaks | `c_periodicity` | 9.529 | `c_periodicity` | 10.0 |
-| 5 | noncompute | `b_state_growth` | 10.0 | `b_state_growth` | 10.0 |
-| 6 | vetoes | `b_fixed_sig` | 9.333 | `b_fixed_sig` | 10.0 |
-| 7 | patterns | `a_p99` | 10.0 | `a_p99` | 10.0 |
-| 8 | candidates | `c_relative` | 9.692 | `c_relative` | 10.0 |
-| 9 | sizing | `b_formula_replay` | 8.597 | `b_formula_replay` | 9.5 |
-| 10 | risk | `b_bootstrap` | 9.791 | `b_bootstrap` | 9.801 |
-| 11 | cost | `a_sequential` | 10.0 | `a_sequential` | 10.0 |
-| 12 | assemble | `b_precedence` | 9.745 | `b_precedence` | 10.0 |
-
-**Identical selection on both datasets**: the chosen logic does not depend on the disputed labels.
 
 ### Presets
 

@@ -2,8 +2,8 @@
  "schema_version": "1.0",
  "generated_at": "2026-10-20T00:00:00+05:30",
  "counts": {
-  "critical": 14,
-  "warning": 14,
+  "critical": 11,
+  "warning": 15,
   "info": 3
  },
  "items": [
@@ -62,23 +62,6 @@
    "alert_id": "ALT-0004",
    "type": "capacity_trend",
    "severity": "critical",
-   "resource_id": "vm-0050",
-   "title": "prod-api-02: cpu reaches 90% in ~3 days",
-   "why": "cpu grows 3.45 points/day over the last 14 days (p = 0.049); now 80%, 90% in about 3 days",
-   "evidence": {
-    "metric": "cpu",
-    "value": 2.9,
-    "threshold": 30,
-    "window": "last 14 days"
-   },
-   "first_seen": "2026-10-20T00:00:00+05:30",
-   "occurrences": 1,
-   "suggested_action": "plan an upsize"
-  },
-  {
-   "alert_id": "ALT-0005",
-   "type": "capacity_trend",
-   "severity": "critical",
    "resource_id": "vm-0056",
    "title": "prod-web-31: disk used % reaches 90% in ~3 days",
    "why": "disk used % grows 0.80 points/day over the last 14 days (p = 0.000); now 88%, 90% in about 3 days",
@@ -93,7 +76,7 @@
    "suggested_action": "plan an upsize / cleanup before it fills"
   },
   {
-   "alert_id": "ALT-0006",
+   "alert_id": "ALT-0005",
    "type": "capacity_trend",
    "severity": "critical",
    "resource_id": "vm-0057",
@@ -110,7 +93,7 @@
    "suggested_action": "plan an upsize / cleanup before it fills"
   },
   {
-   "alert_id": "ALT-0007",
+   "alert_id": "ALT-0006",
    "type": "capacity_trend",
    "severity": "critical",
    "resource_id": "vm-0058",
@@ -127,7 +110,7 @@
    "suggested_action": "plan an upsize / cleanup before it fills"
   },
   {
-   "alert_id": "ALT-0008",
+   "alert_id": "ALT-0007",
    "type": "capacity_trend",
    "severity": "critical",
    "resource_id": "vm-0059",
@@ -144,7 +127,7 @@
    "suggested_action": "plan an upsize / cleanup before it fills"
   },
   {
-   "alert_id": "ALT-0009",
+   "alert_id": "ALT-0008",
    "type": "capacity_trend",
    "severity": "critical",
    "resource_id": "vol-0015",
@@ -161,7 +144,7 @@
    "suggested_action": "plan an upsize / cleanup before it fills"
   },
   {
-   "alert_id": "ALT-0010",
+   "alert_id": "ALT-0009",
    "type": "level_shift",
    "severity": "critical",
    "resource_id": "vm-0049",
@@ -178,7 +161,7 @@
    "suggested_action": "find the cause (deploy? traffic? incident?)"
   },
   {
-   "alert_id": "ALT-0011",
+   "alert_id": "ALT-0010",
    "type": "possible_compromise",
    "severity": "critical",
    "resource_id": "vm-0055",
@@ -195,24 +178,7 @@
    "suggested_action": "isolate and inspect the VM now; rotate credentials"
   },
   {
-   "alert_id": "ALT-0012",
-   "type": "under_provisioned",
-   "severity": "critical",
-   "resource_id": "vm-0015",
-   "title": "prod-api-04: saturated, upsize recommended",
-   "why": "saturated: upsize to B4 (CPU p99 100.0 > 90)",
-   "evidence": {
-    "metric": "cpu_pct",
-    "value": 100.0,
-    "threshold": 90,
-    "window": "window"
-   },
-   "first_seen": "2026-10-20T00:00:00+05:30",
-   "occurrences": 1,
-   "suggested_action": "apply the upsize recommendation"
-  },
-  {
-   "alert_id": "ALT-0013",
+   "alert_id": "ALT-0011",
    "type": "under_provisioned",
    "severity": "critical",
    "resource_id": "vm-0016",
@@ -229,24 +195,7 @@
    "suggested_action": "apply the upsize recommendation"
   },
   {
-   "alert_id": "ALT-0014",
-   "type": "under_provisioned",
-   "severity": "critical",
-   "resource_id": "vm-0050",
-   "title": "prod-api-02: saturated, upsize recommended",
-   "why": "saturated: upsize to B4 (CPU p99 100.0 > 90)",
-   "evidence": {
-    "metric": "cpu_pct",
-    "value": 100.0,
-    "threshold": 90,
-    "window": "window"
-   },
-   "first_seen": "2026-10-20T00:00:00+05:30",
-   "occurrences": 1,
-   "suggested_action": "apply the upsize recommendation"
-  },
-  {
-   "alert_id": "ALT-0015",
+   "alert_id": "ALT-0012",
    "type": "budget_overrun",
    "severity": "warning",
    "resource_id": null,
@@ -263,7 +212,7 @@
    "suggested_action": "review this team's recommendations first"
   },
   {
-   "alert_id": "ALT-0016",
+   "alert_id": "ALT-0013",
    "type": "budget_overrun",
    "severity": "warning",
    "resource_id": null,
@@ -280,7 +229,24 @@
    "suggested_action": "review this team's recommendations first"
   },
   {
-   "alert_id": "ALT-0017",
+   "alert_id": "ALT-0014",
+   "type": "capacity_trend",
+   "severity": "warning",
+   "resource_id": "vm-0015",
+   "title": "prod-api-04: cpu reaches 90% in ~10 days",
+   "why": "cpu grows 1.75 points/day over the last 14 days (p = 0.000); now 72%, 90% in about 10 days",
+   "evidence": {
+    "metric": "cpu",
+    "value": 10.4,
+    "threshold": 30,
+    "window": "last 14 days"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "plan an upsize"
+  },
+  {
+   "alert_id": "ALT-0015",
    "type": "cost_increase",
    "severity": "warning",
    "resource_id": null,
@@ -297,7 +263,7 @@
    "suggested_action": "confirm the new resources are intended"
   },
   {
-   "alert_id": "ALT-0018",
+   "alert_id": "ALT-0016",
    "type": "cost_increase",
    "severity": "warning",
    "resource_id": null,
@@ -314,7 +280,7 @@
    "suggested_action": "confirm the new resources are intended"
   },
   {
-   "alert_id": "ALT-0019",
+   "alert_id": "ALT-0017",
    "type": "memory_leak",
    "severity": "warning",
    "resource_id": "vm-0011",
@@ -331,7 +297,7 @@
    "suggested_action": "fix the leak; until then no sizing change is trustworthy"
   },
   {
-   "alert_id": "ALT-0020",
+   "alert_id": "ALT-0018",
    "type": "monitoring_missing",
    "severity": "warning",
    "resource_id": "vm-0044",
@@ -348,7 +314,7 @@
    "suggested_action": "install / fix the monitoring agent"
   },
   {
-   "alert_id": "ALT-0021",
+   "alert_id": "ALT-0019",
    "type": "usage_spike",
    "severity": "warning",
    "resource_id": "vm-0006",
@@ -365,7 +331,7 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0022",
+   "alert_id": "ALT-0020",
    "type": "usage_spike",
    "severity": "warning",
    "resource_id": "vm-0008",
@@ -382,7 +348,7 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0023",
+   "alert_id": "ALT-0021",
    "type": "usage_spike",
    "severity": "warning",
    "resource_id": "vm-0012",
@@ -399,7 +365,7 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0024",
+   "alert_id": "ALT-0022",
    "type": "usage_spike",
    "severity": "warning",
    "resource_id": "vm-0016",
@@ -416,7 +382,7 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0025",
+   "alert_id": "ALT-0023",
    "type": "usage_spike",
    "severity": "warning",
    "resource_id": "vm-0017",
@@ -433,41 +399,41 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0026",
+   "alert_id": "ALT-0024",
    "type": "usage_spike",
    "severity": "warning",
-   "resource_id": "vm-0024",
-   "title": "prod-web-11b: CPU 60% vs a normal 19% at this hour",
-   "why": "30-min CPU 60% at 2026-09-23 11:55; the same hours of the week normally run at 19% (median); 5.1 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "resource_id": "vm-0058",
+   "title": "prod-search-33: CPU 53% vs a normal 37% at this hour",
+   "why": "30-min CPU 53% at 2026-10-05 16:30; the same hours of the week normally run at 37% (median); 4.7 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
    "evidence": {
     "metric": "robust_z_log_ratio",
-    "value": 5.1,
+    "value": 4.7,
     "threshold": 4,
     "window": "30-min rolling"
    },
-   "first_seen": "2026-09-23T10:55:00+05:30",
+   "first_seen": "2026-10-05T16:25:00+05:30",
    "occurrences": 1,
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0027",
+   "alert_id": "ALT-0025",
    "type": "usage_spike",
    "severity": "warning",
-   "resource_id": "vm-0050",
-   "title": "prod-api-02: CPU 65% vs a normal 32% at this hour",
-   "why": "30-min CPU 65% at 2026-10-03 10:55; the same hours of the week normally run at 32% (median); 7.1 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "resource_id": "vm-0062",
+   "title": "prod-search-37: CPU 59% vs a normal 47% at this hour",
+   "why": "30-min CPU 59% at 2026-10-02 17:20; the same hours of the week normally run at 47% (median); 4.0 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
    "evidence": {
     "metric": "robust_z_log_ratio",
-    "value": 7.1,
+    "value": 4.0,
     "threshold": 4,
     "window": "30-min rolling"
    },
-   "first_seen": "2026-10-03T09:40:00+05:30",
-   "occurrences": 3,
+   "first_seen": "2026-10-02T17:20:00+05:30",
+   "occurrences": 2,
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0028",
+   "alert_id": "ALT-0026",
    "type": "usage_spike",
    "severity": "warning",
    "resource_id": "vm-0064",
@@ -484,7 +450,7 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0029",
+   "alert_id": "ALT-0027",
    "type": "usage_spike",
    "severity": "info",
    "resource_id": "vm-0053",
@@ -501,7 +467,7 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0030",
+   "alert_id": "ALT-0028",
    "type": "usage_spike",
    "severity": "info",
    "resource_id": "vm-0099",
@@ -518,7 +484,7 @@
    "suggested_action": "check what ran at that time; not a sizing signal on its own"
   },
   {
-   "alert_id": "ALT-0031",
+   "alert_id": "ALT-0029",
    "type": "usage_spike",
    "severity": "info",
    "resource_id": "vm-0101",

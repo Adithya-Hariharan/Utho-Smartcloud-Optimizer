@@ -203,6 +203,18 @@ def _ledger(sens):
     return rows
 
 
+def _presets_line():
+    p = HERE / "presets_report.json"
+    if not p.exists():
+        return "**Presets**: not run yet (`python -m engine.presets`)."
+    rep = json.loads(p.read_text())
+    sav = [v["saving_pct"] for v in rep.values()]
+    unsafe = sum(v["backtest_unsafe"] for v in rep.values())
+    return (f"**Presets** (`engine/presets_report.json`): savings move only {min(sav)}% -> {max(sav)}% from max-performance "
+            "to max-savings because Peak Replay, the memory caps, the recurring-peak veto and the one-step prod rule are "
+            f"preset-independent; {unsafe} unsafe changes across all presets in the held-out week.")
+
+
 def main():
     log = json.loads(LOG.read_text())
     sel = json.loads(SEL.read_text())
@@ -271,7 +283,9 @@ def main():
           "right-sized resampling kept busy on average, three contradictory labels corrected. The disputes therefore apply "
           "only to that dataset (identified by its fingerprint in `engine/disputes.py`): there they are `xfail(strict=True)` "
           "tests; on the corrected dataset every truth row must match, and the engine (same selected logic) gets 141/141. "
-          "The logic selection re-run on the corrected data is recorded in section 7.", "",
+          "Re-running the whole checkpointed selection on the corrected data picks the same logic for all 12 "
+          "components (on the data it was found on the comparison is section 8; on the merged main branch the selection "
+          "log above IS the corrected-data run).", "",
           "| resource | label said | engine said | evidence and reasoning |", "|---|---|---|---|"]
     for n, d in DISPUTES.items():
         L.append(f"| {n} | {d['label']} | {d['engine']} | {d['summary']} |")
@@ -282,7 +296,7 @@ def main():
           "*deviation* instead of the raw value stopped windows straddling an hour boundary from comparing a peak hour with "
           "a quiet one (prod-billing-01 at 12:00 was '77% vs 3%'); (2) scaling MAD to sigma makes 4 a real 4-sigma "
           "threshold (plain 4 x MAD is ~2.7 sigma); (3) the log scale treats the fitted multiplicative day-to-day drift "
-          "(Bitbrains sd 0.59) as normal spread. Spike alerts fell 56 -> 36 -> 11, the strongest being the planted "
+          "(Bitbrains sd 0.59) as normal spread. During development spike alerts fell 56 -> 36 -> 11 on the first dataset, the strongest being the planted "
           "one-off (prod-reports-02, z 15) and the random bursts (prod-queue-02).",
           "- *Cost increase*: alerts on the provisioning **step** only (the day cost changes), not on the following days "
           "while the 7-day average catches up. Threshold x1.1 is measured: billing is flat on 87% of team-days and the "
@@ -292,9 +306,7 @@ def main():
           "reaching 90% within 30 days (critical within 7). *Level shift* / *possible compromise* (CPU and egress both "
           "> 3x). *Memory leak*, *under-provisioned*, *monitoring missing*, *budget overrun* (forecast = spent + 7-day "
           "run-rate x days left vs 1.25 x first-quarter spend).", "",
-          "**Presets** (`engine/presets_report.json`): savings move only 18.6% -> 19.5% from max-performance to "
-          "max-savings because Peak Replay, the memory caps, the recurring-peak veto and the one-step prod rule are "
-          "preset-independent; none of the presets produces an unsafe change in the held-out week.", "",
+          _presets_line(), "",
           "**Scorecard** (`data/scorecard.json`) and **benchmark** (`engine/benchmark.json`): summarised in ASSUMPTIONS.md.", "",
           "## 7. Numbers ledger", "",
           "Every number the engine uses. Categories: M measured, C cited default, D derived, S scenario, J judgement. "

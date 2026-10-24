@@ -6,24 +6,24 @@
   "target_cpu_nonprod": 60,
   "budget_prod": 0,
   "budget_nonprod": 0,
-  "saving_inr": 114596,
+  "saving_inr": 118052,
   "bill_inr": 615989,
-  "saving_pct": 18.6,
+  "saving_pct": 19.2,
   "verdicts": {
-   "healthy": 31,
-   "recommend": 49,
-   "reject": 31,
+   "healthy": 34,
+   "recommend": 52,
+   "reject": 27,
    "flag": 6,
    "exclude": 21,
-   "upsize": 3
+   "upsize": 1
   },
   "risk_levels": {
-   "Medium": 22,
+   "Medium": 23,
    "Low": 29,
    "High": 1
   },
   "backtest_unsafe": 0,
-  "backtest_evaluated": 45,
+  "backtest_evaluated": 46,
   "unsafe_examples": []
  },
  "default": {
@@ -33,24 +33,24 @@
   "target_cpu_nonprod": 80,
   "budget_prod": 0,
   "budget_nonprod": 30,
-  "saving_inr": 119996,
+  "saving_inr": 123452,
   "bill_inr": 615989,
-  "saving_pct": 19.5,
+  "saving_pct": 20.0,
   "verdicts": {
-   "healthy": 31,
-   "recommend": 50,
-   "reject": 30,
+   "healthy": 34,
+   "recommend": 53,
+   "reject": 26,
    "flag": 6,
    "exclude": 21,
-   "upsize": 3
+   "upsize": 1
   },
   "risk_levels": {
-   "Medium": 22,
+   "Medium": 23,
    "Low": 30,
    "High": 1
   },
   "backtest_unsafe": 0,
-  "backtest_evaluated": 46,
+  "backtest_evaluated": 47,
   "unsafe_examples": []
  },
  "balanced": {
@@ -60,24 +60,24 @@
   "target_cpu_nonprod": 80,
   "budget_prod": 30,
   "budget_nonprod": 30,
-  "saving_inr": 119996,
+  "saving_inr": 123452,
   "bill_inr": 615989,
-  "saving_pct": 19.5,
+  "saving_pct": 20.0,
   "verdicts": {
-   "healthy": 29,
-   "recommend": 50,
-   "reject": 32,
+   "healthy": 32,
+   "recommend": 53,
+   "reject": 28,
    "flag": 6,
    "exclude": 21,
-   "upsize": 3
+   "upsize": 1
   },
   "risk_levels": {
-   "Medium": 22,
+   "Medium": 23,
    "Low": 30,
    "High": 1
   },
   "backtest_unsafe": 0,
-  "backtest_evaluated": 46,
+  "backtest_evaluated": 47,
   "unsafe_examples": []
  },
  "max_savings": {
@@ -87,24 +87,24 @@
   "target_cpu_nonprod": 90,
   "budget_prod": 60,
   "budget_nonprod": 60,
-  "saving_inr": 119996,
+  "saving_inr": 123452,
   "bill_inr": 615989,
-  "saving_pct": 19.5,
+  "saving_pct": 20.0,
   "verdicts": {
-   "healthy": 28,
-   "recommend": 50,
-   "reject": 33,
+   "healthy": 31,
+   "recommend": 53,
+   "reject": 29,
    "flag": 6,
    "exclude": 21,
-   "upsize": 3
+   "upsize": 1
   },
   "risk_levels": {
-   "Medium": 22,
+   "Medium": 23,
    "Low": 30,
    "High": 1
   },
   "backtest_unsafe": 0,
-  "backtest_evaluated": 46,
+  "backtest_evaluated": 47,
   "unsafe_examples": []
  }
 }

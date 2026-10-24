@@ -1,5 +1,5 @@
 {
- "base_saving_inr": 119996,
+ "base_saving_inr": 123452,
  "base_bill_inr": 615989,
  "factors": [
   0.75,
@@ -10,12 +10,12 @@
  "keys": {
   "percentiles.prod": {
    "0.75": {
-    "flips": 20,
-    "saving_change_pct": -25.4
+    "flips": 17,
+    "saving_change_pct": -24.7
    },
    "0.90": {
     "flips": 9,
-    "saving_change_pct": -13.8
+    "saving_change_pct": -13.4
    },
    "1.10": {
     "flips": 0,
@@ -54,12 +54,12 @@
     "saving_change_pct": 0.0
    },
    "1.10": {
-    "flips": 66,
-    "saving_change_pct": -72.1
+    "flips": 62,
+    "saving_change_pct": -70.1
    },
    "1.25": {
-    "flips": 66,
-    "saving_change_pct": -72.1
+    "flips": 62,
+    "saving_change_pct": -70.1
    }
   },
   "evidence.trend_percentile": {
@@ -173,7 +173,7 @@
   "gates_data.min_coverage": {
    "0.75": {
     "flips": 1,
-    "saving_change_pct": 1.2
+    "saving_change_pct": 1.1
    },
    "0.90": {
     "flips": 0,
@@ -185,7 +185,7 @@
    },
    "1.25": {
     "flips": 100,
-    "saving_change_pct": -92.7
+    "saving_change_pct": -92.9
    }
   },
   "gates_data.medium_coverage": {
@@ -424,19 +424,19 @@
   },
   "peaks.looks_wasteful_mean": {
    "0.75": {
-    "flips": 9,
-    "saving_change_pct": -1.4
+    "flips": 8,
+    "saving_change_pct": -1.3
    },
    "0.90": {
-    "flips": 2,
-    "saving_change_pct": -1.4
+    "flips": 1,
+    "saving_change_pct": -1.3
    },
    "1.10": {
-    "flips": 0,
+    "flips": 1,
     "saving_change_pct": 0.0
    },
    "1.25": {
-    "flips": 3,
+    "flips": 2,
     "saving_change_pct": 0.0
    }
   },
@@ -541,11 +541,11 @@
    },
    "1.10": {
     "flips": 1,
-    "saving_change_pct": 3.3
+    "saving_change_pct": 3.2
    },
    "1.25": {
     "flips": 2,
-    "saving_change_pct": 3.3
+    "saving_change_pct": 3.2
    }
   },
   "vetoes.iops_p95": {
@@ -929,7 +929,7 @@
   "candidates.underused_cpu": {
    "0.75": {
     "flips": 3,
-    "saving_change_pct": -6.4
+    "saving_change_pct": -6.3
    },
    "0.90": {
     "flips": 0,
@@ -937,11 +937,11 @@
    },
    "1.10": {
     "flips": 1,
-    "saving_change_pct": 1.0
+    "saving_change_pct": 0.9
    },
    "1.25": {
     "flips": 1,
-    "saving_change_pct": 1.0
+    "saving_change_pct": 0.9
    }
   },
   "candidates.underused_mem": {
@@ -965,7 +965,7 @@
   "candidates.offhour_percentile": {
    "0.75": {
     "flips": 0,
-    "saving_change_pct": 1.4
+    "saving_change_pct": 1.3
    },
    "0.90": {
     "flips": 0,
@@ -983,7 +983,7 @@
   "candidates.offhour_cpu": {
    "0.75": {
     "flips": 2,
-    "saving_change_pct": -7.5
+    "saving_change_pct": -7.2
    },
    "0.90": {
     "flips": 0,
@@ -1127,11 +1127,11 @@
   "sizing.target_mem": {
    "0.75": {
     "flips": 1,
-    "saving_change_pct": -5.7
+    "saving_change_pct": -5.5
    },
    "0.90": {
     "flips": 0,
-    "saving_change_pct": -1.2
+    "saving_change_pct": -1.1
    },
    "1.10": {
     "flips": 0,
@@ -1139,13 +1139,13 @@
    },
    "1.25": {
     "flips": 1,
-    "saving_change_pct": 2.3
+    "saving_change_pct": 2.2
    }
   },
   "sizing.overload_level": {
    "0.75": {
     "flips": 1,
-    "saving_change_pct": -3.3
+    "saving_change_pct": -3.2
    },
    "0.90": {
     "flips": 0,
@@ -1199,11 +1199,11 @@
   "sizing.mem_cap": {
    "0.75": {
     "flips": 0,
-    "saving_change_pct": -7.9
+    "saving_change_pct": -7.7
    },
    "0.90": {
     "flips": 0,
-    "saving_change_pct": -1.2
+    "saving_change_pct": -1.1
    },
    "1.10": {
     "flips": 0,
@@ -1216,12 +1216,12 @@
   },
   "sizing.prod_max_steps": {
    "0.75": {
-    "flips": 9,
-    "saving_change_pct": -19.4
+    "flips": 12,
+    "saving_change_pct": -21.7
    },
    "0.90": {
-    "flips": 9,
-    "saving_change_pct": -19.4
+    "flips": 12,
+    "saving_change_pct": -21.7
    },
    "1.10": {
     "flips": 0,
@@ -1238,7 +1238,7 @@
     "saving_change_pct": 0.0
    },
    "0.90": {
-    "flips": 9,
+    "flips": 6,
     "saving_change_pct": 0.0
    },
    "1.10": {
@@ -1246,7 +1246,7 @@
     "saving_change_pct": 0.0
    },
    "1.25": {
-    "flips": 3,
+    "flips": 1,
     "saving_change_pct": 0.0
    }
   },

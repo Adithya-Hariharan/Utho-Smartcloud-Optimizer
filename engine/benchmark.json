@@ -4,14 +4,14 @@
  "copies": 9,
  "metric_rows": 8647371,
  "seconds": {
-  "replicate": 0.01,
-  "clean": 5.24,
-  "evidence_and_decisions": 36.8,
-  "alerts": 11.87,
-  "total": 53.9
+  "replicate": 0.02,
+  "clean": 5.94,
+  "evidence_and_decisions": 41.39,
+  "alerts": 13.89,
+  "total": 61.22
  },
- "ms_per_vm": 50.8,
- "alerts": 216,
+ "ms_per_vm": 57.6,
+ "alerts": 198,
  "rss_mb": 763,
  "machine": {
   "python": "3.11.7",
