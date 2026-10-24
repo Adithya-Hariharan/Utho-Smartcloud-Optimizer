@@ -120,11 +120,15 @@ alerts:
   g9_share_above_90: {value: 0.05, why: "Share of CPU samples above 90%", source: "PLAN_final.md B5"}
 
 # Presets (plan section 7 preset table). default mirrors the thresholds above.
+# Besides percentile, CPU target and replay limit (plan section 7), each preset sets how wide the net of "shrink
+# candidates" is: underused (CPU P < x and mem P < y) and looks-shrinkable (mean CPU < z). Peak Replay, the 95%
+# memory cap and the prod one-step rule are the same in every preset, so a wider net never makes a resize unsafe.
+# default must equal thresholds.underused_cpu_pct / underused_mem_pct / shrinkable_mean_cpu_pct.
 presets:
-  max_savings: {label: Max savings, enabled: true, pct_prod: 90, pct_nonprod: 90, cpu_target_prod: 90, cpu_target_nonprod: 90, replay_limit_prod: 60, replay_limit_nonprod: 60}
-  balanced: {label: Balanced, enabled: true, pct_prod: 95, pct_nonprod: 95, cpu_target_prod: 80, cpu_target_nonprod: 80, replay_limit_prod: 30, replay_limit_nonprod: 30}
-  default: {label: Default, enabled: true, pct_prod: 99, pct_nonprod: 95, cpu_target_prod: 70, cpu_target_nonprod: 80, replay_limit_prod: 0, replay_limit_nonprod: 30}
-  max_performance: {label: Max performance, enabled: true, pct_prod: 99.5, pct_nonprod: 99.5, cpu_target_prod: 60, cpu_target_nonprod: 60, replay_limit_prod: 0, replay_limit_nonprod: 0}
+  max_savings: {label: Max savings, enabled: true, pct_prod: 90, pct_nonprod: 90, cpu_target_prod: 90, cpu_target_nonprod: 90, replay_limit_prod: 60, replay_limit_nonprod: 60, underused_cpu_pct: 55, underused_mem_pct: 65, shrinkable_mean_cpu_pct: 30}
+  balanced: {label: Balanced, enabled: true, pct_prod: 95, pct_nonprod: 95, cpu_target_prod: 80, cpu_target_nonprod: 80, replay_limit_prod: 30, replay_limit_nonprod: 30, underused_cpu_pct: 45, underused_mem_pct: 55, shrinkable_mean_cpu_pct: 25}
+  default: {label: Default, enabled: true, pct_prod: 99, pct_nonprod: 95, cpu_target_prod: 70, cpu_target_nonprod: 80, replay_limit_prod: 0, replay_limit_nonprod: 30, underused_cpu_pct: 40, underused_mem_pct: 50, shrinkable_mean_cpu_pct: 20}
+  max_performance: {label: Max performance, enabled: true, pct_prod: 99.5, pct_nonprod: 99.5, cpu_target_prod: 60, cpu_target_nonprod: 60, replay_limit_prod: 0, replay_limit_nonprod: 0, underused_cpu_pct: 30, underused_mem_pct: 40, shrinkable_mean_cpu_pct: 15}
 
 # Carbon estimate (Forecast & Green). PLACEHOLDER coefficients: published averages, not measured from this
 # dataset (no power, PUE or grid data exists in data/). Future scope: add per-plan power, data-centre PUE and

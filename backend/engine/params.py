@@ -16,6 +16,9 @@ class Params:
     mem_cap: float
     replay_limit_prod: float
     replay_limit_nonprod: float
+    underused_cpu_pct: float          # a VM is a resize candidate when CPU P < this and memory P < underused_mem_pct
+    underused_mem_pct: float
+    shrinkable_mean_cpu_pct: float    # ... or when its mean CPU is below this ("looks wasteful on average")
 
     def pct(self, prod):
         return self.pct_prod if prod else self.pct_nonprod
@@ -51,4 +54,6 @@ def params_for(cfg, preset="default"):
     return Params(preset=preset, label=p["label"], pct_prod=p["pct_prod"], pct_nonprod=p["pct_nonprod"],
                   cpu_target_prod=p["cpu_target_prod"], cpu_target_nonprod=p["cpu_target_nonprod"],
                   mem_target=t("mem_target_pct"), mem_cap=t("mem_hard_cap_pct"),
-                  replay_limit_prod=p["replay_limit_prod"], replay_limit_nonprod=p["replay_limit_nonprod"])
+                  replay_limit_prod=p["replay_limit_prod"], replay_limit_nonprod=p["replay_limit_nonprod"],
+                  underused_cpu_pct=p["underused_cpu_pct"], underused_mem_pct=p["underused_mem_pct"],
+                  shrinkable_mean_cpu_pct=p["shrinkable_mean_cpu_pct"])

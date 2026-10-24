@@ -49,6 +49,16 @@ One deviation from E4: `to_plan` = chosen plan, else the last attempt's plan, el
    | default | p99 / p95 | 70 / 80 | 0 / 30 min |
    | max_performance | p99.5 / p99.5 | 60 / 60 | 0 / 0 min |
 
+   - **Widened (owner decision 2026-10-24).** Percentile, CPU target and replay limit alone barely separated the presets (≤ 5 of 141 resources differed). So each preset also sets how wide the net of shrink candidates is:
+
+     | Preset | underused: CPU P < | underused: mem P < | looks shrinkable: mean CPU < |
+     |---|---|---|---|
+     | max_savings | 55 | 65 | 30 |
+     | balanced | 45 | 55 | 25 |
+     | default | 40 | 50 | 20 (unchanged) |
+     | max_performance | 30 | 40 | 15 |
+
+     Peak Replay, the 95% memory cap and the prod one-step rule are identical in every preset, so a wider net can't make a resize unsafe. Result on the current data: Max savings 54 recommend / ₹1,25,465 (14 resources differ from Default); Balanced ₹1,25,465 (4); Default ₹1,24,313; Max performance 48 recommend / ₹1,10,588 (15). **Honest ceiling:** Max savings gains only ~0.9%, because the extra VMs it would shrink fail Peak Replay or lack RAM; Max performance is clearly more cautious (−11%).
    - Numeric values go into `config.yaml`. `params_for()` returns them, and the engine runs once per preset at startup.
    - The memory target (75%) and cap (95%) are fixed across presets.
    - **Truth only covers `default`.** The other presets must validate against the schema and keep every safety rule.

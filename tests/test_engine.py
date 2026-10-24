@@ -94,6 +94,50 @@ def test_preset_differences_cp13(runs):
     assert retargeted and unchanged and dropped
 
 
+def test_presets_are_genuinely_different(runs):
+    """Owner decision: presets also vary how wide the net of shrink candidates is (PLAN_frontend_integration §2.1)."""
+    saving = lambda items: sum(i["options"][i["default_option"]]["saving_inr"] for i in items
+                               if i["verdict"] == "recommend" and i["options"][i["default_option"]]["saving_inr"] > 0)
+    s = {p: saving(runs[p][0]) for p in PRESETS}
+    assert s["max_performance"] < s["default"] <= s["balanced"] <= s["max_savings"], s
+    assert s["max_performance"] < 0.95 * s["default"]                       # clearly more cautious
+    key = lambda i: (i["verdict"], i["reason_code"], i["default_option"], (i["target"] or {}).get("plan"))
+    default = {i["resource"]["resource_id"]: key(i) for i in runs["default"][0]}
+    for p in ("max_savings", "max_performance"):
+        differs = sum(key(i) != default[i["resource"]["resource_id"]] for i in runs[p][0])
+        assert differs > 3, (p, differs)
+    # a wider net never makes a resize unsafe: every recommended resize in every preset passed Peak Replay
+    for p in PRESETS:
+        for i in runs[p][0]:
+            if i["verdict"] == "recommend" and i["target"]:
+                assert i["replay"]["passed"], (p, i["resource"]["name"])
+
+
+def test_preset_wording_follows_the_limits(runs):
+    trace = lambda p, name: next(i for i in runs[p][0] if i["resource"]["name"] == name)["trace"]
+    gate = lambda p: next(s for s in trace(p, "prod-web-35") if s["step"] == "gate.looks_shrinkable")
+    assert gate("default")["check"] == "mean CPU < 20% or CPU p99 < 40%"
+    assert gate("max_savings")["check"] == "mean CPU < 30% or CPU p90 < 55%"
+    assert gate("max_performance")["check"] == "mean CPU < 15% or CPU p99.5 < 30%"
+    for p in PRESETS:                                          # no internal key leaks into any user-facing text
+        for i in runs[p][0]:
+            assert "p99_5" not in i["reason"] and all("p99_5" not in s["check"] + s["value"] for s in i["trace"])
+
+
+def test_failed_resize_keeps_the_schedule(runs):
+    """A resize that fails Peak Replay forbids resizing, not scheduling: Max savings (p90, 90% target) treats more
+    dev VMs as underused, and must not lose their off-hours schedule because of it."""
+    saving = lambda items: sum(i["options"][i["default_option"]]["saving_inr"] for i in items
+                               if i["verdict"] == "recommend" and i["options"][i["default_option"]]["saving_inr"] > 0)
+    assert saving(runs["max_savings"][0]) >= saving(runs["default"][0])
+    ms = {i["resource"]["name"]: i for i in runs["max_savings"][0]}
+    for name in ["dev-app-74", "dev-app-75", "dev-app-76", "dev-support-05", "dev-api-16"]:
+        assert (ms[name]["verdict"], ms[name]["default_option"]) == ("recommend", "schedule"), name
+    assert "Not resized" in ms["dev-app-76"]["reason"] or ms["dev-app-76"]["reason"]
+    # a resize failure with no schedule to fall back on is still a reject (dev-report-02, staging-demo-10)
+    assert ms["dev-report-02"]["reason_code"] == "PEAK_REPLAY_FAILED" and ms["staging-demo-10"]["verdict"] == "reject"
+
+
 def test_trace_contract(run):
     for name, item in run[0].items():
         assert sum(s["terminal"] for s in item["trace"]) == 1, name

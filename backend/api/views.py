@@ -355,7 +355,9 @@ def assumptions(st):
     ]
     presets = [{"id": k, "label": v["label"], "percentile": f"p{v['pct_prod']:g} prod / p{v['pct_nonprod']:g} non-prod",
                 "cpu_target": f"{v['cpu_target_prod']}% / {v['cpu_target_nonprod']}%",
-                "replay_limit": f"{v['replay_limit_prod']} / {v['replay_limit_nonprod']} min"}
+                "replay_limit": f"{v['replay_limit_prod']} / {v['replay_limit_nonprod']} min",
+                "underused": f"CPU < {v['underused_cpu_pct']}% and memory < {v['underused_mem_pct']}%; "
+                             f"mean CPU < {v['shrinkable_mean_cpu_pct']}%"}
                for k, v in cfg.raw["presets"].items() if v.get("enabled")]
     types = st.inv["type"].value_counts().to_dict()
     return {"data_window": data_window(cfg),

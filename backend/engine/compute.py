@@ -2,7 +2,8 @@
 
 Order (each check appended to the trace):
   0 inventory validation   1 exclusion gates   3 under-provisioned   5a went quiet
-  'looks shrinkable' gate (mean CPU < 20% or CPU P < 40%): otherwise healthy, vetoes are irrelevant
+  'looks shrinkable' gate (mean CPU < shrinkable limit or CPU P < underused limit; both set per preset, Default
+                         20 / 40): otherwise healthy, vetoes are irrelevant
   4 vetoes + 5 patterns: leak > reserved memory > memory > IOPS > network > growth > peak under-observed
                          > recurring peak > one-off peak
   6 candidates (idle, underused, off-hours)   7 sizing   8 Peak Replay   9 floor
@@ -157,8 +158,9 @@ def evaluate_vm(e, rid, row, f, cur, tr):
         return upsize(e, rid, row, f, cur, cpu, mem, prod, tr)
 
     # ---- looks shrinkable? -----------------------------------------------------------------------
-    shrinkable = mean < e.t("shrinkable_mean_cpu_pct") or cpu_p < e.t("underused_cpu_pct")
-    if tr.add("gate.looks_shrinkable", f"mean CPU < 20% or CPU {key} < 40%", round(mean, 1), e.t("shrinkable_mean_cpu_pct"),
+    shr, und = e.p.shrinkable_mean_cpu_pct, e.p.underused_cpu_pct
+    shrinkable = mean < shr or cpu_p < und
+    if tr.add("gate.looks_shrinkable", f"mean CPU < {shr:g}% or CPU {key} < {und:g}%", round(mean, 1), shr,
               "pass" if shrinkable else "healthy") == "healthy":
         tr.terminal()
         return Outcome("healthy", "RIGHT_SIZED",
@@ -268,8 +270,9 @@ def refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr):
                limit, "pass" if chosen else "fail", terminal=True)
         if chosen is not None:
             return Outcome("healthy", "RIGHT_SIZED",
-                           f"CPU {key} {cpu_p:.0f}%, memory {key} {mem_p:.0f}%: not underused (CPU {key} ≥ 40 or memory "
-                           f"{key} ≥ 50), and {chosen.plan_id} would pass replay only with no headroom to spare: keep as is.")
+                           f"CPU {key} {cpu_p:.0f}%, memory {key} {mem_p:.0f}%: not underused (CPU {key} ≥ "
+                           f"{e.p.underused_cpu_pct:g} or memory {key} ≥ {e.p.underused_mem_pct:g}), and "
+                           f"{chosen.plan_id} would pass replay only with no headroom to spare: keep as is.")
         worst = replay["attempts"][0]
         return Outcome("reject", "PEAK_REPLAY_FAILED",
                        f"Sized on {key} {cpu_p:.0f}% the target is {plan.plan_id}, but replaying 30 days shows "
@@ -352,29 +355,38 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
 
     # ---- UNDERUSED -> sizing + replay --------------------------------------------------------------
     if resize_blocked is None:
-        underused = cpu_p < t("underused_cpu_pct") and mem_p < t("underused_mem_pct")
-        tr.add("candidate.underused", f"CPU {key} < 40 and mem {key} < 50", round(cpu_p, 2), t("underused_cpu_pct"),
+        underused = cpu_p < e.p.underused_cpu_pct and mem_p < e.p.underused_mem_pct
+        tr.add("candidate.underused", f"CPU {key} < {e.p.underused_cpu_pct:g} and mem {key} < {e.p.underused_mem_pct:g}",
+               round(cpu_p, 2), e.p.underused_cpu_pct,
                "match" if underused else "no")
+    resize_failed = None              # a resize that failed Peak Replay forbids RESIZING, not scheduling
     if underused and not smallest:
         cp, mp, basis = e.group_percentiles(row, key, cpu_p, mem_p)
         need_v, need_r = needs(row["vcpu"], row["ram_gb"], cp, mp, e.p.cpu_target(prod), e.p.mem_target)
         plan, size_note = size(e.cat, row["plan_id"], need_v, need_r, prod)
         if plan is None or plan.price >= compute:
-            return refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr)
-        tr.add("sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB", f"{plan.plan_id}{basis}", row["plan_id"], "pass")
-        replay, chosen = rp.search(cpu, mem, row["vcpu"], row["ram_gb"], plan, e.cat, compute,
-                                   e.p.replay_limit(prod), e.p.mem_cap)
-        tr.add("step8.peak_replay", "minutes CPU > 90% at the new size", replay["attempts"][-1]["minutes_above_90"],
-               e.p.replay_limit(prod), "pass" if chosen else "fail")
-        if chosen is None:
-            worst = replay["attempts"][0]
-            tr.terminal()
-            return Outcome("reject", "PEAK_REPLAY_FAILED",
-                           f"Sized on {key} {cpu_p:.0f}% the target is {plan.plan_id}, but replaying 30 days at that size "
-                           f"shows {worst['minutes_above_90']} min above 90% (limit {e.p.replay_limit(prod):.0f}): checked and kept.",
-                           veto=veto("replay", "minutes_above_90", worst["minutes_above_90"], e.p.replay_limit(prod), ">",
-                                     f"replay shows {worst['minutes_above_90']} min > 90%"), naive=naive, replay=replay)
-        target = chosen
+            if prod:                  # prod is never scheduled: nothing else to try
+                return refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr)
+        else:
+            tr.add("sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB", f"{plan.plan_id}{basis}", row["plan_id"], "pass")
+            replay, chosen = rp.search(cpu, mem, row["vcpu"], row["ram_gb"], plan, e.cat, compute,
+                                       e.p.replay_limit(prod), e.p.mem_cap)
+            tr.add("step8.peak_replay", "minutes CPU > 90% at the new size", replay["attempts"][-1]["minutes_above_90"],
+                   e.p.replay_limit(prod), "pass" if chosen else "fail")
+            if chosen is None:
+                worst = replay["attempts"][0]
+                resize_failed = Outcome(
+                    "reject", "PEAK_REPLAY_FAILED",
+                    f"Sized on {key} {cpu_p:.0f}% the target is {plan.plan_id}, but replaying 30 days at that size "
+                    f"shows {worst['minutes_above_90']} min above 90% (limit {e.p.replay_limit(prod):.0f}): checked and kept.",
+                    veto=veto("replay", "minutes_above_90", worst["minutes_above_90"], e.p.replay_limit(prod), ">",
+                              f"replay shows {worst['minutes_above_90']} min > 90%"), naive=naive, replay=replay)
+                if prod:
+                    tr.terminal()
+                    return resize_failed
+                replay = None
+            else:
+                target = chosen
 
     # ---- OFF-HOURS ---------------------------------------------------------------------------------
     sched, why = None, "prod is never scheduled"
@@ -393,6 +405,9 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
         if resize_blocked is not None:
             tr.add("veto.recurring_peak.decision", "no off-hours schedule around the peak", None, None, "reject", True)
             return resize_blocked
+        if resize_failed is not None:
+            tr.terminal()
+            return resize_failed
         if underused and smallest:
             tr.terminal()
             return Outcome("healthy", "RIGHT_SIZED",
@@ -431,6 +446,8 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
                      (f"; busy hours kept on: {', '.join(sched['busy_hours_excluded'][:3])}" if sched["busy_hours_excluded"] else "") + ".")
     if peak_note:
         parts.append(f"Not resized: {peak_note}; the schedule keeps that window on.")
+    if resize_failed is not None and target is None:
+        parts.append(f"Not resized: {resize_failed.veto['message']}.")
     o = Outcome("recommend", code, " ".join(parts), actions=acts, default=default, schedule=sched, replay=replay,
                 target=e.target_block(target, cur) if target is not None else None)
     o.options = build_options(cur["monthly_inr"], opts)

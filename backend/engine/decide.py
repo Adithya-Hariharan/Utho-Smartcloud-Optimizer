@@ -127,7 +127,9 @@ class Engine:
             elif row["type"] == "volume" and f.get("metrics", {}).get("disk_used", {}).get("p50") is not None:
                 naive = present.naive_volume(self, row, f)
         v = present.veto(self, o, row, f, naive) if o.verdict == "reject" else None
-        reason = v["message"] if v else o.reason
+        if v:
+            v["message"] = present.pretty(v["message"])
+        reason = v["message"] if v else present.pretty(o.reason)
         options = o.options or {"none": {"monthly_inr_after": cur["monthly_inr"], "saving_inr": 0,
                                          "formula": f"{format_inr(cur['monthly_inr'])}/month, no change"}}
         has_tel = series is not None and o.code not in METRICS_NULL

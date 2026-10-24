@@ -161,9 +161,10 @@ The backend now serves every endpoint in the frontend's own shapes (`frontend/sr
   - alert types and wording
 - **New modules:** `backend/api/views.py` (one function per endpoint), `backend/engine/present.py`, and `backend/insights/{forecast,whatif,export}.py`. `scorecard.py`, `alerts.py` and `growth.py` were rewritten to the frontend shapes.
 - **Carbon** (Forecast & Green) uses PLACEHOLDER coefficients in `config.yaml` (`carbon`: CCF / CEA published averages). The dataset has no power, PUE or grid data. Adding them is **future scope** (§10 of the integration plan).
+- **Presets widened** (`config.yaml` `presets`, `backend/engine/params.py`): each preset also sets the *underused* limits (CPU P / memory P) and the *looks-shrinkable* mean-CPU limit (Max savings 55 / 65 / 30, Balanced 45 / 55 / 25, Default 40 / 50 / 20, Max performance 30 / 40 / 15). Default is unchanged (141/141). Peak Replay stays the same hard gate everywhere. A resize that fails Peak Replay no longer discards a valid off-hours schedule: it forbids resizing only.
 - **One deliberate deviation from the integration plan (E4):** the replay chart projects onto the plan the replay attempts were run on, i.e. chosen plan, else last attempt, else naive target. The plan said "else naive target, else last attempt", but with that order `dev-report-02` would chart S1 while its rejecting attempt was B1.
 - **Verified:**
-  - `pytest` passes (491 tests).
+  - `pytest` passes (494 tests).
   - A shape diff of every endpoint against every frontend fixture finds 0 missing and 0 type mismatches.
   - The frontend's `check_fixtures.mjs` passes all 5,854 checks on a dump of the live API.
   - The frontend typechecks, its unit tests pass (19) and it builds.

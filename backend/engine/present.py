@@ -21,6 +21,11 @@ def _null(v):
     return None if v is None or (isinstance(v, float) and math.isnan(v)) or v == "" else v
 
 
+def pretty(s):
+    """Internal percentile key -> label: 'p99_5' reads 'p99.5' wherever text reaches the UI."""
+    return s.replace("p99_5", "p99.5") if isinstance(s, str) else s
+
+
 def text(v):
     """Trace values and thresholds are always strings (the UI calls .match on them)."""
     if v is None or (isinstance(v, float) and math.isnan(v)):
@@ -38,8 +43,8 @@ def trace(steps, verdict):
         res = RESULT_MAP.get(s["result"], "info")
         if s["terminal"]:
             res = "pass" if verdict in TERMINAL_OK else "fail"
-        out.append({"step": s["step"], "check": s["check"], "value": text(s["value"]),
-                    "threshold": text(s["threshold"]), "result": res, "terminal": bool(s["terminal"])})
+        out.append({"step": s["step"], "check": pretty(s["check"]), "value": pretty(text(s["value"])),
+                    "threshold": pretty(text(s["threshold"])), "result": res, "terminal": bool(s["terminal"])})
     return out
 
 

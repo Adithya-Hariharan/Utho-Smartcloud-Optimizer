@@ -32,6 +32,15 @@ def test_params_four_presets(cfg):
         assert (q.pct_prod, q.pct_nonprod, q.cpu_target_prod, q.cpu_target_nonprod, q.replay_limit_prod,
                 q.replay_limit_nonprod) == vals
         assert (q.mem_target, q.mem_cap) == (75, 95)
+    wide = {"max_savings": (55, 65, 30), "balanced": (45, 55, 25), "default": (40, 50, 20),
+            "max_performance": (30, 40, 15)}
+    for name, vals in wide.items():
+        q = params_for(cfg, name)
+        assert (q.underused_cpu_pct, q.underused_mem_pct, q.shrinkable_mean_cpu_pct) == vals
+    d = params_for(cfg)                                       # Default must mirror the global thresholds
+    assert (d.underused_cpu_pct, d.underused_mem_pct, d.shrinkable_mean_cpu_pct) == (
+        cfg.get("thresholds.underused_cpu_pct"), cfg.get("thresholds.underused_mem_pct"),
+        cfg.get("thresholds.shrinkable_mean_cpu_pct"))
     assert params_for(cfg, "max_performance").pct_label(True) == "p99.5"
     assert params_for(cfg, "max_performance").pct_key(True) == "p99_5"
     with pytest.raises(PresetNotEnabled):
