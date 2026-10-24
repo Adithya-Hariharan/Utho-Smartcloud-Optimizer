@@ -1,0 +1,504 @@
+{
+ "schema_version": "1.0",
+ "generated_at": "2026-10-20T00:00:00+05:30",
+ "counts": {
+  "critical": 11,
+  "warning": 15,
+  "info": 3
+ },
+ "items": [
+  {
+   "alert_id": "ALT-0001",
+   "type": "budget_overrun",
+   "severity": "critical",
+   "resource_id": null,
+   "title": "team growth: month-end forecast 12% over budget",
+   "why": "forecast Rs 113,836 (spent Rs 67,930 + Rs 3,825/day x 12 days) vs budget Rs 101,695 (= 1.25 x first-quarter monthly spend)",
+   "evidence": {
+    "metric": "team_month_forecast:growth",
+    "value": 113836,
+    "threshold": 101695,
+    "window": "2026-10"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "review this team's recommendations first"
+  },
+  {
+   "alert_id": "ALT-0002",
+   "type": "budget_overrun",
+   "severity": "critical",
+   "resource_id": null,
+   "title": "team mobile: month-end forecast 17% over budget",
+   "why": "forecast Rs 35,933 (spent Rs 21,642 + Rs 1,191/day x 12 days) vs budget Rs 30,632 (= 1.25 x first-quarter monthly spend)",
+   "evidence": {
+    "metric": "team_month_forecast:mobile",
+    "value": 35933,
+    "threshold": 30632,
+    "window": "2026-10"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "review this team's recommendations first"
+  },
+  {
+   "alert_id": "ALT-0003",
+   "type": "budget_overrun",
+   "severity": "critical",
+   "resource_id": null,
+   "title": "team payments: month-end forecast 14% over budget",
+   "why": "forecast Rs 113,564 (spent Rs 69,604 + Rs 3,663/day x 12 days) vs budget Rs 99,798 (= 1.25 x first-quarter monthly spend)",
+   "evidence": {
+    "metric": "team_month_forecast:payments",
+    "value": 113564,
+    "threshold": 99798,
+    "window": "2026-10"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "review this team's recommendations first"
+  },
+  {
+   "alert_id": "ALT-0004",
+   "type": "capacity_trend",
+   "severity": "critical",
+   "resource_id": "vm-0056",
+   "title": "prod-web-31: disk used % reaches 90% in ~3 days",
+   "why": "disk used % grows 0.80 points/day over the last 14 days (p = 0.000); now 88%, 90% in about 3 days",
+   "evidence": {
+    "metric": "disk used %",
+    "value": 2.6,
+    "threshold": 30,
+    "window": "last 14 days"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "plan an upsize / cleanup before it fills"
+  },
+  {
+   "alert_id": "ALT-0005",
+   "type": "capacity_trend",
+   "severity": "critical",
+   "resource_id": "vm-0057",
+   "title": "prod-api-32: disk used % reaches 90% in ~7 days",
+   "why": "disk used % grows 0.80 points/day over the last 14 days (p = 0.000); now 84%, 90% in about 7 days",
+   "evidence": {
+    "metric": "disk used %",
+    "value": 6.9,
+    "threshold": 30,
+    "window": "last 14 days"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "plan an upsize / cleanup before it fills"
+  },
+  {
+   "alert_id": "ALT-0006",
+   "type": "capacity_trend",
+   "severity": "critical",
+   "resource_id": "vm-0058",
+   "title": "prod-search-33: disk used % reaches 90% in ~2 days",
+   "why": "disk used % grows 0.80 points/day over the last 14 days (p = 0.000); now 88%, 90% in about 2 days",
+   "evidence": {
+    "metric": "disk used %",
+    "value": 2.0,
+    "threshold": 30,
+    "window": "last 14 days"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "plan an upsize / cleanup before it fills"
+  },
+  {
+   "alert_id": "ALT-0007",
+   "type": "capacity_trend",
+   "severity": "critical",
+   "resource_id": "vm-0059",
+   "title": "prod-checkout-34: disk used % reaches 90% in ~6 days",
+   "why": "disk used % grows 0.80 points/day over the last 14 days (p = 0.000); now 85%, 90% in about 6 days",
+   "evidence": {
+    "metric": "disk used %",
+    "value": 5.6,
+    "threshold": 30,
+    "window": "last 14 days"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "plan an upsize / cleanup before it fills"
+  },
+  {
+   "alert_id": "ALT-0008",
+   "type": "capacity_trend",
+   "severity": "critical",
+   "resource_id": "vol-0015",
+   "title": "vol-growing-10: volume used % reaches 90% in ~1 days",
+   "why": "volume used % grows 2.00 points/day over the last 14 days (p = 0.000); now 89%, 90% in about 1 days",
+   "evidence": {
+    "metric": "volume used %",
+    "value": 0.5,
+    "threshold": 30,
+    "window": "last 14 days"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "plan an upsize / cleanup before it fills"
+  },
+  {
+   "alert_id": "ALT-0009",
+   "type": "level_shift",
+   "severity": "critical",
+   "resource_id": "vm-0049",
+   "title": "prod-worker-05: CPU 4.2x its normal level",
+   "why": "last 48 h mean CPU is 4.2x the earlier mean (threshold 3x); sizing is suspended until it settles",
+   "evidence": {
+    "metric": "cpu_x",
+    "value": 4.24,
+    "threshold": 3.0,
+    "window": "last 48 h"
+   },
+   "first_seen": "2026-10-18T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "find the cause (deploy? traffic? incident?)"
+  },
+  {
+   "alert_id": "ALT-0010",
+   "type": "possible_compromise",
+   "severity": "critical",
+   "resource_id": "vm-0055",
+   "title": "dev-sandbox-17: CPU and outbound traffic jumped together",
+   "why": "last 48 h: CPU 11.1x and network out 6.1x their earlier level (threshold 3x); a sustained CPU + egress jump on a quiet VM is the signature of crypto-mining or exfiltration",
+   "evidence": {
+    "metric": "cpu_x / net_out_x",
+    "value": "11.1 / 6.1",
+    "threshold": 3.0,
+    "window": "last 48 h"
+   },
+   "first_seen": "2026-10-18T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "isolate and inspect the VM now; rotate credentials"
+  },
+  {
+   "alert_id": "ALT-0011",
+   "type": "under_provisioned",
+   "severity": "critical",
+   "resource_id": "vm-0016",
+   "title": "prod-search-02: saturated, upsize recommended",
+   "why": "saturated: upsize to B3 (CPU p99 100.0 > 90)",
+   "evidence": {
+    "metric": "cpu_pct",
+    "value": 100.0,
+    "threshold": 90,
+    "window": "window"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "apply the upsize recommendation"
+  },
+  {
+   "alert_id": "ALT-0012",
+   "type": "budget_overrun",
+   "severity": "warning",
+   "resource_id": null,
+   "title": "team data: month-end forecast 6% over budget",
+   "why": "forecast Rs 111,543 (spent Rs 68,365 + Rs 3,598/day x 12 days) vs budget Rs 105,397 (= 1.25 x first-quarter monthly spend)",
+   "evidence": {
+    "metric": "team_month_forecast:data",
+    "value": 111543,
+    "threshold": 105397,
+    "window": "2026-10"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "review this team's recommendations first"
+  },
+  {
+   "alert_id": "ALT-0013",
+   "type": "budget_overrun",
+   "severity": "warning",
+   "resource_id": null,
+   "title": "team platform: month-end forecast 8% over budget",
+   "why": "forecast Rs 167,580 (spent Rs 102,895 + Rs 5,390/day x 12 days) vs budget Rs 155,045 (= 1.25 x first-quarter monthly spend)",
+   "evidence": {
+    "metric": "team_month_forecast:platform",
+    "value": 167580,
+    "threshold": 155045,
+    "window": "2026-10"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "review this team's recommendations first"
+  },
+  {
+   "alert_id": "ALT-0014",
+   "type": "capacity_trend",
+   "severity": "warning",
+   "resource_id": "vm-0015",
+   "title": "prod-api-04: cpu reaches 90% in ~10 days",
+   "why": "cpu grows 1.75 points/day over the last 14 days (p = 0.000); now 72%, 90% in about 10 days",
+   "evidence": {
+    "metric": "cpu",
+    "value": 10.4,
+    "threshold": 30,
+    "window": "last 14 days"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "plan an upsize"
+  },
+  {
+   "alert_id": "ALT-0015",
+   "type": "cost_increase",
+   "severity": "warning",
+   "resource_id": null,
+   "title": "team growth: daily cost +13% on 2026-10-12",
+   "why": "Rs 432/day above its 7-day average (x1.13, threshold x1.1); 4 resource(s) created by growth that day: dev-app-70, dev-app-71, dev-app-72, dev-app-73",
+   "evidence": {
+    "metric": "team_daily_cost:growth",
+    "value": 1.127,
+    "threshold": 1.1,
+    "window": "7 days before 2026-10-12"
+   },
+   "first_seen": "2026-10-12T00:00:00",
+   "occurrences": 1,
+   "suggested_action": "confirm the new resources are intended"
+  },
+  {
+   "alert_id": "ALT-0016",
+   "type": "cost_increase",
+   "severity": "warning",
+   "resource_id": null,
+   "title": "team mobile: daily cost +13% on 2026-10-17",
+   "why": "Rs 146/day above its 7-day average (x1.13, threshold x1.1); 1 resource(s) created by mobile that day: dev-test-12",
+   "evidence": {
+    "metric": "team_daily_cost:mobile",
+    "value": 1.129,
+    "threshold": 1.1,
+    "window": "7 days before 2026-10-17"
+   },
+   "first_seen": "2026-10-17T00:00:00",
+   "occurrences": 1,
+   "suggested_action": "confirm the new resources are intended"
+  },
+  {
+   "alert_id": "ALT-0017",
+   "type": "memory_leak",
+   "severity": "warning",
+   "resource_id": "vm-0011",
+   "title": "prod-orders-08: memory leak suspected",
+   "why": "4 sharp memory drops (> 25 points) in the window: memory climbs and the process restarts",
+   "evidence": {
+    "metric": "memory resets",
+    "value": 4,
+    "threshold": 3,
+    "window": "window"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 4,
+   "suggested_action": "fix the leak; until then no sizing change is trustworthy"
+  },
+  {
+   "alert_id": "ALT-0018",
+   "type": "monitoring_missing",
+   "severity": "warning",
+   "resource_id": "vm-0044",
+   "title": "prod-nomon-13: no metrics",
+   "why": "the VM is running but no monitoring data arrived in the whole window",
+   "evidence": {
+    "metric": "samples",
+    "value": 0,
+    "threshold": 1,
+    "window": "window"
+   },
+   "first_seen": "2026-10-20T00:00:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "install / fix the monitoring agent"
+  },
+  {
+   "alert_id": "ALT-0019",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0006",
+   "title": "prod-reports-02: CPU 96% vs a normal 23% at this hour",
+   "why": "30-min CPU 96% at 2026-10-01 14:55; the same hours of the week normally run at 23% (median); 15.0 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 15.0,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-01T08:10:00+05:30",
+   "occurrences": 2,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0020",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0008",
+   "title": "prod-queue-02: CPU 83% vs a normal 11% at this hour",
+   "why": "30-min CPU 83% at 2026-10-01 06:40; the same hours of the week normally run at 11% (median); 12.4 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 12.4,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-09-22T12:40:00+05:30",
+   "occurrences": 14,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0021",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0012",
+   "title": "prod-db-01: CPU 51% vs a normal 18% at this hour",
+   "why": "30-min CPU 51% at 2026-09-22 15:25; the same hours of the week normally run at 18% (median); 4.5 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 4.5,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-09-22T13:25:00+05:30",
+   "occurrences": 2,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0022",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0016",
+   "title": "prod-search-02: CPU 100% vs a normal 44% at this hour",
+   "why": "30-min CPU 100% at 2026-10-09 05:25; the same hours of the week normally run at 44% (median); 14.2 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 14.2,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-07T23:25:00+05:30",
+   "occurrences": 5,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0023",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0017",
+   "title": "prod-legacy-06: CPU 88% vs a normal 32% at this hour",
+   "why": "30-min CPU 88% at 2026-10-01 20:25; the same hours of the week normally run at 32% (median); 4.4 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 4.4,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-01T20:25:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0024",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0058",
+   "title": "prod-search-33: CPU 53% vs a normal 37% at this hour",
+   "why": "30-min CPU 53% at 2026-10-05 16:30; the same hours of the week normally run at 37% (median); 4.7 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 4.7,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-05T16:25:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0025",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0062",
+   "title": "prod-search-37: CPU 59% vs a normal 47% at this hour",
+   "why": "30-min CPU 59% at 2026-10-02 17:20; the same hours of the week normally run at 47% (median); 4.0 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 4.0,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-02T17:20:00+05:30",
+   "occurrences": 2,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0026",
+   "type": "usage_spike",
+   "severity": "warning",
+   "resource_id": "vm-0064",
+   "title": "prod-web-39: CPU 66% vs a normal 52% at this hour",
+   "why": "30-min CPU 66% at 2026-10-01 13:40; the same hours of the week normally run at 52% (median); 4.1 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 4.1,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-01T13:40:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0027",
+   "type": "usage_spike",
+   "severity": "info",
+   "resource_id": "vm-0053",
+   "title": "dev-api-16: CPU 100% vs a normal 32% at this hour",
+   "why": "30-min CPU 100% at 2026-10-14 12:25; the same hours of the week normally run at 32% (median); 5.2 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 5.2,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-14T10:10:00+05:30",
+   "occurrences": 3,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0028",
+   "type": "usage_spike",
+   "severity": "info",
+   "resource_id": "vm-0099",
+   "title": "dev-app-74: CPU 85% vs a normal 30% at this hour",
+   "why": "30-min CPU 85% at 2026-10-06 17:35; the same hours of the week normally run at 30% (median); 4.7 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 4.7,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-10-06T17:20:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  },
+  {
+   "alert_id": "ALT-0029",
+   "type": "usage_spike",
+   "severity": "info",
+   "resource_id": "vm-0101",
+   "title": "dev-app-76: CPU 72% vs a normal 34% at this hour",
+   "why": "30-min CPU 72% at 2026-09-30 16:55; the same hours of the week normally run at 34% (median); 4.2 robust sigmas above normal on a log scale (threshold 4, sigma = 1.4826 x MAD)",
+   "evidence": {
+    "metric": "robust_z_log_ratio",
+    "value": 4.2,
+    "threshold": 4,
+    "window": "30-min rolling"
+   },
+   "first_seen": "2026-09-30T16:40:00+05:30",
+   "occurrences": 1,
+   "suggested_action": "check what ran at that time; not a sizing signal on its own"
+  }
+ ]
+}

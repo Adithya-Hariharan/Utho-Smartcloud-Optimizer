@@ -55,3 +55,31 @@ CALIBRATION = {
     "median_cpu_p95_below": 50.0,              # Google 2011: usage far below allocation
     "random_missing_share": (0.003, 0.02),     # IBM trace study: gaps are common
 }
+
+# ------------------------------------------------------------------ fitted parameters (CP3)
+import json as _json
+import os as _os
+from pathlib import Path as _Path
+
+FITTED_PATH = _Path(__file__).resolve().parent / "fitted_params.json"
+FITTED = _json.loads(FITTED_PATH.read_text()) if FITTED_PATH.exists() else {}
+
+# Negative-test hook: SCO_PERTURB="ar1_phi_cpu=0.1,drift_sd=0.0" overrides fitted values
+for _kv in filter(None, _os.environ.get("SCO_PERTURB", "").split(",")):
+    _k, _v = _kv.split("=")
+    FITTED[_k] = {**FITTED.get(_k, {}), "value": float(_v)}
+
+
+def fitted(key, default=None):
+    """Fitted median for `key` (see generator/fitted_params.json)."""
+    v = FITTED.get(key)
+    if v is None:
+        if default is None:
+            raise KeyError(f"fitted parameter '{key}' missing; run python -m generator.fit.fit")
+        return default
+    return v["value"]
+
+
+# Hand-set dynamics kept ONLY for planted resources listed in planted.PINNED (scenario targets)
+PINNED_PHI = 0.8
+PINNED_DRIFT_SD = 0.05

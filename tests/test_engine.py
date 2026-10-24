@@ -55,9 +55,13 @@ def test_trace_has_one_terminal_step(run):
 
 # ---- sizing and replay (A-group) ---------------------------------------------------------------
 
-def test_prod_one_step(R):
+def test_prod_one_step(R, run, cfg):
     assert R("prod-api-07")["target"]["plan"] == "B3"                 # A2: B2 fits, prod moves one step
-    assert all(R(n)["target"]["plan"] == "B4" for n in ["prod-svc-46", "prod-svc-47", "prod-svc-48", "prod-svc-51"])
+    order = [p for p, _ in sorted(cfg.plans.items(), key=lambda kv: kv[1]["monthly_inr"])]
+    for name, item in run[0].items():
+        if item["target"] and "resize" in item["default_option"] and item["resource"]["env"] in ("prod", ""):
+            cur, new = order.index(item["current"]["plan"]), order.index(item["target"]["plan"])
+            assert cur - new == 1, (name, item["current"]["plan"], item["target"]["plan"])
 
 
 def test_round_up(R):

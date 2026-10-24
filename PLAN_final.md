@@ -1,6 +1,6 @@
 # CURRENT STEP: Backend MVP (B1–B8) + engine (B10), both implemented
 
-**Status (2026-10-24):** the backend is complete for the MVP. B1–B8 were built first with the engine stubbed; the engine was then added (B10) and replaces the stub. B6 below describes the stub-era behaviour; B10 lists what changed. `pytest` (291 tests) is green.
+**Status (2026-10-24):** the backend is complete for the MVP. B1–B8 were built first with the engine stubbed; the engine was then added (B10) and replaces the stub. B6 below describes the stub-era behaviour; B10 lists what changed. `pytest` is green (454 tests after the merge with main: 291 for `backend/`, 163 for main's `engine/`).
 
 **Frozen:** the recommendation schema (§4.5), the data contracts (§4.1, §4.2) and the API (§10: paths, methods, parameters, body fields) are not changed by this step. Where this section says "stub", the endpoint keeps its path and parameters and the response keeps the frozen shape. Where §4.5 does not give a shape (list endpoints, metrics, data-quality, assumptions), this section defines it.
 
@@ -125,12 +125,14 @@ Modules: `params.py` (preset → percentiles, CPU targets, replay limits), `sizi
 **VM pipeline order** (first terminal verdict wins; strict `<` / `>`; every check goes into `trace`):
 1. Inventory: plan not in catalogue → UNKNOWN_PRICE; no metrics → NO_TELEMETRY; empty env → treated as prod + UNTAGGED_ENV; empty owner → UNOWNED; name/env conflict → TAG_NAME_CONFLICT; coverage 80–95% → MEDIUM_COVERAGE.
 2. Gates: tags dr_standby / autoscaled / seasonal_peak, policy never, stateful prod, days_of_data < 14, resized < 14 d ago, coverage < 80%, level_shift_up > 3 (ACTIVE_ANOMALY).
-3. Under-provisioned: ≥ 5% of CPU samples > 90 (same rule as G9) or mem p99 > 90 → UPSIZE. (§7's "p99 > 90" would upsize every nightly batch VM; truth says reject.)
-4. Went quiet (last 7 d ÷ prior 23 d < 0.2) → flag, before any average test.
-5. **Looks shrinkable** gate: mean CPU < 20% or CPU P < 40%. Otherwise healthy; vetoes only matter when shrinking is on the table. This resolves A15 (prod-api-04 healthy despite its growth trend; the capacity alert still fires).
-6. Vetoes and patterns: leak → reserved memory (flat ≥ 75% with std < 0.75; memory-bound VMs vary with CPU) → memory p99 > 70 → IOPS p95 > 70 → network p95 > 60 → CPU growth (slope ≥ 0.3, R² ≥ 0.5, days_to_85 < 60) → peak under-observed (coverage of the IST hours whose p95 ≥ 50% is < 50%) → recurring peak (same IST hour-of-week above 80% in ≥ 3 weeks, and CPU p99 ≥ 80) → one-off peak.
-7. Candidates: idle (prod → IDLE_PROD flag; stateful non-prod → snapshot+stop), underused → sizing (round up; prod one step down; service group sized on its busiest member) → Peak Replay (try bigger, still-cheaper plans; none → PEAK_REPLAY_FAILED). A prod VM whose mean CPU < 20% but p99 ≥ 40% gets the naive mean-CPU cut replayed; a failure → PEAK_REPLAY_FAILED ("bursts need headroom"). Off-hours for non-prod (policy, keep_running and `stopped_vm_billed` respected).
-8. Floor: compute right-sizing (idle, underused, off-hours) saving < ₹500 → healthy, counted in `below_floor`. Clean-ups (orphans, stopped VMs, unused IPs) are not floored: they are waste, whatever the amount.
+3. Went quiet (last 7 d ÷ prior 23 d < 0.2) → flag, before any other test.
+4. Leak veto on **every** VM (≥ 3 memory resets not caused by a CPU drop): a leaking VM's memory is an artefact of its restarts.
+5. Under-provisioned: CPU p99 > 90 **and** mean CPU ≥ 20% → UPSIZE. A VM idle on average that touches 90% is batchy, not starved (same rule as `engine/components/sizing.py` on main). Memory alone never upsizes.
+6. **Looks shrinkable** gate: mean CPU < 20% or CPU P < 40%. Otherwise healthy; capacity vetoes only matter when shrinking is on the table. This resolves A15 (prod-api-04 healthy despite its growth trend; the capacity alert still fires).
+7. Capacity vetoes and patterns (shrink candidates only): reserved memory (flat ≥ 75% with std < 0.75) → memory p99 > 70 → IOPS p95 > 70 → network p95 > 60 → CPU growth (slope ≥ 0.3, R² ≥ 0.5, days_to_85 < 60) → peak under-observed (coverage of the IST hours whose p95 ≥ 50% is < 50%) → recurring peak (same IST hour-of-week above 80% in ≥ 3 weeks, and CPU p99 ≥ 80) → one-off peak. A recurring peak blocks **resizing only**: a non-prod VM with a valid off-hours schedule (which keeps the peak window on) gets OFF_HOURS / schedule.
+8. Candidates: idle on 4 metrics with lines relative to the plan (CPU P < 5, mem P < 70, mean network < 0.1% of bandwidth, IOPS p95 < 1% of provisioned; prod → IDLE_PROD flag; stateful non-prod → snapshot+stop), underused → sizing (round up; prod one step down; service group sized on its busiest member) → Peak Replay (try bigger, still-cheaper plans). Off-hours for non-prod (policy, keep_running and `stopped_vm_billed` respected).
+9. A shrink candidate that ends with no action is explained: formula sizing on P; if a cheaper plan passes replay → healthy; otherwise NO_CHEAPER_PLAN when memory rules out every cheaper plan, else PEAK_REPLAY_FAILED with the replay evidence (the naive mean-CPU cut). This applies to every env (staging-demo-10: keep_running forbids scheduling, not evaluation).
+10. Floor: compute right-sizing (idle, underused, off-hours) saving < ₹500 → healthy, counted in `below_floor`. Clean-ups (orphans, stopped VMs, unused IPs) are not floored: they are waste, whatever the amount.
 
 **Non-compute:** volume: unattached < 7 d → ORPHAN_TOO_NEW, else ORPHAN_VOLUME (snapshot of the median used GB + delete); attached to a VM stopped > 30 d → STOPPED_VM; growth → VETO_GROWTH; IOPS p95 < 5 → IDLE_VOLUME_REVIEW; used p99 < 30% → OVERSIZED_VOLUME (migrate to a volume sized for ≤ 50% use, 50 GB steps). IP: allowlisted → exclude; unassociated ≥ 7 d → UNUSED_IP; on a VM stopped > 30 d → STOPPED_VM. Stopped VM > 30 d → STOPPED_VM snapshot + delete.
 
@@ -138,7 +140,9 @@ Modules: `params.py` (preset → percentiles, CPU targets, replay limits), `sizi
 
 **API changes from the stub (shapes unchanged):** `/api/recommendations` serves engine items (`X-Engine: v1`; the stub stays as the fallback if the engine fails at startup, `X-Engine: stub`); `/api/summary` fills `potential_after_inr` (upsizes kept at current cost; their extra cost is `counts.upsize_extra_inr`); `/api/resources/{id}` returns the real `trace`; `/api/resources/{id}/replay` returns `{resource_id, current_plan, replay_plan, passed, minutes_above_90, limit_minutes_above_90, mem_cap_pct, threshold_pct, step, ts[], actual_cpu[], projected_cpu[], actual_mem[], projected_mem[]}` (`step=5m|1h`, hourly = max; 404 when the resource has no replay); `/api/scorecard` returns `{total, matched, accuracy, unsafe_downsizes, unsafe_resources, waste_found, by_verdict, by_archetype, mismatches, contract_mapped}`.
 
-**Checks:** `tests/test_engine.py` runs every `truth.csv` row (140/140 match), the F1–F10 cost rules, replay safety (0 resizes that fail replay), schedule windows (B5–B7) and flags; the default-preset headline is 22.8% (F9 band 15–35%).
+**Checks:** `tests/test_engine.py` runs every `truth.csv` row (140/140 match), the F1–F10 cost rules, replay safety (0 resizes that fail replay), schedule windows (B5–B7) and flags; the default-preset headline is 20.1% on the merged (fitted, label-corrected) data (F9 band 15–35%).
+
+**Merge with main (2026-10-24):** main brought a regenerated dataset (fitted to public traces, 9 label disputes resolved) and a second engine in `engine/`. The rules above were aligned with main's published choices (relative idle lines, batchy-not-starved upsize, leak on every VM, schedule around a recurring peak, refusal explanation for every env) so both engines agree with `truth.csv`. `backend/` and `engine/` coexist; `pytest` runs both suites (454 tests).
 
 ---
 

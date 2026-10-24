@@ -121,12 +121,12 @@ def evaluate_vm(e, rid, row, f, cur, tr):
     s = e.cleaned.series[rid]
     cpu, mem = s.values["cpu_pct"], s.values["mem_pct"]
 
-    # ---- step 3: under-provisioned ---------------------------------------------------------------
-    share = f["share_cpu_above_90"]
-    under = share >= e.t("upsize_share_above_90") or m["mem"]["p99"] > e.t("upsize_mem_p99_pct")
-    if tr.add("step3.under_provisioned", "share of CPU samples > 90%", share, e.t("upsize_share_above_90"),
-              "fail" if under else "pass") == "fail":
-        return upsize(e, rid, row, f, cur, cpu, mem, prod, tr)
+    mean = f["mean_cpu"]
+    naive = naive_cut(e, row, f, cur)
+
+    def reject(code, v, reason, recurring=None, replay=None):
+        tr.terminal()
+        return Outcome("reject", code, reason, veto=v, naive=naive, recurring=recurring, replay=replay)
 
     # ---- step 5a: went quiet (decommission review), regardless of averages ------------------------
     down = f.get("level_shift_down")
@@ -136,8 +136,23 @@ def evaluate_vm(e, rid, row, f, cur, tr):
         return Outcome("flag", "WENT_QUIET",
                        f"CPU in the last 7 days is {down:.0%} of the prior 23 days: confirm decommission with the owner.")
 
+    # ---- step 4 (leak, on every VM): a leaking VM's memory is an artefact of its restarts -----------
+    leak = f["leak_score"]
+    if tr.add("veto.leak", "leak_score < 3", leak, e.cfg.get("alerts.g6_leak_cycles"),
+              "fail" if leak >= e.cfg.get("alerts.g6_leak_cycles") else "pass") == "fail":
+        return reject("VETO_LEAK", veto("leak", "leak_score", leak, e.cfg.get("alerts.g6_leak_cycles"), ">=",
+                                        "memory leak suspected"),
+                      f"Memory climbs and resets {leak} times in 30 days (sawtooth): a leak, not spare RAM. "
+                      f"No sizing decision is trustworthy until it is fixed.")
+
+    # ---- step 3: under-provisioned (CPU p99 > 90 on a VM that is busy on average) -----------------
+    p99 = m["cpu"]["p99"]
+    under = p99 > e.t("upsize_cpu_p99_pct") and mean >= e.t("upsize_min_mean_cpu_pct")
+    if tr.add("step3.under_provisioned", "CPU p99 ≤ 90 or mean CPU < 20 (batchy, not starved)", round(p99, 1),
+              e.t("upsize_cpu_p99_pct"), "fail" if under else "pass") == "fail":
+        return upsize(e, rid, row, f, cur, cpu, mem, prod, tr)
+
     # ---- looks shrinkable? -----------------------------------------------------------------------
-    mean = f["mean_cpu"]
     shrinkable = mean < e.t("shrinkable_mean_cpu_pct") or cpu_p < e.t("underused_cpu_pct")
     if tr.add("gate.looks_shrinkable", f"mean CPU < 20% or CPU {key} < 40%", round(mean, 1), e.t("shrinkable_mean_cpu_pct"),
               "pass" if shrinkable else "healthy") == "healthy":
@@ -145,19 +160,7 @@ def evaluate_vm(e, rid, row, f, cur, tr):
         return Outcome("healthy", "RIGHT_SIZED",
                        f"CPU mean {mean:.0f}% / {key} {cpu_p:.0f}%, memory {key} {mem_p:.0f}%: busy enough, keep as is.")
 
-    naive = naive_cut(e, row, f, cur)
-
-    def reject(code, v, reason, recurring=None, replay=None):
-        tr.terminal()
-        return Outcome("reject", code, reason, veto=v, naive=naive, recurring=recurring, replay=replay)
-
-    # ---- step 4 + 5: vetoes and patterns ---------------------------------------------------------
-    leak = f["leak_score"]
-    if tr.add("veto.leak", "leak_score < 3", leak, e.cfg.get("alerts.g6_leak_cycles"),
-              "fail" if leak >= e.cfg.get("alerts.g6_leak_cycles") else "pass") == "fail":
-        return reject("VETO_LEAK", veto("leak", "leak_score", leak, e.cfg.get("alerts.g6_leak_cycles"), ">=",
-                                        "memory leak suspected"),
-                      f"Memory climbs and resets {leak} times in 30 days (sawtooth): a leak, not spare RAM.")
+    # ---- step 4 + 5: capacity vetoes and patterns (shrink candidates only) -------------------------
     std, mean_mem = f["mem_std"], f["mean_mem"]
     reserved = mean_mem >= e.t("reserved_mem_min_pct") and std < e.t("reserved_mem_max_std")
     if tr.add("pattern.reserved_memory", "memory flat ≥ 75% with std < 0.75", round(std, 2), e.t("reserved_mem_max_std"),
@@ -194,15 +197,18 @@ def evaluate_vm(e, rid, row, f, cur, tr):
                        f"Only {phc:.0%} of the peak hours were observed: the busiest window is under-observed, so "
                        f"no sizing until it is monitored.")
     rec = f["recurring_peak"]
-    p99 = m["cpu"]["p99"]
     if tr.add("veto.recurring_peak", "no recurring peak with CPU p99 ≥ 80", p99, e.t("recurring_peak_pct"),
               "fail" if rec and p99 >= e.t("recurring_peak_pct") else "pass") == "fail":
         when = peak_when(rec["buckets"])
-        return reject("VETO_RECURRING_PEAK",
-                      veto("recurring_peak", "cpu_p99", p99, e.t("recurring_peak_pct"), ">=",
-                           f"recurring peak at {when} IST"),
-                      f"Mean CPU {mean:.0f}% but p99 {p99:.0f}%: a peak recurs at {when} IST in {rec['weeks']} weeks. "
-                      f"An average-based tool would cut this; we keep it.", recurring=rec)
+        kept = Outcome("reject", "VETO_RECURRING_PEAK",
+                       f"Mean CPU {mean:.0f}% but p99 {p99:.0f}%: a peak recurs at {when} IST in {rec['weeks']} weeks. "
+                       f"An average-based tool would cut this; we keep it.",
+                       veto=veto("recurring_peak", "cpu_p99", p99, e.t("recurring_peak_pct"), ">=",
+                                 f"recurring peak at {when} IST"), naive=naive, recurring=rec)
+        # A recurring peak forbids SHRINKING, not scheduling around it: a non-prod VM still gets its off-hours
+        # schedule, which by construction keeps the peak window on (same rule as engine/pipeline.py _finalise).
+        return candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr,
+                          resize_blocked=kept, peak_note=f"the recurring peak at {when} IST blocks resizing only")
     excl = f["p99_excl_top_day"]
     if tr.add("pattern.one_off_peak", "p99 ≥ 80 but < 40 without the busiest day", excl, e.t("one_off_excl_max_pct"),
               "flag" if p99 >= e.t("one_off_p99_pct") and excl is not None and excl < e.t("one_off_excl_max_pct")
@@ -241,24 +247,77 @@ def upsize(e, rid, row, f, cur, cpu, mem, prod, tr):
     return o
 
 
-def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr):
+def refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr):
+    """A shrink candidate that ended with no action: say why it was kept (engine/pipeline.py _finalise, main).
+    Formula sizing on P; if a cheaper plan passes Peak Replay the VM is simply healthy (not underused).
+    Otherwise NO_CHEAPER_PLAN when MEMORY rules out every cheaper plan, else PEAK_REPLAY_FAILED with replay evidence."""
+    compute = cur["compute_inr"]
+    limit = e.p.replay_limit(prod)
+    need_v, need_r = needs(row["vcpu"], row["ram_gb"], cpu_p, mem_p, e.p.cpu_target(prod), e.p.mem_target)
+    plan, _ = size(e.cat, row["plan_id"], need_v, need_r, prod)
+    tr.add("step7.sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB", plan.plan_id if plan else None, row["plan_id"],
+           "pass" if plan and plan.price < compute else "fail")
+    if plan is not None and plan.price < compute:
+        replay, chosen = rp.search(cpu, mem, row["vcpu"], row["ram_gb"], plan, e.cat, compute, limit, e.p.mem_cap)
+        tr.add("step8.peak_replay", "minutes CPU > 90% at the new size", replay["attempts"][-1]["minutes_above_90"],
+               limit, "pass" if chosen else "fail", terminal=True)
+        if chosen is not None:
+            return Outcome("healthy", "RIGHT_SIZED",
+                           f"CPU {key} {cpu_p:.0f}%, memory {key} {mem_p:.0f}%: not underused (CPU {key} ≥ 40 or memory "
+                           f"{key} ≥ 50), and {chosen.plan_id} would pass replay only with no headroom to spare: keep as is.")
+        worst = replay["attempts"][0]
+        return Outcome("reject", "PEAK_REPLAY_FAILED",
+                       f"Sized on {key} {cpu_p:.0f}% the target is {plan.plan_id}, but replaying 30 days shows "
+                       f"{worst['minutes_above_90']} min above 90% (limit {limit:.0f}): checked and kept.",
+                       veto=veto("replay", "minutes_above_90", worst["minutes_above_90"], limit, ">",
+                                 f"replay shows {worst['minutes_above_90']} min > 90%"), naive=naive, replay=replay)
+    cheaper = [p for p in e.cat if p.price < compute]
+    if not any(p.ram_gb >= need_r for p in cheaper):
+        tr.add("step7.memory_blocks", "a cheaper plan has enough RAM", need_r, max((p.ram_gb for p in cheaper), default=0),
+               "fail", terminal=True)
+        return Outcome("reject", "NO_CHEAPER_PLAN",
+                       f"CPU {key} is {cpu_p:.0f}% but memory {key} {mem_p:.0f}% of {row['ram_gb']:.0f} GB needs "
+                       f"{need_r:.1f} GB: no cheaper plan satisfies CPU and memory together.",
+                       veto=veto("sizing", "needed_ram_gb", need_r, max((p.ram_gb for p in cheaper), default=0), ">",
+                                 "no cheaper plan satisfies CPU and memory together"), naive=naive)
+    # CPU is the limit: replay what an average-based tool would do (or the next plan down) as the evidence
+    probe_id = naive["plan"] if naive["action"] == "resize" else cheaper[-1].plan_id
+    probe = next(p for p in e.cat if p.plan_id == probe_id)
+    a = rp.attempt(cpu, mem, row["vcpu"], row["ram_gb"], probe, limit, e.p.mem_cap)
+    replay = {"limit_minutes_above_90": limit, "mem_cap_pct": e.p.mem_cap, "attempts": [a], "passed": a["passed"],
+              "chosen_plan": None}
+    tr.add("step8.peak_replay_naive", f"naive cut to {probe_id} (mean CPU)", a["minutes_above_90"], limit,
+           "pass" if a["passed"] else "fail", terminal=True)
+    return Outcome("reject", "PEAK_REPLAY_FAILED",
+                   f"Mean CPU {f['mean_cpu']:.0f}% looks wasteful, but CPU {key} is {cpu_p:.0f}% (p99 "
+                   f"{f['metrics']['cpu']['p99']:.0f}%): an average-based tool would move to {probe_id}, and replaying "
+                   f"30 days there shows {a['minutes_above_90']} min above 90%. The peaks need the headroom.",
+                   veto=veto("replay", "minutes_above_90", a["minutes_above_90"], limit, ">",
+                             f"replay shows {a['minutes_above_90']} min > 90%"), naive=naive, replay=replay)
+
+
+def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr, resize_blocked=None, peak_note=None):
+    """Idle, underused (sizing + replay) and off-hours. With `resize_blocked` (a recurring-peak reject) only the
+    schedule is considered: if there is one it stands, otherwise the reject is returned."""
     m = f["metrics"]
     t = e.t
     compute, storage = cur["compute_inr"], cur["storage_inr"]
+    target, replay, size_note, underused = None, None, None, False
+    smallest = index_of(e.cat, row["plan_id"]) == 0
 
-    # ---- IDLE ------------------------------------------------------------------------------------
-    net_mbps = f["net_total_mean_mbps"]
-    idle_net = t("idle_net_mb_per_hour") / 450               # 1 Mbps = 450 MB/h
-    iops_p95 = float(np.nanpercentile(e.cleaned.series[rid].values["iops"], 95))
-    idle = (cpu_p < t("idle_cpu_pct") and mem_p < t("veto_mem_p99_pct") and net_mbps < idle_net
-            and iops_p95 < t("idle_iops_p95"))
-    tr.add("candidate.idle", f"CPU {key} < 5, mem < 70, net < 5 MB/h, IOPS p95 < 5", round(cpu_p, 2), t("idle_cpu_pct"),
-           "match" if idle else "no")
+    # ---- IDLE (lines relative to the plan: network % of bandwidth, IOPS % of provisioned) ----------
+    net_pct = f["net_pct_mean"]
+    iops_pct = m["iops_pct"]["p95"]
+    idle = (resize_blocked is None and cpu_p < t("idle_cpu_pct") and mem_p < t("veto_mem_p99_pct")
+            and net_pct is not None and net_pct < t("idle_net_pct_bw")
+            and iops_pct is not None and iops_pct < t("idle_iops_pct"))
+    tr.add("candidate.idle", f"CPU {key} < 5, mem < 70, net < 0.1% bw, IOPS p95 < 1%", round(cpu_p, 2),
+           t("idle_cpu_pct"), "match" if idle else "no")
     if idle and prod:
         tr.terminal()
         return Outcome("flag", "IDLE_PROD",
-                       f"Idle prod VM (CPU {key} {cpu_p:.1f}%, network {net_mbps * 450:.1f} MB/h): review with the "
-                       f"owner, never auto-stopped.")
+                       f"Idle prod VM (CPU {key} {cpu_p:.1f}%, network {net_pct:.3f}% of bandwidth, IOPS p95 "
+                       f"{iops_pct:.2f}% of provisioned): review with the owner, never auto-stopped.")
     if idle:
         stateful = "stateful" in row["tags_list"]
         acts, opts = [], {}
@@ -275,7 +334,8 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
             opts["stop"] = (storage, f"₹0 compute + {format_inr(storage)} disk")
         default = key_of([a["type"] for a in acts])
         o = Outcome("recommend", "IDLE",
-                    f"Idle for 30 days: CPU {key} {cpu_p:.1f}%, network {net_mbps * 450:.1f} MB/h, IOPS p95 {iops_p95:.1f}."
+                    f"Idle for 30 days: CPU {key} {cpu_p:.1f}%, network {net_pct:.3f}% of bandwidth, IOPS p95 "
+                    f"{iops_pct:.2f}% of provisioned."
                     + (" Already the smallest plan: stop, never resize." if index_of(e.cat, row["plan_id"]) == 0 else ""),
                     actions=acts, default=default)
         o.options = build_options(cur["monthly_inr"], opts)
@@ -283,26 +343,17 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
         return e.floor(o, cur, tr)
 
     # ---- UNDERUSED -> sizing + replay --------------------------------------------------------------
-    underused = cpu_p < t("underused_cpu_pct") and mem_p < t("underused_mem_pct")
-    tr.add("candidate.underused", f"CPU {key} < 40 and mem {key} < 50", round(cpu_p, 2), t("underused_cpu_pct"),
-           "match" if underused else "no")
-    target, replay, size_note = None, None, None
-    smallest = index_of(e.cat, row["plan_id"]) == 0
+    if resize_blocked is None:
+        underused = cpu_p < t("underused_cpu_pct") and mem_p < t("underused_mem_pct")
+        tr.add("candidate.underused", f"CPU {key} < 40 and mem {key} < 50", round(cpu_p, 2), t("underused_cpu_pct"),
+               "match" if underused else "no")
     if underused and not smallest:
         cp, mp, basis = e.group_percentiles(row, key, cpu_p, mem_p)
         need_v, need_r = needs(row["vcpu"], row["ram_gb"], cp, mp, e.p.cpu_target(prod), e.p.mem_target)
         plan, size_note = size(e.cat, row["plan_id"], need_v, need_r, prod)
-        tr.add("step7.sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB{basis}", plan.plan_id if plan else None,
-               row["plan_id"], "pass" if plan and plan.price < compute else "fail")
         if plan is None or plan.price >= compute:
-            cheaper = [p for p in e.cat if p.price < compute]
-            biggest_ram = max((p.ram_gb for p in cheaper), default=0)
-            tr.terminal()
-            return Outcome("reject", "NO_CHEAPER_PLAN",
-                           f"CPU {key} is {cpu_p:.0f}% but memory {key} {mem_p:.0f}% of {row['ram_gb']:.0f} GB needs "
-                           f"{need_r:.1f} GB: no cheaper plan satisfies CPU and memory together.",
-                           veto=veto("sizing", "needed_ram_gb", need_r, biggest_ram, ">",
-                                     "no cheaper plan satisfies CPU and memory together"), naive=naive)
+            return refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr)
+        tr.add("step7.sizing", f"need {need_v:.2f} vCPU, {need_r:.2f} GB{basis}", plan.plan_id, row["plan_id"], "pass")
         replay, chosen = rp.search(cpu, mem, row["vcpu"], row["ram_gb"], plan, e.cat, compute,
                                    e.p.replay_limit(prod), e.p.mem_cap)
         tr.add("step8.peak_replay", "minutes CPU > 90% at the new size", replay["attempts"][-1]["minutes_above_90"],
@@ -316,22 +367,6 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
                            veto=veto("replay", "minutes_above_90", worst["minutes_above_90"], e.p.replay_limit(prod), ">",
                                      f"replay shows {worst['minutes_above_90']} min > 90%"), naive=naive, replay=replay)
         target = chosen
-    elif not underused and prod and f["mean_cpu"] < t("shrinkable_mean_cpu_pct") and naive["action"] == "resize":
-        # Looks wasteful on average: replay what a naive tool would do, to show why it is kept.
-        plan = next(p for p in e.cat if p.plan_id == naive["plan"])
-        a = rp.attempt(cpu, mem, row["vcpu"], row["ram_gb"], plan, e.p.replay_limit(prod), e.p.mem_cap)
-        replay = {"limit_minutes_above_90": e.p.replay_limit(prod), "mem_cap_pct": e.p.mem_cap, "attempts": [a],
-                  "passed": a["passed"], "chosen_plan": None}
-        tr.add("step8.peak_replay_naive", f"naive {naive['plan']} (mean CPU)", a["minutes_above_90"],
-               e.p.replay_limit(prod), "pass" if a["passed"] else "fail")
-        if not a["passed"]:
-            tr.terminal()
-            return Outcome("reject", "PEAK_REPLAY_FAILED",
-                           f"Mean CPU {f['mean_cpu']:.0f}% looks wasteful, but CPU p99 is {m['cpu']['p99']:.0f}%: replaying "
-                           f"30 days on {plan.plan_id} shows {a['minutes_above_90']} min above 90%. Bursts need the headroom.",
-                           veto=veto("replay", "minutes_above_90", a["minutes_above_90"], e.p.replay_limit(prod), ">",
-                                     f"replay shows {a['minutes_above_90']} min > 90%"), naive=naive, replay=replay)
-        replay = None
 
     # ---- OFF-HOURS ---------------------------------------------------------------------------------
     sched, why = None, "prod is never scheduled"
@@ -347,12 +382,14 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
            t("off_min_hours_per_week"), "match" if sched else f"no ({why})")
 
     if target is None and sched is None:
-        tr.terminal()
+        if resize_blocked is not None:
+            tr.add("veto.recurring_peak.decision", "no off-hours schedule around the peak", None, None, "reject", True)
+            return resize_blocked
         if underused and smallest:
+            tr.terminal()
             return Outcome("healthy", "RIGHT_SIZED",
                            f"Already the smallest plan ({row['plan_id']}) and no usable off-hours: nothing to change.")
-        return Outcome("healthy", "RIGHT_SIZED",
-                       f"CPU {key} {cpu_p:.0f}%, memory {key} {mem_p:.0f}%: keep as is.")
+        return refusal(e, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr)
 
     acts, opts = [], {}
     if target is not None:
@@ -379,6 +416,8 @@ def candidates(e, rid, row, f, cur, cpu, mem, prod, key, cpu_p, mem_p, naive, tr
     if sched is not None:
         parts.append(f"Quiet {sched['off_hours_per_week']:.0f} h/week (CPU p95 < 5% every week)" +
                      (f"; busy hours kept on: {', '.join(sched['busy_hours_excluded'][:3])}" if sched["busy_hours_excluded"] else "") + ".")
+    if peak_note:
+        parts.append(f"Not resized: {peak_note}; the schedule keeps that window on.")
     o = Outcome("recommend", code, " ".join(parts), actions=acts, default=default, schedule=sched, replay=replay,
                 target=e.target_block(target, cur) if target is not None else None)
     o.options = build_options(cur["monthly_inr"], opts)

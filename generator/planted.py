@@ -4,7 +4,28 @@ import pandas as pd
 
 from .archetypes import make_ip, make_vm, make_volume, truth
 from .config import N_SLOTS, SLOTS_PER_DAY, TZ
-from .signals import AX, ar1, between, clip, daily, drift, random_spikes, rng_for, steady, weekly
+from .signals import AX, ar1, between, clip, daily, drift, pinned, random_spikes, rng_for, steady, weekly
+
+# Planted resources that keep the ORIGINAL hand-set dynamics (phi 0.8, drift 0.05, hand companion
+# coefficients). Each one is listed because the fitted dynamics break its edge-case target;
+# reasons are in PIN_REASONS and in data/DATASET.md. Every other planted VM uses fitted dynamics.
+PINNED = {
+    "prod-api-01": "A1 needs p95 in 60-80; fitted noise (sigma ~17 at 40% CPU) pushes p95 to ~98",
+    "prod-api-07": "A2 needs p99 ~31% for the B4->B3 example; fitted day drift (0.59) pushes p99 to ~65",
+    "dev-report-02": "A5 needs p99 < 30 so that ONLY Peak Replay catches the weekly job; fitted drift lifts p99 to ~39",
+    "prod-reports-02": "A6 needs p99-without-top-day < 40 to isolate the single event; fitted drift lifts it to ~53",
+    "prod-cache-04": "A9 needs CPU p99 < 10 so memory is the only binding signal; fitted noise lifts it to ~15",
+    "prod-gateway-03": "A14 needs CPU p99 < 10 so network is the only signal; fitted noise lifts it to ~10.5",
+    "prod-ml-10": "A18 needs CPU p99 < 15 and mem p99 37.5-50; fitted noise lifts CPU p99 to ~25",
+    "staging-web-08": "A20 needs p95 27-33 (exactly ~3 vCPU of 8); fitted drift lifts p95 to ~39",
+    # added after the engine (b2_adi) found these labels contradicted by the fitted data (engine/disputes.py)
+    "prod-api-02": "E1 is a healthy VM with a gap; fitted noise saturated it (30-min mean 100% on 7 days, p95 89%)",
+    "prod-api-04": "A15 must grow toward capacity without saturating inside the window; fitted noise hit 100% on 2 days",
+    "prod-web-11a": "A23 group must be underused; fitted noise gave 11a a 61% peak day that fails replay on B2",
+    "prod-web-11b": "A23 group must be underused; fitted noise lifted 11b's p99 to 48% (not underused)",
+    "prod-web-11c": "A23 group members share one sizing decision; pinned with 11a/11b so the group is consistent",
+}
+PIN_REASONS = PINNED
 
 
 def ts(s):
@@ -31,12 +52,18 @@ def planted_vms():
     S = []
 
     def add(name, cpu_fn, **kw):
-        r = rng_for(name)
-        cpu = cpu_fn(r) if cpu_fn else np.zeros(AX.n)
-        for key in ("mem", "iops_pct", "net_pct", "net_out"):
-            if callable(kw.get(key)):
-                kw[key] = kw[key](r, clip(cpu))
-        S.append(make_vm(name, cpu=cpu, rng=r, **kw))
+        def build():
+            r = rng_for(name)
+            cpu = cpu_fn(r) if cpu_fn else np.zeros(AX.n)
+            for key in ("mem", "iops_pct", "net_pct", "net_out"):
+                if callable(kw.get(key)):
+                    kw[key] = kw[key](r, clip(cpu))
+            return make_vm(name, cpu=cpu, rng=r, **kw)
+        if name in PINNED:
+            with pinned():
+                S.append(build())
+        else:
+            S.append(build())
 
     # ---------------- A. Workload shape and peak behaviour
     add("prod-api-01", lambda r: steady(r, 30, 45, 0.85, 3.0),
@@ -260,8 +287,9 @@ def planted_vms():
     add("staging-demo-10", lambda r: office(r, 35, 6, 2.0),
         env="staging", team="growth", region="mumbai", plan="B2", purpose="demo", mem_base=20,
         tags=("keep_running",), policy="no_schedule",
-        t=truth("planted", "B10", "healthy", "RIGHT_SIZED", "none",
-                "office-hours shape but keep_running tag: never scheduled"))
+        t=truth("planted", "B10", "reject", "PEAK_REPLAY_FAILED", "none",
+                "keep_running forbids scheduling, not evaluation: averages ~10% so an average-based tool would cut "
+                "B2 -> S1, and its office-hours peaks fail replay there -> 'checked and kept'"))
 
     # ---------------- C. Stopped VMs
     add("vm-stopped-07", None, env="dev", team="data", region="noida", plan="B3", purpose="web",

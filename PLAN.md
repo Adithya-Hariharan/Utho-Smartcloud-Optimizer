@@ -34,31 +34,39 @@ Transfinitte/smartcloud-optimizer/
 - **Randomness:** each resource gets its own generator, `np.random.default_rng([42, crc32(name)])`. Its data stays the same even if the list order changes.
 - **Precision:** metrics are float32, rounded to 2 decimals.
 
-## G3. Calibration against public datasets
+## G3. Calibration against public datasets (FITTED to real traces)
 
-The calibration targets are approximate figures from the published papers, recalled from memory. DATASET.md states this. `validate.py` checks the fleet aggregates against each target.
+The generator's parameters are **fitted** from public traces downloaded into `data/external/` (gitignored), from the Hugging Face mirrors `Salesforce/GiftEval` and `Salesforce/lotsa_data`. The original GWA site doesn't respond, and Azure's own blob storage refuses public access. `generator/fit/fit.py` writes `generator/fitted_params.json`, and `validate.py` (FIT section) checks that the synthetic bulk fleet falls inside each real IQR. The full real-vs-synthetic table is in `data/DATASET.md`.
 
-| Source | What we take from it | Fleet-level target we check |
+| Source (mirror) | Channels used (identified by evidence) | What it fits |
 |---|---|---|
-| **Azure** (Resource Central, SOSP '17; 2017/2019 traces) | Most VMs have low average CPU. Workloads split into interactive (daily curve) and delay-insensitive (batch). p95 sits far above the average. Small VM sizes dominate | 50–65% of VMs have mean CPU < 20%; median p95/mean CPU ratio of 2–4 |
-| **Azure spike study** | Most VMs have spikes, and most spikes are not seasonal | Bursty archetype uses random (non-scheduled) spikes |
-| **Bitbrains GWA-T-12 / Materna** | Business-critical VMs: CPU low and bursty, memory more stable than CPU, disk and network bursty | Median coefficient of variation of memory < that of CPU; heavy-tailed network and IOPS |
-| **Google 2011** (Reiss et al., SoCC '12) | Usage far below what was allocated | Fleet median CPU p95 < 50% of allocation |
-| **Alibaba 2018** | Memory stays high and sticky even when CPU is low | Memory-bound archetype at 80–88%; memory = base + 0.25 × CPU |
-| **IBM trace study** | Gaps are common in monitoring data | ~0.5% random drops plus reboot gaps |
+| **Bitbrains GWA-T-12 fastStorage** (1,250 VMs, 30 d, 5 min) | CPU %, memory KB, disk r/w, network rx/tx | CPU φ, noise model, day-to-day drift, weekend factor, memory φ, network/disk spread, `net_out/in`, gap rate, archetype tuples |
+| **Azure VM traces 2017** (2,000 sampled of 7,249) | CPU avg/min/max | spikes (rate, height), archetype tuples, φ cross-check (shift-invariant stats only) |
+| **Alibaba 2018** (5,841 **containers**, 6 d) | CPU %, mem % (of container limit), net in/out, disk-io % | memory-CPU coupling, memory noise, disk-IO intercept/slope |
+| **Google Borg 2011** (3,000 sampled tasks) | CPU, memory usage | CV comparison (memory steadier than CPU) |
 
-## G4. Signal model (per VM, vectorised over 8,640 slots)
+**Stated assumptions (not fittable):**
+- network absolute scale
+- disk-used %
+- peak hour 14:00 IST (scenario)
+- archetype mix
+- levels for batch_nightly, office_hours_dev and bursty_daily (< 30 real matches)
+- memory_bound level
+- the right_sized_prod caps
+
+## G4. Signal model (per VM, vectorised over 8,640 slots; numbers from fitted_params.json)
 ```
-cpu = clip(base × daily(t) × weekly(t) × drift(day) + bursts(t) + ar1_noise(t), 0, 100)
-mem = clip(mem_base + 0.25 × cpu + noise, 0, 100)
-iops = k_iops × cpu × provisioned/100 + lognormal noise
-net_in, net_out = k_net × cpu + lognormal noise
-disk_used_pct = start + slope × day + small noise
+cpu  = clip((trough + (peak-trough) x daily(t)) x drift(day) + AR1(sigma, phi=0.905)) x weekly(t)
+       (trough, peak, sigma, drift, weekly) resampled from one real VM of the same archetype
+mem  = clip(mem_base + 0.029 x cpu + AR1(sd=3.12, phi=0.792))
+iops = provisioned x (base + k x cpu)% x lognormal(0, 1.06)
+net_in  = bandwidth x k x (base/k + cpu)% x lognormal(0, 1.99);  net_out = 0.258 x net_in
+disk_used_pct = start + slope x day + small noise            (assumption)
 ```
-- `daily(t)`: business-hours bump peaking at 14:00 IST.
-- `weekly(t)`: weekend factor, near 0.1 for dev.
-- `drift`: N(1, 0.05) per day.
-- `ar1_noise`: eₜ = 0.8·eₜ₋₁ + N(0, σ).
+- `daily(t)`: business-hours bump peaking at 14:00 IST (scenario).
+- `drift`: a lognormal multiplier per day, with sd taken from the archetype's real median.
+- Planted cases use the fitted dynamics too, **except 8 pinned ones** (listed in `generator/planted.py` with reasons) whose exact edge-case targets need φ 0.8 and drift 0.05.
+- Checkpoints: `python -m generator.checkpoints --upto N` re-verifies checkpoints 1…N cumulatively.
 
 ## G5. Fleet: 118 VMs + 15 volumes + 8 IPs = 141 inventory rows
 

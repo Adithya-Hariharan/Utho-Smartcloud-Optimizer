@@ -71,7 +71,6 @@ def test_sum_matches_last_billing_day(costs, ds, cfg):
     expected = last * cfg.get("billing.hours_per_month") / 24
     assert (expected - per.loc[expected.index]).abs().max() <= 1
     assert abs(expected.sum() - per.sum()) <= len(per)
-    assert int(per.sum()) == 657302
 
 
 def test_daily_conversion(cfg):

@@ -56,7 +56,7 @@ def test_resource_detail(client, ids):
     r = client.get(f"/api/resources/{ids['prod-batch-07']}")
     assert r.status_code == 200
     body = r.json()
-    assert body["trace"] and body["trace"][-1]["terminal"] and body["trace"][-1]["step"] == "veto.recurring_peak"
+    assert body["trace"] and body["trace"][-1]["terminal"] and body["trace"][-1]["step"].startswith("veto.recurring_peak")
     assert (body["verdict"], body["reason_code"]) == ("reject", "VETO_RECURRING_PEAK")
     assert body["inventory"]["name"] == "prod-batch-07"
     assert 88 <= body["features"]["metrics"]["cpu"]["p99"] <= 95
@@ -129,16 +129,18 @@ def test_alert_ids_linked(client):
     assert linked and all(alerts[a]["resource_id"] == rid for rid, a in linked)
 
 
-def test_summary(client):
+def test_summary(client, ds, cfg):
     s = Summary.model_validate(client.get("/api/summary").json())
-    assert s.monthly_before_inr == 657302
+    last = ds.billing[ds.billing["date"] == ds.billing["date"].max()]["cost_inr"].sum()
+    run_rate = last * cfg.get("billing.hours_per_month") / 24          # the bill's own monthly run-rate
+    assert abs(s.monthly_before_inr - run_rate) <= 140                   # ± ₹1 per resource (B3)
     assert 15 <= s.potential_saving_pct <= 35                              # F9 plausibility band
     items = client.get("/api/recommendations").json()["items"]
     after = sum(i["options"][i["default_option"]]["monthly_inr_after"] if i["verdict"] != "upsize"
                 else i["current"]["monthly_inr"] for i in items)
     assert s.potential_after_inr == after                                 # headline = sum of the cards
     assert s.counts["upsize_extra_inr"] > 0 and s.counts["engine"] == "v1"
-    assert sum(s.by_env.values()) == sum(s.by_team.values()) == sum(s.by_region.values()) == 657302
+    assert sum(s.by_env.values()) == sum(s.by_team.values()) == sum(s.by_region.values()) == s.monthly_before_inr
     assert s.counts["by_type"] == {"ip": 8, "vm": 117, "volume": 15}
     assert len(s.bill_trend_6m) == 6
     assert sum(w.delta_inr for w in s.growth_waterfall) == s.bill_trend_6m[-1].total_inr - s.bill_trend_6m[0].total_inr

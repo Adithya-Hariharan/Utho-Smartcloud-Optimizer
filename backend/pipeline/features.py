@@ -166,6 +166,7 @@ def vm_features(s, inv_row, grid, cfg):
         "mean_mem": _nanmean(mem),
         "mem_flatness": _f(np.nanstd(mem)) if np.any(~np.isnan(mem)) else None,
         "net_total_mean_mbps": _nanmean(net_total),
+        "net_pct_mean": _nanmean(net_total / bw * 100) if bw and bw > 0 else None,
         "share_cpu_above_90": float((valid_cpu > 90).mean()) if len(valid_cpu) else None,
         "recurring_peak_days": recurring_peak_days(cpu, day, n_days, cfg.get("thresholds.recurring_peak_pct")),
         "p99_excl_top_day": excl,

@@ -60,8 +60,10 @@ thresholds:
   replay_limit_minutes_prod: {value: 0, why: "Hard safety gate for prod", source: "plan section 7"}
   replay_limit_minutes_nonprod: {value: 30, why: "Per month above 90% CPU", source: "plan section 7"}
   idle_cpu_pct: {value: 5, why: "Idle CPU threshold", source: "Datadog, Azure Advisor"}
-  idle_net_mb_per_hour: {value: 5, why: "Idle network threshold; 1 Mbps = 450 MB/h, so 5 MB/h = 0.0111 Mbps", source: "Datadog, Azure Advisor"}
-  idle_iops_p95: {value: 5, why: "Idle disk threshold", source: "Datadog, Azure Advisor"}
+  idle_net_mb_per_hour: {value: 5, why: "Plan section 7 absolute idle line (1 Mbps = 450 MB/h); kept for reference, the VM idle test uses idle_net_pct_bw", source: "Datadog, Azure Advisor"}
+  idle_iops_p95: {value: 5, why: "Absolute IOPS line; still used for the idle-volume review (C3)", source: "Datadog, Azure Advisor"}
+  idle_net_pct_bw: {value: 0.1, why: "VM idle if mean (in + out) network < 0.1% of plan bandwidth; real network is lognormal, so absolute MB/h lines call idle VMs busy", source: "engine/config.yaml candidates.idle_net_pct_bw (main)"}
+  idle_iops_pct: {value: 1, why: "VM idle if IOPS p95 < 1% of provisioned IOPS", source: "engine/config.yaml candidates.idle_iops_pct (main)"}
   underused_cpu_pct: {value: 40, why: "Leaves room after headroom", source: "plan section 7"}
   underused_mem_pct: {value: 50, why: "Leaves room after headroom", source: "plan section 7"}
   veto_mem_p99_pct: {value: 70, why: "Memory-bound", source: "catalogue doc"}
@@ -88,8 +90,8 @@ thresholds:
   growth_min_slope: {value: 0.3, why: "Slope (points/day) below this is flat noise", source: "PLAN_final.md B5"}
   growth_min_r2: {value: 0.5, why: "Fit quality; a weekly on/off pattern is not a trend", source: "PLAN_final.md B9a.1"}
   shrinkable_mean_cpu_pct: {value: 20, why: "Looks wasteful on its average", source: "plan section 7 step 6 (Rejections panel test)"}
-  upsize_share_above_90: {value: 0.05, why: "Share of CPU samples above 90%; a nightly batch of 1-2 h stays below", source: "PLAN_final.md B5 (G9)"}
-  upsize_mem_p99_pct: {value: 90, why: "Memory p99 above this needs more RAM", source: "plan section 7 step 3"}
+  upsize_cpu_p99_pct: {value: 90, why: "CPU p99 above this = saturated (plan section 7 step 3)", source: "plan section 7; engine/config.yaml sizing.upsize_level (main)"}
+  upsize_min_mean_cpu_pct: {value: 20, why: "A VM idle on average that touches 90% is batchy, not starved: no upsize below this mean", source: "engine/components/sizing.py _upsize (main)"}
   off_hour_cpu_p95_pct: {value: 5, why: "An hour is off if CPU p95 is below this in every week", source: "plan section 7 step 6"}
   off_block_min_hours: {value: 4, why: "Shorter off blocks are start/stop churn", source: "plan section 7 step 6"}
   off_min_hours_per_week: {value: 40, why: "Below this a schedule is not worth it", source: "plan section 7 step 6"}

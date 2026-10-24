@@ -1,0 +1,543 @@
+{
+ "bitbrains_5T": {
+  "items": 1250,
+  "freq": "5T",
+  "start_example": "2013-08-12 13:40:00",
+  "timestamps": "UTC; Bitbrains data centre local time = UTC+2 (CEST, Aug-Sep 2013)",
+  "channels": {
+   "target[0]": {
+    "meaning": "cpu_mhz",
+    "unit": "MHz",
+    "evidence": "target[0]/target[1] constant per VM (median CV 6.8e-08) = CPU capacity"
+   },
+   "target[1]": {
+    "meaning": "cpu_pct",
+    "unit": "%",
+    "evidence": "p99 103.7, 0.975 in [0,100]; proportional to MHz channel. Values slightly >100 exist in raw Bitbrains (clipped when fitting)"
+   },
+   "past_feat_dynamic_real[0]": {
+    "meaning": "mem_kb",
+    "unit": "KB",
+    "evidence": "KB-scale (p50 7.97e+04), varies within VM (CV 0.65) -> usage not provisioned"
+   },
+   "past_feat_dynamic_real[1]": {
+    "meaning": "disk_read_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.60) vs disk r/w 0.35"
+   },
+   "past_feat_dynamic_real[2]": {
+    "meaning": "disk_write_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.60) vs disk r/w 0.35"
+   },
+   "past_feat_dynamic_real[3]": {
+    "meaning": "net_rx_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.60) vs disk r/w 0.35"
+   },
+   "past_feat_dynamic_real[4]": {
+    "meaning": "net_tx_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.60) vs disk r/w 0.35"
+   }
+  },
+  "stats": {
+   "target[0]": {
+    "min": 0.0,
+    "p50": 29.46666145324707,
+    "p99": 21547.064453125,
+    "max": 22091.32421875,
+    "share_0_100": 0.6548525162138752,
+    "share_0_1": 0.24697417830693094,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.9843605670118536,
+    "nan_share": 0.04595601851851852
+   },
+   "target[1]": {
+    "min": 0.0,
+    "p50": 0.9333333373069763,
+    "p99": 103.71666717529297,
+    "max": 106.20833587646484,
+    "share_0_100": 0.9752212196133904,
+    "share_0_1": 0.560940635258779,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.9965706667361173,
+    "nan_share": 0.04595601851851852
+   },
+   "past_feat_dynamic_real[0]": {
+    "min": 0.0,
+    "p50": 79689.6015625,
+    "p99": 8657042.0,
+    "max": 402653184.0,
+    "share_0_100": 0.12558059786111914,
+    "share_0_1": 0.12558059786111914,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.6491513700380407,
+    "nan_share": 0.04595601851851852
+   },
+   "past_feat_dynamic_real[1]": {
+    "min": 0.0,
+    "p50": 0.0,
+    "p99": 573.0793255615197,
+    "max": 309663.53125,
+    "share_0_100": 0.9725421593104726,
+    "share_0_1": 0.9379671169105521,
+    "nonneg": 1.0,
+    "median_within_item_cv": 13.654315540913203,
+    "nan_share": 0.04595601851851852
+   },
+   "past_feat_dynamic_real[2]": {
+    "min": 0.0,
+    "p50": 1.5333333015441895,
+    "p99": 729.2000122070312,
+    "max": 76374.203125,
+    "share_0_100": 0.9541142682910062,
+    "share_0_1": 0.4331589618914287,
+    "nonneg": 1.0,
+    "median_within_item_cv": 2.1123808783665297,
+    "nan_share": 0.04595601851851852
+   },
+   "past_feat_dynamic_real[3]": {
+    "min": 0.0,
+    "p50": 0.0,
+    "p99": 811.933349609375,
+    "max": 44736.33203125,
+    "share_0_100": 0.9545396828477866,
+    "share_0_1": 0.7076694318612857,
+    "nonneg": 1.0,
+    "median_within_item_cv": 6.228001435255858,
+    "nan_share": 0.04595601851851852
+   },
+   "past_feat_dynamic_real[4]": {
+    "min": 0.0,
+    "p50": 0.06666667014360428,
+    "p99": 936.1586889648363,
+    "max": 44814.6015625,
+    "share_0_100": 0.9652656293345174,
+    "share_0_1": 0.7633959080942803,
+    "nonneg": 1.0,
+    "median_within_item_cv": 4.793718818564086,
+    "nan_share": 0.04595601851851852
+   }
+  },
+  "pair_corr_past": {
+   "1-2": 0.3509283605792804,
+   "1-3": 0.06001023753409025,
+   "1-4": 0.044692225984013734,
+   "2-3": 0.18091222903175758,
+   "2-4": 0.10377425701666498,
+   "3-4": 0.5993548719945389
+  }
+ },
+ "bitbrains_H": {
+  "items": 1250,
+  "freq": "H",
+  "start_example": "2013-08-12 13:00:00",
+  "timestamps": "UTC; Bitbrains data centre local time = UTC+2 (CEST, Aug-Sep 2013)",
+  "channels": {
+   "target[0]": {
+    "meaning": "cpu_mhz",
+    "unit": "MHz",
+    "evidence": "target[0]/target[1] constant per VM (median CV 6.6e-08) = CPU capacity"
+   },
+   "target[1]": {
+    "meaning": "cpu_pct",
+    "unit": "%",
+    "evidence": "p99 103.3, 0.980 in [0,100]; proportional to MHz channel. Values slightly >100 exist in raw Bitbrains (clipped when fitting)"
+   },
+   "past_feat_dynamic_real[0]": {
+    "meaning": "mem_kb",
+    "unit": "KB",
+    "evidence": "KB-scale (p50 9.29e+04), varies within VM (CV 0.30) -> usage not provisioned"
+   },
+   "past_feat_dynamic_real[1]": {
+    "meaning": "disk_read_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.74) vs disk r/w 0.39"
+   },
+   "past_feat_dynamic_real[2]": {
+    "meaning": "disk_write_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.74) vs disk r/w 0.39"
+   },
+   "past_feat_dynamic_real[3]": {
+    "meaning": "net_rx_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.74) vs disk r/w 0.39"
+   },
+   "past_feat_dynamic_real[4]": {
+    "meaning": "net_tx_kbps",
+    "unit": "KB/s",
+    "evidence": "non-negative 1.000; original GWA-T-12 column order (mem usage, disk read, disk write, net rx, net tx); rx/tx are the most correlated pair (median r=0.74) vs disk r/w 0.39"
+   }
+  },
+  "stats": {
+   "target[0]": {
+    "min": 0.0,
+    "p50": 30.766658782958984,
+    "p99": 21474.83853515625,
+    "max": 21984.294921875,
+    "share_0_100": 0.6489834016869148,
+    "share_0_1": 0.16153853594366632,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.45279596483756457,
+    "nan_share": 0.04406842348589922
+   },
+   "target[1]": {
+    "min": 0.0,
+    "p50": 0.9222221970558167,
+    "p99": 103.27777168273923,
+    "max": 105.6937484741211,
+    "share_0_100": 0.9803644664551575,
+    "share_0_1": 0.5491710516134024,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.4527959721920911,
+    "nan_share": 0.04406842348589922
+   },
+   "past_feat_dynamic_real[0]": {
+    "min": 0.0,
+    "p50": 92855.1875,
+    "p99": 8358137.084999916,
+    "max": 65408772.0,
+    "share_0_100": 0.05456356883076685,
+    "share_0_1": 0.054413642343109185,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.29671792547281994,
+    "nan_share": 0.04406842348589922
+   },
+   "past_feat_dynamic_real[1]": {
+    "min": 0.0,
+    "p50": 0.0,
+    "p99": 851.7832775878823,
+    "max": 213307.234375,
+    "share_0_100": 0.9674175887951714,
+    "share_0_1": 0.8805859707498259,
+    "nonneg": 1.0,
+    "median_within_item_cv": 4.816917247392032,
+    "nan_share": 0.04406842348589922
+   },
+   "past_feat_dynamic_real[2]": {
+    "min": 0.0,
+    "p50": 1.9888888597488403,
+    "p99": 914.6922363281236,
+    "max": 47738.41796875,
+    "share_0_100": 0.9479996904743481,
+    "share_0_1": 0.35551922928112667,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.7173893153258475,
+    "nan_share": 0.04406842348589922
+   },
+   "past_feat_dynamic_real[3]": {
+    "min": 0.0,
+    "p50": 0.10000000149011612,
+    "p99": 826.624655761718,
+    "max": 29494.271484375,
+    "share_0_100": 0.9349996130929351,
+    "share_0_1": 0.6552851505068482,
+    "nonneg": 1.0,
+    "median_within_item_cv": 3.088093535093767,
+    "nan_share": 0.04406842348589922
+   },
+   "past_feat_dynamic_real[4]": {
+    "min": 0.0,
+    "p50": 0.07777778059244156,
+    "p99": 876.749444580076,
+    "max": 29494.189453125,
+    "share_0_100": 0.9602356264025381,
+    "share_0_1": 0.6890573009363151,
+    "nonneg": 1.0,
+    "median_within_item_cv": 2.335198009974912,
+    "nan_share": 0.04406842348589922
+   }
+  },
+  "pair_corr_past": {
+   "1-2": 0.39145552933590216,
+   "1-3": 0.0971971328899285,
+   "1-4": 0.10471817088738092,
+   "2-3": 0.25324174482163303,
+   "2-4": 0.13254756375058135,
+   "3-4": 0.7363704765757287
+  }
+ },
+ "azure_2017": {
+  "items": 7249,
+  "freq": "5T",
+  "start_example": "2016-11-15 16:00:00",
+  "channels": {
+   "target[0]": {
+    "meaning": "cpu_avg_pct",
+    "unit": "%",
+    "evidence": "pct100 test passed (p50 4.09, p99 59.6, in[0,100] 1.000); CloudOps-TSF: target = average CPU utilisation"
+   },
+   "past_feat_dynamic_real[0]": {
+    "meaning": "cpu_min_pct",
+    "unit": "%",
+    "evidence": "pct100 test passed (p50 2.38, p99 47.9, in[0,100] 1.000); <= avg in 1.000 of samples; covariate: min CPU in interval"
+   },
+   "past_feat_dynamic_real[1]": {
+    "meaning": "cpu_max_pct",
+    "unit": "%",
+    "evidence": "pct100 test passed (p50 7.45, p99 95.8, in[0,100] 1.000); >= avg in 1.000 of samples; covariate: max CPU in interval"
+   }
+  },
+  "stats": {
+   "target[0]": {
+    "min": 0.02103699930012226,
+    "p50": 4.0915350914001465,
+    "p99": 59.58422607421868,
+    "max": 100.0,
+    "share_0_100": 1.0,
+    "share_0_1": 0.12198443121275714,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.5814599405413423,
+    "nan_share": 0.0002195530865149886
+   },
+   "past_feat_dynamic_real[0]": {
+    "min": 0.0,
+    "p50": 2.3830690383911133,
+    "p99": 47.86223083496056,
+    "max": 99.18231964111328,
+    "share_0_100": 1.0,
+    "share_0_1": 0.28494628291324736,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.586750441956151,
+    "nan_share": 0.0002195530865149886
+   },
+   "past_feat_dynamic_real[1]": {
+    "min": 0.021671000868082047,
+    "p50": 7.449516773223877,
+    "p99": 95.80051757812497,
+    "max": 100.0,
+    "share_0_100": 1.0,
+    "share_0_1": 0.06033522956862515,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.8855426597471908,
+    "nan_share": 0.0002195530865149886
+   }
+  }
+ },
+ "alibaba_2018": {
+  "items": 5841,
+  "freq": "5T",
+  "start_example": "2018-01-02 12:00:00",
+  "channels": {
+   "target[0]": {
+    "meaning": "cpu_pct",
+    "unit": "% of container limit",
+    "evidence": "pct100 test passed (p50 6.63, p99 54.8, in[0,100] 1.000); container_usage.cpu_util_percent"
+   },
+   "target[1]": {
+    "meaning": "mem_pct",
+    "unit": "% of container limit",
+    "evidence": "pct100 test passed (p50 97, p99 100, in[0,100] 1.000); container_usage.mem_util_percent"
+   },
+   "past_feat_dynamic_real[0]": {
+    "meaning": "cpi",
+    "unit": "cycles/instr",
+    "evidence": "nonneg test passed (p50 1.58, p99 2.37, in[0,100] 1.000); container_usage.cpi (typical 0.5-4)"
+   },
+   "past_feat_dynamic_real[3]": {
+    "meaning": "net_in",
+    "unit": "normalised",
+    "evidence": "nonneg test passed (p50 0.06, p99 1.54, in[0,100] 1.000); container_usage.net_in; net_in/net_out median corr 0.987"
+   },
+   "past_feat_dynamic_real[4]": {
+    "meaning": "net_out",
+    "unit": "normalised",
+    "evidence": "nonneg test passed (p50 0.06, p99 1.23, in[0,100] 1.000); container_usage.net_out; net_in/net_out median corr 0.987"
+   },
+   "past_feat_dynamic_real[5]": {
+    "meaning": "disk_io_pct",
+    "unit": "%",
+    "evidence": "pct100 test passed (p50 7.4, p99 26.2, in[0,100] 1.000); container_usage.disk_io_percent"
+   }
+  },
+  "stats": {
+   "target[0]": {
+    "min": 0.0,
+    "p50": 6.633333206176758,
+    "p99": 54.83333206176758,
+    "max": 94.96551513671875,
+    "share_0_100": 1.0,
+    "share_0_1": 0.10149539250171319,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.27720889573759894,
+    "nan_share": 0.0
+   },
+   "target[1]": {
+    "min": 5.0,
+    "p50": 97.0,
+    "p99": 100.0,
+    "max": 100.0,
+    "share_0_100": 1.0,
+    "share_0_1": 0.0,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.04037733647354332,
+    "nan_share": 0.0
+   },
+   "past_feat_dynamic_real[0]": {
+    "min": 0.0,
+    "p50": 1.5834482908248901,
+    "p99": 2.368578178882599,
+    "max": 3.4282143115997314,
+    "share_0_100": 1.0,
+    "share_0_1": 0.05898096349659919,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.08200083373001987,
+    "nan_share": 0.8717389799497367
+   },
+   "past_feat_dynamic_real[1]": {
+    "min": 0.0,
+    "p50": 0.01827586255967617,
+    "p99": 1.3148396360874175,
+    "max": 3.1593103408813477,
+    "share_0_100": 1.0,
+    "share_0_1": 0.9843240632671952,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.73841163075221,
+    "nan_share": 0.8717389799497367
+   },
+   "past_feat_dynamic_real[2]": {
+    "min": 0.0,
+    "p50": 0.7037037014961243,
+    "p99": 1.8965517282485962,
+    "max": 7.0,
+    "share_0_100": 1.0,
+    "share_0_1": 0.8783354127258824,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.42380070897479283,
+    "nan_share": 0.8717389799497367
+   },
+   "past_feat_dynamic_real[3]": {
+    "min": 0.0,
+    "p50": 0.05999999865889549,
+    "p99": 1.5399999618530273,
+    "max": 3.140000104904175,
+    "share_0_100": 1.0,
+    "share_0_1": 0.9829029952598616,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.25813650410467026,
+    "nan_share": 0.06584205151963524
+   },
+   "past_feat_dynamic_real[4]": {
+    "min": 0.0,
+    "p50": 0.05999999865889549,
+    "p99": 1.2300000190734863,
+    "max": 3.740000009536743,
+    "share_0_100": 1.0,
+    "share_0_1": 0.9810617108582345,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.24732844642768403,
+    "nan_share": 0.06584205151963524
+   },
+   "past_feat_dynamic_real[5]": {
+    "min": 0.0,
+    "p50": 7.400000095367432,
+    "p99": 26.200000762939453,
+    "max": 96.0,
+    "share_0_100": 1.0,
+    "share_0_1": 0.0053696513763937205,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.5286343592126592,
+    "nan_share": 0.07224614869562775
+   }
+  },
+  "note": "container-level (not machine-level) usage; mem% is relative to the container limit (median ~96%), so only CPU-memory coupling and noise are used, not levels"
+ },
+ "borg_2011": {
+  "items": 4626,
+  "freq": "5T",
+  "start_example": "2011-05-22 14:15:00",
+  "channels": {
+   "target[0]": {
+    "meaning": "cpu_usage_norm",
+    "unit": "aggregated CPU rate, scale unknown (0-154)",
+    "evidence": "nonneg test passed (p50 13.5, p99 22.9, in[0,100] 1.000); task usage: CPU rate; only scale-free stats (CV) are used"
+   },
+   "target[1]": {
+    "meaning": "mem_usage_norm",
+    "unit": "fraction of largest machine",
+    "evidence": "nonneg test passed (p50 0.0178, p99 0.0273, in[0,100] 1.000); task usage: canonical memory usage (normalised)"
+   }
+  },
+  "stats": {
+   "target[0]": {
+    "min": 0.0,
+    "p50": 13.494810104370117,
+    "p99": 22.88979721069336,
+    "max": 190.20655822753906,
+    "share_0_100": 0.9999974203534115,
+    "share_0_1": 0.054992905971881854,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.388701790406494,
+    "nan_share": 0.0028450612078624584
+   },
+   "target[1]": {
+    "min": 0.0,
+    "p50": 0.01780434139072895,
+    "p99": 0.027304183691740036,
+    "max": 0.13662578165531158,
+    "share_0_100": 1.0,
+    "share_0_1": 1.0,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.11309807667684882,
+    "nan_share": 0.0028450612078624584
+   },
+   "past_feat_dynamic_real[0]": {
+    "min": 0.0,
+    "p50": 0.0019359999569132924,
+    "p99": 0.0019379999721422791,
+    "max": 0.002853000070899725,
+    "share_0_100": 1.0,
+    "share_0_1": 1.0,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.02781208205097231,
+    "nan_share": 0.0028450612078624584
+   },
+   "past_feat_dynamic_real[1]": {
+    "min": 0.0,
+    "p50": 6.199000199558213e-05,
+    "p99": 0.00014109999756328762,
+    "max": 0.0017219999572262168,
+    "share_0_100": 1.0,
+    "share_0_1": 1.0,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.24566533051565437,
+    "nan_share": 0.0028450612078624584
+   },
+   "past_feat_dynamic_real[2]": {
+    "min": 0.0,
+    "p50": 0.00015259999781847,
+    "p99": 0.00023269999655894935,
+    "max": 0.0018119999440386891,
+    "share_0_100": 1.0,
+    "share_0_1": 1.0,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.108564785921822,
+    "nan_share": 0.0028450612078624584
+   },
+   "past_feat_dynamic_real[3]": {
+    "min": 0.0,
+    "p50": 0.0,
+    "p99": 0.0,
+    "max": 6.675999884464545e-06,
+    "share_0_100": 1.0,
+    "share_0_1": 1.0,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.0,
+    "nan_share": 0.0028450612078624584
+   },
+   "past_feat_dynamic_real[4]": {
+    "min": 0.0,
+    "p50": 0.0,
+    "p99": 0.0,
+    "max": 0.0,
+    "share_0_100": 1.0,
+    "share_0_1": 1.0,
+    "nonneg": 1.0,
+    "median_within_item_cv": 0.0,
+    "nan_share": 0.0028450612078624584
+   }
+  }
+ }
+}
