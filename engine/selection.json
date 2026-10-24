@@ -1,0 +1,14 @@
+{
+ "assemble": "b_precedence",
+ "candidates": "c_relative",
+ "clean": "a_basic",
+ "cost": "a_sequential",
+ "gates_data": "c_peak_hours",
+ "gates_policy": "a_table",
+ "noncompute": "b_state_growth",
+ "patterns": "a_p99",
+ "peaks": "c_periodicity",
+ "risk": "b_bootstrap",
+ "sizing": "b_formula_replay",
+ "vetoes": "b_fixed_sig"
+}
