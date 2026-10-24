@@ -76,19 +76,16 @@ flowchart LR
 ## Decision engine
 
 ```mermaid
-flowchart TD
-    A[VM] --> B{Data complete?}
-    B -- no --> X[Exclude]
-    B -- yes --> C{Too small?}
-    C -- yes --> U[Upsize]
-    C -- no --> D{Looks wasteful?}
-    D -- no --> H[Healthy]
-    D -- yes --> E{Any veto?}
-    E -- yes --> K[Kept]
-    E -- no --> F[Pick smaller plan]
-    F --> G{Peak Replay passes?}
-    G -- no --> K
-    G -- yes --> R[Recommend]
+flowchart LR
+    A([VM]) --> B{Data OK?}
+    B -->|yes| C{Wasteful?}
+    C -->|yes| D{Veto?}
+    D -->|no| E{Replay OK?}
+    E -->|yes| R([Recommend])
+    B -->|no| X([Exclude])
+    C -->|no| H([Healthy / Upsize])
+    D -->|yes| K([Kept])
+    E -->|no| K
 ```
 
 | Rule | Value | Why |
