@@ -1,0 +1,22 @@
+{
+ "vms": 1062,
+ "resources": 1269,
+ "copies": 9,
+ "metric_rows": 8647371,
+ "seconds": {
+  "replicate": 0.01,
+  "clean": 5.24,
+  "evidence_and_decisions": 36.8,
+  "alerts": 11.87,
+  "total": 53.9
+ },
+ "ms_per_vm": 50.8,
+ "alerts": 216,
+ "rss_mb": 763,
+ "machine": {
+  "python": "3.11.7",
+  "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+  "system": "Windows"
+ },
+ "note": "single process, no parallelism; per-VM work is independent, so it parallelises across processes"
+}
