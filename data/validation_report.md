@@ -20,7 +20,7 @@ Monthly run-rate (last day x 730/24): Rs 619,490
 | A12 | prod-db-01 | iops p95 >= 70% of provisioned | PASS | 94.2 |
 | A13 | prod-ingest-09 | iops p95 >= 70% of provisioned | PASS | 90.8 |
 | A14 | prod-gateway-03 | cpu p99 < 10, net p95 >= 60% bw | PASS | (6.7, 78.7) |
-| A15 | prod-api-04 | daily p95 slope > 1 %/day | PASS | 1.38 |
+| A15 | prod-api-04 | daily p95 slope > 1 %/day | PASS | 1.64 |
 | A16 | prod-search-02 | cpu p99 > 90 | PASS | 100.0 |
 | A17 | prod-legacy-06 | last-7d / prior mean < 0.2 | PASS | 0.031 |
 | A18 | prod-ml-10 | cpu p99 < 15, mem p99 in 37.5-50 | PASS | (11.5, 44.9) |
@@ -71,13 +71,13 @@ Monthly run-rate (last day x 730/24): Rs 619,490
 | C8 | ip-stopped-02 | on vm-stopped-07 | PASS |  |
 | C9 | ip-allowlist-04 | allowlisted tag | PASS |  |
 | G7 | growth team | 4 VMs created 2026-10-12 | PASS | 4 |
-| CAL | fleet | share of VMs with mean CPU < 20% in 0.5-0.85 (Azure) | PASS | 0.809 |
-| CAL | fleet | median p95/mean CPU in 1.5-5.0 (Azure) | PASS | 2.26 |
-| CAL | fleet | median memory CV < median CPU CV (Bitbrains/Google) | PASS | (0.156, 0.65) |
-| CAL | fleet | median CPU p95 < 50.0% (Google: usage << allocation) | PASS | 40.6 |
+| CAL | fleet | share of VMs with mean CPU < 20% in 0.5-0.85 (Azure) | PASS | 0.8 |
+| CAL | fleet | median p95/mean CPU in 1.5-5.0 (Azure) | PASS | 2.16 |
+| CAL | fleet | median memory CV < median CPU CV (Bitbrains/Google) | PASS | (0.154, 0.632) |
+| CAL | fleet | median CPU p95 < 50.0% (Google: usage << allocation) | PASS | 41.1 |
 | FIT | ar1_phi_cpu | CPU lag-1 autocorrelation (residual): synthetic median in real IQR [0.771, 0.959] | PASS | 0.898 (n=52, real median 0.905) |
 | FIT | mem_ar1_phi | memory lag-1 autocorrelation (residual): synthetic median in real IQR [0.578, 0.873] | PASS | 0.784 (n=52, real median 0.792) |
-| FIT | mem_coupling | memory-on-CPU OLS slope: synthetic median in real IQR [-0.125, 0.391] | PASS | 0.0297 (n=58, real median 0.0287) |
+| FIT | mem_coupling | memory-on-CPU OLS slope: synthetic median in real IQR [-0.125, 0.391] | PASS | 0.0298 (n=58, real median 0.0287) |
 | FIT | mem_noise_sd_pct | memory residual sd (pct points): synthetic median in real IQR [1.25, 6.77] | PASS | 3.1 (n=58, real median 3.12) |
 | FIT | net_out_in_ratio | net_out / net_in: synthetic median in real IQR [0.0267, 1.01] | PASS | 0.263 (n=58, real median 0.258) |
 | FIT | net_lognorm_sigma | network lognormal spread: synthetic median in real IQR [1.43, 2.18] | PASS | 1.98 (n=52, real median 1.99) |
@@ -85,25 +85,25 @@ Monthly run-rate (last day x 730/24): Rs 619,490
 | FIT | archetypes.steady_low.drift_sd | day-to-day drift sd, steady_low: synthetic median in real IQR [0.0839, 0.305] | PASS | 0.2 (n=12, real median 0.191) |
 | INFO | archetypes.bursty_daily.drift_sd | day-to-day drift sd, bursty_daily: archetype has < 30 real matches, not compared | PASS | 0.329 (n=7) |
 | FIT | archetypes.zombie.drift_sd | day-to-day drift sd, zombie: synthetic median in real IQR [0.0493, 0.223] | PASS | 0.194 (n=5, real median 0.111) |
-| FIT | weekend_factor_interactive | weekend/weekday ratio (interactive VMs): synthetic median in real IQR [0.718, 0.934] | PASS | 0.827 (n=15, real median 0.814) |
-| FIT | archetypes.right_sized_prod.spikes_per_day | unscheduled spikes per day (p50 + 4 MAD), right-sized VMs: synthetic median in real IQR [1.68, 10.9] | PASS | 4.6 (n=15, real median 4.07) |
-| FIT | p95/mean | KS(synthetic, real re-weighted to mix {'right_sized_prod': 15, 'steady_low': 12, 'zombie': 5}) < 0.309 (alpha 0.01) | PASS | 0.23 |
-| CAL | fleet | memory steadier than CPU (median CV), as in Alibaba (0.045 vs 0.2572) and Borg (0.112 vs 0.3831) | PASS | (0.158, 0.685) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (32.8, 62.6, 88.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (27.9, 65.1, 88.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (26.3, 62.6, 88.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (19.3, 38.8, 64.1) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (22.2, 38.9, 54.8) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (22.1, 36.0, 52.7) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (25.3, 60.1, 88.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (37.3, 56.5, 79.9) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (33.1, 55.8, 72.6) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (29.0, 62.7, 88.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (23.0, 42.2, 65.1) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (43.4, 62.6, 88.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (39.1, 61.5, 84.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (46.0, 63.8, 84.0) |
-| TRUTH | right_sized_prod | 40 <= p99 < 90 (not underused, not upsize) | PASS | (47.5, 65.5, 86.0) |
+| FIT | weekend_factor_interactive | weekend/weekday ratio (interactive VMs): synthetic median in real IQR [0.718, 0.934] | PASS | 0.826 (n=15, real median 0.814) |
+| FIT | archetypes.right_sized_prod.spikes_per_day | unscheduled spikes per day (p50 + 4 MAD), right-sized VMs: synthetic median in real IQR [1.68, 10.9] | PASS | 4.67 (n=15, real median 4.07) |
+| FIT | p95/mean | KS(synthetic, real re-weighted to mix {'right_sized_prod': 15, 'steady_low': 12, 'zombie': 5}) < 0.309 (alpha 0.01) | PASS | 0.262 |
+| CAL | fleet | memory steadier than CPU (median CV), as in Alibaba (0.045 vs 0.2572) and Borg (0.112 vs 0.3831) | PASS | (0.158, 0.646) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (28.1, 41.5, 56.3) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (39.6, 64.3, 87.2) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (31.6, 47.0, 65.7) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (21.7, 38.4, 59.2) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (22.2, 38.9, 54.8) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (37.0, 54.2, 75.1) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (37.6, 55.4, 72.3) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (37.3, 56.5, 79.9) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (33.1, 55.8, 72.6) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (25.1, 60.0, 88.0) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (38.3, 61.1, 87.7) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (43.4, 62.6, 88.0) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (32.0, 48.0, 63.4) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (35.3, 65.6, 88.0) |
+| TRUTH | right_sized_prod | 40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful') | PASS | (36.2, 68.4, 88.0) |
 | TRUTH | steady_low | P < 40 and mem P < 50 (underused -> resize) | PASS | (6.0, 12.0, 14.7) |
 | TRUTH | steady_low | P < 40 and mem P < 50 (underused -> resize) | PASS | (9.2, 19.1, 23.0) |
 | TRUTH | steady_low | P < 40 and mem P < 50 (underused -> resize) | PASS | (10.4, 19.6, 23.4) |
@@ -178,9 +178,9 @@ Monthly run-rate (last day x 730/24): Rs 619,490
 | PROV | weekend_factor_all | has source, method and n_series | PASS | bitbrains_fastStorage_2013 n=881 |
 | PROV | weekend_factor_interactive | has source, method and n_series | PASS | bitbrains_fastStorage_2013 (active VMs, mean CPU >= 5%) n=218 |
 | PROV | traces | fitted_params provenance hashes == downloaded trace manifest | PASS | 5 |
-| INFO | right_sized_prod | drift sd capped at 0.10 (real p50 0.6145) to keep p99 < 90 | PASS | 0.124 |
-| INFO | fleet | share mean CPU < 20%: real Azure 0.9123, Bitbrains 0.8175 (depends on archetype mix) | PASS | 0.759 |
-| INFO | fleet | median CPU p95: real Azure 7.2657, Bitbrains 2.9604 (our fleet is deliberately busier) | PASS | 57.4 |
+| INFO | right_sized_prod | drift sd capped at 0.10 (real p50 0.6145) to keep p99 < 90 | PASS | 0.105 |
+| INFO | fleet | share mean CPU < 20%: real Azure 0.9123, Bitbrains 0.8175 (depends on archetype mix) | PASS | 0.741 |
+| INFO | fleet | median CPU p95: real Azure 7.2657, Bitbrains 2.9604 (our fleet is deliberately busier) | PASS | 55.6 |
 | BILL | fleet | month 6 / month 1 in 1.35-1.45 | PASS | 1.383 |
-| SIZE | data/ | total <= 30 MB | PASS | 12.4 MB |
+| SIZE | data/ | total <= 30 MB | PASS | 13.2 MB |
 | COUNT | inventory | 117 VMs, 15 volumes, 8 IPs | PASS | {'vm': 117, 'volume': 15, 'ip': 8} |

@@ -221,8 +221,11 @@ def bulk_vms():
     for i in range(15):
         name = nm("prod", ["web", "api", "search", "checkout"][i % 4])
         r = rng_for(name)
+        # mean >= 22 keeps the synthetic VM busy on average (>= 20%, so it never 'looks wasteful'), as the
+        # 'right-sized / healthy' label requires; found by the engine (prod-checkout-34 resampled to 19.3%)
         row = sample_real(r, "right_sized_prod",
-                          lambda x: x["trough"] >= 15 and x["peak"] <= 65 and x["peak"] - x["trough"] >= 10)
+                          lambda x: x["trough"] >= 15 and x["peak"] <= 65 and x["peak"] - x["trough"] >= 10
+                          and x["mean"] >= 22)
         if row:
             base, peak = row["trough"], row["peak"]
             cpu = resampled_cpu(r, "right_sized_prod", row, wk_inter, drift_cap=RIGHT_SIZED_DRIFT_CAP,
@@ -297,7 +300,10 @@ def bulk_vms():
             name, env=env, team=pick(r, TEAMS), plan=pick(r, ["B2", "B3"]), purpose="batch",
             cpu=cpu, rng=r, mem_base=r.uniform(15, 30), auto_created=True,
             t=truth("batch_nightly", "A3-bulk", "reject", "VETO_RECURRING_PEAK", "none",
-                    "never schedule off over 01:00-03:00")))
+                    "never schedule off over 01:00-03:00") if env == "prod" else
+            truth("batch_nightly", "B5-bulk", "recommend", "OFF_HOURS", "schedule",
+                  "non-prod: the nightly peak blocks shrinking, not scheduling; off-window keeps 01:00-03:00 on "
+                  "(same case as dev-etl-04)")))
 
     # office_hours_dev (15): weekdays 09-19 busy, else ~2%. 4 growth-team VMs created on day 22
     for i, env in enumerate(["dev"] * 11 + ["staging"] * 4):

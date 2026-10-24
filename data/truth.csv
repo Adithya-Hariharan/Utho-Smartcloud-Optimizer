@@ -36,7 +36,7 @@ vm-0034,dev-etl-04,vm,planted,B5,recommend,OFF_HOURS,schedule,nightly job 01:00-
 vm-0035,dev-support-05,vm,planted,B6,recommend,OFF_HOURS,schedule,night-shift team busy 22:00-06:00: window must be daytime
 vm-0036,staging-load-06,vm,planted,B7,recommend,OFF_HOURS,schedule,weekend-only load tests: weekdays off
 vm-0037,dev-misc-07,vm,planted,B9,recommend,UNDERUSED,resize,"activity scattered across all hours: off-hours fragmented, so no schedule"
-vm-0038,staging-demo-10,vm,planted,B10,healthy,RIGHT_SIZED,none,office-hours shape but keep_running tag: never scheduled
+vm-0038,staging-demo-10,vm,planted,B10,reject,PEAK_REPLAY_FAILED,none,"keep_running forbids scheduling, not evaluation: averages ~10% so an average-based tool would cut B2 -> S1, and its office-hours peaks fail replay there -> 'checked and kept'"
 vm-0039,vm-stopped-07,vm,planted,C10,recommend,STOPPED_VM,snapshot+delete,stopped 45 days; disk + IP still billed
 vm-0040,vm-maint-08,vm,planted,C11,exclude,STOPPED_RECENTLY,none,stopped 3 days ago: maintenance
 vm-0041,dev-test-12,vm,planted,D1,exclude,HISTORY_TOO_SHORT,none,created 3 days ago
@@ -91,8 +91,8 @@ vm-0089,staging-burst-64,vm,bursty_daily,A7-bulk,reject,VETO_RECURRING_PEAK,none
 vm-0090,prod-batch-65,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
 vm-0091,prod-batch-66,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
 vm-0092,prod-batch-67,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
-vm-0093,staging-batch-68,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
-vm-0094,dev-batch-69,vm,batch_nightly,A3-bulk,reject,VETO_RECURRING_PEAK,none,never schedule off over 01:00-03:00
+vm-0093,staging-batch-68,vm,batch_nightly,B5-bulk,recommend,OFF_HOURS,schedule,"non-prod: the nightly peak blocks shrinking, not scheduling; off-window keeps 01:00-03:00 on (same case as dev-etl-04)"
+vm-0094,dev-batch-69,vm,batch_nightly,B5-bulk,recommend,OFF_HOURS,schedule,"non-prod: the nightly peak blocks shrinking, not scheduling; off-window keeps 01:00-03:00 on (same case as dev-etl-04)"
 vm-0095,dev-app-70,vm,office_hours_dev,D1-bulk/G7,exclude,HISTORY_TOO_SHORT,none,created 2026-10-12 by growth team; drives team cost-jump alert
 vm-0096,dev-app-71,vm,office_hours_dev,D1-bulk/G7,exclude,HISTORY_TOO_SHORT,none,created 2026-10-12 by growth team; drives team cost-jump alert
 vm-0097,dev-app-72,vm,office_hours_dev,D1-bulk/G7,exclude,HISTORY_TOO_SHORT,none,created 2026-10-12 by growth team; drives team cost-jump alert

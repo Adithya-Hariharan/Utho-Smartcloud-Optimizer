@@ -95,13 +95,13 @@ Archetype parameter tuples (trough, peak, sigma, drift, weekend factor) are **re
 
 | case | statistic | check | result | synthetic |
 |---|---|---|---|---|
-| CAL | fleet | share of VMs with mean CPU < 20% in 0.5-0.85 (Azure) | PASS | 0.809 |
-| CAL | fleet | median p95/mean CPU in 1.5-5.0 (Azure) | PASS | 2.26 |
-| CAL | fleet | median memory CV < median CPU CV (Bitbrains/Google) | PASS | (0.156, 0.65) |
-| CAL | fleet | median CPU p95 < 50.0% (Google: usage << allocation) | PASS | 40.6 |
+| CAL | fleet | share of VMs with mean CPU < 20% in 0.5-0.85 (Azure) | PASS | 0.8 |
+| CAL | fleet | median p95/mean CPU in 1.5-5.0 (Azure) | PASS | 2.16 |
+| CAL | fleet | median memory CV < median CPU CV (Bitbrains/Google) | PASS | (0.154, 0.632) |
+| CAL | fleet | median CPU p95 < 50.0% (Google: usage << allocation) | PASS | 41.1 |
 | FIT | ar1_phi_cpu | CPU lag-1 autocorrelation (residual): synthetic median in real IQR [0.771, 0.959] | PASS | 0.898 (n=52, real median 0.905) |
 | FIT | mem_ar1_phi | memory lag-1 autocorrelation (residual): synthetic median in real IQR [0.578, 0.873] | PASS | 0.784 (n=52, real median 0.792) |
-| FIT | mem_coupling | memory-on-CPU OLS slope: synthetic median in real IQR [-0.125, 0.391] | PASS | 0.0297 (n=58, real median 0.0287) |
+| FIT | mem_coupling | memory-on-CPU OLS slope: synthetic median in real IQR [-0.125, 0.391] | PASS | 0.0298 (n=58, real median 0.0287) |
 | FIT | mem_noise_sd_pct | memory residual sd (pct points): synthetic median in real IQR [1.25, 6.77] | PASS | 3.1 (n=58, real median 3.12) |
 | FIT | net_out_in_ratio | net_out / net_in: synthetic median in real IQR [0.0267, 1.01] | PASS | 0.263 (n=58, real median 0.258) |
 | FIT | net_lognorm_sigma | network lognormal spread: synthetic median in real IQR [1.43, 2.18] | PASS | 1.98 (n=52, real median 1.99) |
@@ -109,13 +109,13 @@ Archetype parameter tuples (trough, peak, sigma, drift, weekend factor) are **re
 | FIT | archetypes.steady_low.drift_sd | day-to-day drift sd, steady_low: synthetic median in real IQR [0.0839, 0.305] | PASS | 0.2 (n=12, real median 0.191) |
 | INFO | archetypes.bursty_daily.drift_sd | day-to-day drift sd, bursty_daily: archetype has < 30 real matches, not compared | PASS | 0.329 (n=7) |
 | FIT | archetypes.zombie.drift_sd | day-to-day drift sd, zombie: synthetic median in real IQR [0.0493, 0.223] | PASS | 0.194 (n=5, real median 0.111) |
-| FIT | weekend_factor_interactive | weekend/weekday ratio (interactive VMs): synthetic median in real IQR [0.718, 0.934] | PASS | 0.827 (n=15, real median 0.814) |
-| FIT | archetypes.right_sized_prod.spikes_per_day | unscheduled spikes per day (p50 + 4 MAD), right-sized VMs: synthetic median in real IQR [1.68, 10.9] | PASS | 4.6 (n=15, real median 4.07) |
-| FIT | p95/mean | KS(synthetic, real re-weighted to mix {'right_sized_prod': 15, 'steady_low': 12, 'zombie': 5}) < 0.309 (alpha 0.01) | PASS | 0.23 |
-| CAL | fleet | memory steadier than CPU (median CV), as in Alibaba (0.045 vs 0.2572) and Borg (0.112 vs 0.3831) | PASS | (0.158, 0.685) |
-| INFO | right_sized_prod | drift sd capped at 0.10 (real p50 0.6145) to keep p99 < 90 | PASS | 0.124 |
-| INFO | fleet | share mean CPU < 20%: real Azure 0.9123, Bitbrains 0.8175 (depends on archetype mix) | PASS | 0.759 |
-| INFO | fleet | median CPU p95: real Azure 7.2657, Bitbrains 2.9604 (our fleet is deliberately busier) | PASS | 57.4 |
+| FIT | weekend_factor_interactive | weekend/weekday ratio (interactive VMs): synthetic median in real IQR [0.718, 0.934] | PASS | 0.826 (n=15, real median 0.814) |
+| FIT | archetypes.right_sized_prod.spikes_per_day | unscheduled spikes per day (p50 + 4 MAD), right-sized VMs: synthetic median in real IQR [1.68, 10.9] | PASS | 4.67 (n=15, real median 4.07) |
+| FIT | p95/mean | KS(synthetic, real re-weighted to mix {'right_sized_prod': 15, 'steady_low': 12, 'zombie': 5}) < 0.309 (alpha 0.01) | PASS | 0.262 |
+| CAL | fleet | memory steadier than CPU (median CV), as in Alibaba (0.045 vs 0.2572) and Borg (0.112 vs 0.3831) | PASS | (0.158, 0.646) |
+| INFO | right_sized_prod | drift sd capped at 0.10 (real p50 0.6145) to keep p99 < 90 | PASS | 0.105 |
+| INFO | fleet | share mean CPU < 20%: real Azure 0.9123, Bitbrains 0.8175 (depends on archetype mix) | PASS | 0.741 |
+| INFO | fleet | median CPU p95: real Azure 7.2657, Bitbrains 2.9604 (our fleet is deliberately busier) | PASS | 55.6 |
 
 178 / 178 checks passed.
 
@@ -143,6 +143,11 @@ Every other planted VM uses the fitted dynamics. A pin exists only where fitted 
 | prod-gateway-03 | A14 needs CPU p99 < 10 so network is the only signal; fitted noise lifts it to ~10.5 |
 | prod-ml-10 | A18 needs CPU p99 < 15 and mem p99 37.5-50; fitted noise lifts CPU p99 to ~25 |
 | staging-web-08 | A20 needs p95 27-33 (exactly ~3 vCPU of 8); fitted drift lifts p95 to ~39 |
+| prod-api-02 | E1 is a healthy VM with a gap; fitted noise saturated it (30-min mean 100% on 7 days, p95 89%) |
+| prod-api-04 | A15 must grow toward capacity without saturating inside the window; fitted noise hit 100% on 2 days |
+| prod-web-11a | A23 group must be underused; fitted noise gave 11a a 61% peak day that fails replay on B2 |
+| prod-web-11b | A23 group must be underused; fitted noise lifted 11b's p99 to 48% (not underused) |
+| prod-web-11c | A23 group members share one sizing decision; pinned with 11a/11b so the group is consistent |
 
 ## Sources
 
@@ -169,7 +174,7 @@ Findings worth knowing: Bitbrains memory (KB) is **not** steadier than CPU (CV 0
 | right_sized_prod | 15 | resampled real trough/peak (trough >= 15, peak <= 65) + fitted spikes. 4 have disk filling at 0.8%/day | healthy (4 trigger a disk alert) |
 | steady_low | 12 | resampled real low/flat VMs (p95 >= 6, mean <= 11), on B3–B5 | resize |
 | bursty_daily | 7 | 8–12% base (hand-set), 75–90% from 09:00 to 10:30, per-day peak + AR noise | reject (recurring peak) |
-| batch_nightly | 5 | ~3%, 85–93% from 01:00 to 03:00 (hand-set level, fitted noise) | reject (recurring peak) |
+| batch_nightly | 5 | ~3%, 85–93% from 01:00 to 03:00 (hand-set level, fitted noise) | prod: reject (recurring peak); non-prod: schedule with 01:00–03:00 kept on |
 | office_hours_dev | 15 | weekdays 09–19 at ~38%, else ~2% (hand-set level, fitted AR noise and drift). 4 are new growth-team VMs created 2026-10-12 | schedule / exclude (history) |
 | zombie | 5 | resampled real idle VMs (p95 < 3.5), no network, no IO | stop |
 | memory_bound | 3 | CPU ~10%, memory 80–85% | reject (memory) |
@@ -205,6 +210,12 @@ Findings worth knowing: Bitbrains memory (KB) is **not** steadier than CPU (CV 0
 - **Growth story:** creation dates of 31 bulk VMs (non-prod first) were placed inside the billing window so that last-30-day cost ÷ first-30-day cost = **1.36**. The target was 1.40; the result is coarse because each VM adds a discrete step.
 
 ## Deviations from PLAN.md
+
+- **Label corrections after the engine review (engine branch `b2_adi`, `engine/disputes.py`):**
+  - prod-api-02, prod-api-04 and prod-web-11a/b/c are now pinned. The fitted noise had saturated them or pushed them out of 'underused', contradicting their labels.
+  - Right-sized resampling now requires a real VM with mean >= 22%, so no 'healthy' VM averages under 20% (it was prod-checkout-34 at 19.3%).
+  - Non-prod nightly-batch VMs are now labelled 'schedule, keep 01:00–03:00 on'. This is the same case as dev-etl-04, whose label already said so.
+  - staging-demo-10 is now 'checked and kept'.
 
 - 117 VMs (55 planted), not 118 (56 planted): prod-api-02 was counted in both group A and group E.
 - prod-batch-20 is missing 18 of 30 nights, not 10, so peak-window coverage falls below the 50% flag threshold.
@@ -253,7 +264,7 @@ Findings worth knowing: Bitbrains memory (KB) is **not** steadier than CPU (CV 0
 | B6 | dev-support-05 | vm | recommend | OFF_HOURS | schedule | night-shift team busy 22:00-06:00: window must be daytime |
 | B7 | staging-load-06 | vm | recommend | OFF_HOURS | schedule | weekend-only load tests: weekdays off |
 | B9 | dev-misc-07 | vm | recommend | UNDERUSED | resize | activity scattered across all hours: off-hours fragmented, so no schedule |
-| B10 | staging-demo-10 | vm | healthy | RIGHT_SIZED | none | office-hours shape but keep_running tag: never scheduled |
+| B10 | staging-demo-10 | vm | reject | PEAK_REPLAY_FAILED | none | keep_running forbids scheduling, not evaluation: averages ~10%, an average-based cut to S1 fails replay -> 'checked and kept' |
 | C1 | vol-orphan-11 | volume | recommend | ORPHAN_VOLUME | snapshot+delete | unattached 65 days; 120 GB used -> snapshot Rs 480 |
 | C2 | vol-new-12 | volume | exclude | ORPHAN_TOO_NEW | none | unattached 2 days: under the 7-day gate |
 | C3 | vol-idle-04 | volume | flag | IDLE_VOLUME_REVIEW | none | attached to a running VM, zero IOPS for 30 days |
