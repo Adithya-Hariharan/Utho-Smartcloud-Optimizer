@@ -1,0 +1,146 @@
+import { useMemo, useState } from 'react'
+import clsx from 'clsx'
+import { CheckCircle2, XCircle } from 'lucide-react'
+import { Page } from '../components/layout/AppShell'
+import { ErrorNote, Loading, Stat } from '../components/common/ui'
+import { useDataQuality } from '../api/data'
+import { formatNum, formatPct } from '../lib/format'
+import { useResourceDrawer } from '../lib/useDrawer'
+import type { DqRow } from '../types/api'
+
+export default function DataQuality() {
+  const dq = useDataQuality()
+  const drawer = useResourceDrawer()
+  const [all, setAll] = useState(false)
+  const rows = dq.data?.checks ?? []
+  const coverage = useMemo(
+    () => [...(dq.data?.resources ?? [])].filter((r) => r.type === 'vm' && r.coverage !== null).sort((a, b) => (a.coverage ?? 0) - (b.coverage ?? 0)),
+    [dq.data],
+  )
+
+  if (dq.isLoading) return <Page title="Data quality"><Loading /></Page>
+  if (!dq.data) return <Page title="Data quality"><ErrorNote error={dq.error} /></Page>
+  const t = dq.data.totals
+
+  return (
+    <Page title="Data quality" subtitle="Real monitoring data is dirty, so ours is too. Every fault is cleaned before any decision; missing data stays missing, never zero.">
+      <div className="mb-4 grid grid-cols-6 gap-3">
+        <Stat label="Rows ingested" value={formatNum(t.metric_rows)} sub="5-minute VM samples" how="Rows in metrics.parquet before cleaning (GET /api/data-quality totals.metric_rows)." testId="dq-rows" />
+        <Stat label="Duplicates removed" value={t.duplicates} sub="agent re-sends" how="Rows sharing (resource, timestamp) after snapping; the first is kept, the rest dropped." testId="dq-dupes" />
+        <Stat label="Out-of-range dropped" value={t.out_of_range} sub="CPU < 0% or > 100%" how="Percentages outside 0–100 and negative rates are set to missing, never clipped." testId="dq-oor" />
+        <Stat label="Out-of-order sorted" value={t.out_of_order} sub="inversions" how="Count of rows whose timestamp is earlier than the row before; the series is sorted before use." testId="dq-ooo" />
+        <Stat label="Timestamps snapped" value={t.irregular_ts} sub="to the 5-min grid" how="Timestamps not on a 5-minute boundary (e.g. 05:03) are floored to it." testId="dq-jitter" />
+        <Stat label="Stuck-agent hours" value={formatNum(t.flatline_slots / 12, 0)} sub="treated as missing" testId="dq-flat" />
+      </div>
+
+      <section className="card mb-4 overflow-hidden">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <h2 className="text-sm font-semibold text-slate-800">Injected vs detected</h2>
+          <p className="text-xs text-slate-500">The generator logs every fault it plants; the cleaning step must find each one.</p>
+        </div>
+        <table className="w-full text-sm" data-testid="dq-reconcile">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="th">Case</th>
+              <th className="th">Fault</th>
+              <th className="th">Where</th>
+              <th className="th">Injected</th>
+              <th className="th">Detected</th>
+              <th className="th">Handling</th>
+              <th className="th" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rows.map((r) => (
+              <tr key={r.id} data-testid={`dq-${r.id}`}>
+                <td className="td font-mono text-xs text-slate-500">{r.id}</td>
+                <td className="td font-medium text-slate-800">{r.fault}</td>
+                <td className="td max-w-[220px] truncate text-xs text-slate-600" title={r.where}>{r.where}</td>
+                <td className="td num text-xs text-slate-600">{r.injected}</td>
+                <td className="td num text-xs font-semibold text-slate-800">{r.detected}</td>
+                <td className="td text-xs text-slate-600">{r.handling}</td>
+                <td className="td">
+                  {r.ok ? (
+                    <span className="inline-flex items-center gap-1 text-2xs font-semibold text-save-700" data-testid="dq-ok"><CheckCircle2 size={14} /> handled</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-2xs font-semibold text-danger-700"><XCircle size={14} /> mismatch</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <div className="grid grid-cols-3 gap-4">
+        <section className="card card-pad">
+          <h2 className="mb-2 text-sm font-semibold text-slate-800">Inventory reconciliation</h2>
+          <div className="label mb-1">Metrics but no inventory row</div>
+          <ul className="mb-3 text-sm" data-testid="dq-ghost">
+            {dq.data.not_in_inventory.map((x) => (
+              <li key={x.resource_id} className="text-slate-700">
+                <span className="font-mono text-xs">{x.resource_id}</span> {x.name}: possibly untracked or unbilled
+              </li>
+            ))}
+          </ul>
+          <div className="label mb-1">Inventory but no metrics</div>
+          <ul className="text-sm" data-testid="dq-nometrics">
+            {dq.data.no_metrics.map((x) => (
+              <li key={x.resource_id}>
+                <button className="text-sky-700 hover:underline" onClick={() => drawer.open(x.resource_id)}>{x.name}</button>
+                <span className="text-xs text-slate-500"> · {x.state === 'stopped' ? 'stopped, expected' : 'running: monitoring missing'}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="card col-span-2 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+            <h2 className="text-sm font-semibold text-slate-800">Coverage by VM (worst first)</h2>
+            <span className="text-2xs text-slate-500">gate: &lt; 80% excluded · 80–95% medium confidence</span>
+          </div>
+          <table className="w-full text-sm" data-testid="dq-coverage">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="th">VM</th>
+                <th className="th">Coverage</th>
+                <th className="th text-right">Worst hour-of-week</th>
+                <th className="th text-right">Longest gap</th>
+                <th className="th text-right">Days</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {(all ? coverage : coverage.slice(0, 10)).map((r) => (
+                <CoverageRow key={r.resource_id} r={r} onOpen={() => r.in_inventory && drawer.open(r.resource_id)} />
+              ))}
+            </tbody>
+          </table>
+          <button className="w-full border-t border-slate-100 py-2 text-xs font-medium text-sky-700 hover:bg-slate-50" onClick={() => setAll(!all)}>
+            {all ? 'Show worst 10' : `Show all ${coverage.length}`}
+          </button>
+        </section>
+      </div>
+    </Page>
+  )
+}
+
+function CoverageRow({ r, onOpen }: { r: DqRow; onOpen: () => void }) {
+  const c = (r.coverage ?? 0) * 100
+  const tone = c < 80 ? 'bg-danger-600' : c < 95 ? 'bg-review-600' : 'bg-save-600'
+  return (
+    <tr className="cursor-pointer hover:bg-slate-50" onClick={onOpen} data-testid={`cov-${r.name}`}>
+      <td className="td font-medium text-slate-800">{r.name}</td>
+      <td className="td">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-28 rounded bg-slate-100">
+            <div className={clsx('h-2 rounded', tone)} style={{ width: `${c}%` }} />
+          </div>
+          <span className="num text-xs text-slate-700">{formatPct(c)}</span>
+        </div>
+      </td>
+      <td className="td num text-right text-xs">{r.peak_window_coverage !== null ? formatPct(r.peak_window_coverage * 100, 0) : '—'}</td>
+      <td className="td num text-right text-xs">{r.longest_gap_hours ? `${r.longest_gap_hours} h` : '—'}</td>
+      <td className="td num text-right text-xs">{r.days_of_data ?? '—'}</td>
+    </tr>
+  )
+}

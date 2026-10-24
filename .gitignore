@@ -3,3 +3,6 @@ __pycache__/
 .venv/
 data/external/
 data/scale/
+
+# Impeccable install (22 MB incl. engine binary); reinstall with: npx impeccable install
+.claude/
