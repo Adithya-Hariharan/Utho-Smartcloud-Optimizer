@@ -10,6 +10,7 @@ import { useRecs } from '../api/recs'
 import { formatCompactINR, formatDateIST, formatINR, formatNum, formatPct, formatWindow, titleCase } from '../lib/format'
 import { optionLabel, titleEnv } from '../lib/labels'
 import { useResourceDrawer } from '../lib/useDrawer'
+import { potential } from '../lib/cost'
 import type { ReasonCode } from '../types/contract'
 
 /** Resources that are pure waste: idle, orphaned, unused or stopped for weeks. */
@@ -49,6 +50,9 @@ export default function Overview() {
   const wasteInr = waste.reduce((t, r) => t + r.current.monthly_inr, 0)
   const critical = alerts.data?.items.filter((a) => a.severity === 'critical').length ?? 0
   const co2 = forecast.data?.carbon
+  // follows the preset switch (/api/summary is Default-only); equals summary's figure under Default
+  const pot = potential(recs.data.items)
+  const presetLabel = meta.data.presets.find((x) => x.id === recs.data.preset)?.label ?? recs.data.preset
 
   return (
     <Page
@@ -96,9 +100,9 @@ export default function Overview() {
           <Fact
             label="Potential saving"
             tone="save"
-            value={`${formatINR(s.monthly_before_inr - s.potential_after_inr)}/mo`}
-            sub={`${formatPct(s.potential_saving_pct)} of the bill (Default preset)`}
-            how="From /api/summary: monthly bill − potential after, if every Default-preset recommendation were accepted."
+            value={`${formatINR(pot.saving)}/mo`}
+            sub={`${formatPct(pot.pct)} of the bill (${presetLabel} preset)`}
+            how={`Σ default-option saving of the ${pot.count} ${presetLabel}-preset recommendations, if every one were accepted. Same figure as 'Potential' on the Recommendations page.`}
             testId="kpi-potential"
           />
           <Fact
