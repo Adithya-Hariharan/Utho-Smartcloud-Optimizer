@@ -155,7 +155,8 @@ def run(check, g, inv, truth):
         P = f["p99"] if prod else f["p95"]
         memP = f["mem_p99"] if prod else f["mem_p95"]
         rule = {
-            "right_sized_prod": (40 <= f["p99"] < 90, "40 <= p99 < 90 (not underused, not upsize)"),
+            "right_sized_prod": (40 <= f["p99"] < 90 and f["mean"] >= 20,
+                                 "40 <= p99 < 90 and mean >= 20 (not underused, not upsize, not 'looks wasteful')"),
             "steady_low": (P < 40 and memP < 50, "P < 40 and mem P < 50 (underused -> resize)"),
             "bursty_daily": (f["mean"] < 20 and f["p99"] >= 60, "mean < 20 and p99 >= 60 (looks idle, peaks)"),
             "batch_nightly": (f["mean"] < 20 and f["p99"] >= 60, "mean < 20 and p99 >= 60 (looks idle, peaks)"),

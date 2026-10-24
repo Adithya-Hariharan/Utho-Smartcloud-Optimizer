@@ -18,6 +18,12 @@ PINNED = {
     "prod-gateway-03": "A14 needs CPU p99 < 10 so network is the only signal; fitted noise lifts it to ~10.5",
     "prod-ml-10": "A18 needs CPU p99 < 15 and mem p99 37.5-50; fitted noise lifts CPU p99 to ~25",
     "staging-web-08": "A20 needs p95 27-33 (exactly ~3 vCPU of 8); fitted drift lifts p95 to ~39",
+    # added after the engine (b2_adi) found these labels contradicted by the fitted data (engine/disputes.py)
+    "prod-api-02": "E1 is a healthy VM with a gap; fitted noise saturated it (30-min mean 100% on 7 days, p95 89%)",
+    "prod-api-04": "A15 must grow toward capacity without saturating inside the window; fitted noise hit 100% on 2 days",
+    "prod-web-11a": "A23 group must be underused; fitted noise gave 11a a 61% peak day that fails replay on B2",
+    "prod-web-11b": "A23 group must be underused; fitted noise lifted 11b's p99 to 48% (not underused)",
+    "prod-web-11c": "A23 group members share one sizing decision; pinned with 11a/11b so the group is consistent",
 }
 PIN_REASONS = PINNED
 
@@ -281,8 +287,9 @@ def planted_vms():
     add("staging-demo-10", lambda r: office(r, 35, 6, 2.0),
         env="staging", team="growth", region="mumbai", plan="B2", purpose="demo", mem_base=20,
         tags=("keep_running",), policy="no_schedule",
-        t=truth("planted", "B10", "healthy", "RIGHT_SIZED", "none",
-                "office-hours shape but keep_running tag: never scheduled"))
+        t=truth("planted", "B10", "reject", "PEAK_REPLAY_FAILED", "none",
+                "keep_running forbids scheduling, not evaluation: averages ~10% so an average-based tool would cut "
+                "B2 -> S1, and its office-hours peaks fail replay there -> 'checked and kept'"))
 
     # ---------------- C. Stopped VMs
     add("vm-stopped-07", None, env="dev", team="data", region="noida", plan="B3", purpose="web",
