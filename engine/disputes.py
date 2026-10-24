@@ -3,7 +3,30 @@
 Each was checked against the measured evidence (engine run on the committed data). The common cause for the
 first group: these planted VMs were labelled for the hand-set curves, then the generator's fitted noise/drift
 (commit 7b73730, see data/DATASET.md 'Pinned planted cases') was applied to them too, and the data moved.
-Used by tests/test_engine_truth.py (xfail strict) and engine/REASONING.md section 5."""
+Used by tests/test_engine_truth.py (xfail strict) and engine/REASONING.md section 5.
+
+Resolution: the data branch (b1_adi) pins prod-api-02/-04 and prod-web-11a/b/c, keeps resampled right-sized VMs busy
+on average (prod-checkout-34), and corrects the three contradictory labels (staging-batch-68, dev-batch-69,
+staging-demo-10). The disputes therefore apply ONLY to the dataset they were found on, identified by its fingerprint;
+on the corrected dataset every truth.csv row must match (no xfail)."""
+import hashlib
+from pathlib import Path
+
+DATA = Path(__file__).resolve().parent.parent / "data"
+DISPUTED_DATASET = "cbb632c18c6c6aec0164374cbf6deaff8c80dd76590f9ff062ffc26e26e0b24e"   # sha256(truth.csv + metrics.parquet) of 7b73730
+
+
+def dataset_fingerprint():
+    h = hashlib.sha256()
+    for f in ("truth.csv", "metrics.parquet"):
+        h.update((DATA / f).read_bytes())
+    return h.hexdigest()
+
+
+def active():
+    """Disputes apply only to the dataset they were raised on."""
+    return dataset_fingerprint() == DISPUTED_DATASET
+
 
 DISPUTES = {
     "prod-api-02": {

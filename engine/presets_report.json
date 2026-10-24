@@ -1,0 +1,110 @@
+{
+ "max_performance": {
+  "percentile_prod": 99.5,
+  "percentile_nonprod": 99.5,
+  "target_cpu_prod": 60,
+  "target_cpu_nonprod": 60,
+  "budget_prod": 0,
+  "budget_nonprod": 0,
+  "saving_inr": 114596,
+  "bill_inr": 615989,
+  "saving_pct": 18.6,
+  "verdicts": {
+   "healthy": 31,
+   "recommend": 49,
+   "reject": 31,
+   "flag": 6,
+   "exclude": 21,
+   "upsize": 3
+  },
+  "risk_levels": {
+   "Medium": 22,
+   "Low": 29,
+   "High": 1
+  },
+  "backtest_unsafe": 0,
+  "backtest_evaluated": 45,
+  "unsafe_examples": []
+ },
+ "default": {
+  "percentile_prod": 99,
+  "percentile_nonprod": 95,
+  "target_cpu_prod": 70,
+  "target_cpu_nonprod": 80,
+  "budget_prod": 0,
+  "budget_nonprod": 30,
+  "saving_inr": 119996,
+  "bill_inr": 615989,
+  "saving_pct": 19.5,
+  "verdicts": {
+   "healthy": 31,
+   "recommend": 50,
+   "reject": 30,
+   "flag": 6,
+   "exclude": 21,
+   "upsize": 3
+  },
+  "risk_levels": {
+   "Medium": 22,
+   "Low": 30,
+   "High": 1
+  },
+  "backtest_unsafe": 0,
+  "backtest_evaluated": 46,
+  "unsafe_examples": []
+ },
+ "balanced": {
+  "percentile_prod": 95,
+  "percentile_nonprod": 95,
+  "target_cpu_prod": 80,
+  "target_cpu_nonprod": 80,
+  "budget_prod": 30,
+  "budget_nonprod": 30,
+  "saving_inr": 119996,
+  "bill_inr": 615989,
+  "saving_pct": 19.5,
+  "verdicts": {
+   "healthy": 29,
+   "recommend": 50,
+   "reject": 32,
+   "flag": 6,
+   "exclude": 21,
+   "upsize": 3
+  },
+  "risk_levels": {
+   "Medium": 22,
+   "Low": 30,
+   "High": 1
+  },
+  "backtest_unsafe": 0,
+  "backtest_evaluated": 46,
+  "unsafe_examples": []
+ },
+ "max_savings": {
+  "percentile_prod": 90,
+  "percentile_nonprod": 90,
+  "target_cpu_prod": 90,
+  "target_cpu_nonprod": 90,
+  "budget_prod": 60,
+  "budget_nonprod": 60,
+  "saving_inr": 119996,
+  "bill_inr": 615989,
+  "saving_pct": 19.5,
+  "verdicts": {
+   "healthy": 28,
+   "recommend": 50,
+   "reject": 33,
+   "flag": 6,
+   "exclude": 21,
+   "upsize": 3
+  },
+  "risk_levels": {
+   "Medium": 22,
+   "Low": 30,
+   "High": 1
+  },
+  "backtest_unsafe": 0,
+  "backtest_evaluated": 46,
+  "unsafe_examples": []
+ }
+}

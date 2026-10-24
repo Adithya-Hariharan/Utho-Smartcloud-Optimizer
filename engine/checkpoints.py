@@ -27,6 +27,7 @@ class State:
         self.log = {e["checkpoint"]: e for e in json.loads(LOG.read_text())}
         self.ctx, self.res = PL.run(self.data, self.cfg, self.sel)
         self.by = {(r.inv or {}).get("name", r.id): r for r in self.res}
+        self.by_id_name = {r.id: (r.inv or {}).get("name", r.id) for r in self.res}
         self.scorer = Scorer(self.data, self.cfg)
 
     def code(self, name):
@@ -167,7 +168,54 @@ def cp12(st):
     return out
 
 
-CHECKS = [cp1, cp2, cp3, cp4, cp5, cp6, cp7, cp8, cp9, cp10, cp11, cp12]
+def cp13(st):
+    """Engine extras: alerts, presets, scorecard, benchmark, generated documents."""
+    from . import alerts as AL
+    from . import assumptions as AS
+    from . import presets as PR
+    from . import scorecard as SC
+    from .run import build as run_build
+    env, ctx, res, alerts = run_build()
+    byname = {}
+    for a in alerts:
+        byname.setdefault(a["type"], set()).add((st.by_id_name.get(a["resource_id"]) or a["title"]))
+    out = [("every alert explains itself (why + evidence + threshold)",
+            all(a["why"] and a["evidence"]["threshold"] is not None for a in alerts), len(alerts))]
+    for t, n in (("possible_compromise", "dev-sandbox-17"), ("level_shift", "prod-worker-05"),
+                 ("memory_leak", "prod-orders-08"), ("monitoring_missing", "prod-nomon-13"),
+                 ("capacity_trend", "vol-growing-10"), ("usage_spike", "prod-reports-02")):
+        out.append((f"{t} alert on {n}", n in byname.get(t, set()), ""))
+    disk = [n for n in byname.get("capacity_trend", set()) if n in ("prod-web-31", "prod-api-32", "prod-search-33", "prod-checkout-34")]
+    out.append(("disk-filling VMs alerted (>= 3 of 4)", len(disk) >= 3, disk))
+    out.append(("no spike alert for scheduled peaks (prod-batch-07, prod-billing-01)",
+                not ({"prod-batch-07", "prod-billing-01"} & byname.get("usage_spike", set())), ""))
+    out.append(("cost increase alert for the growth team's new VMs",
+                any("growth" in a["title"] for a in alerts if a["type"] == "cost_increase"), ""))
+    ids = {a["alert_id"]: a["resource_id"] for a in alerts}
+    out.append(("recommendation alert_ids point at alerts for the same resource",
+                all(ids.get(x) == i["resource"]["resource_id"] for i in env["items"] for x in i["alert_ids"]), ""))
+    pr = PR.run_all()
+    sav = [pr[p]["saving_inr"] for p in PR.ORDER]
+    out.append(("preset savings non-decreasing max_performance -> max_savings", sav == sorted(sav), sav))
+    out.append(("conservative presets: 0 unsafe in the held-out week",
+                pr["default"]["backtest_unsafe"] == 0 and pr["max_performance"]["backtest_unsafe"] == 0, ""))
+    stored = json.loads(PR.OUT.read_text()) if PR.OUT.exists() else None
+    out.append(("presets_report.json is current", stored == json.loads(json.dumps(pr)), ""))
+    sc = SC.build(env, st.data, st.cfg, st.sel)
+    stored = json.loads((D.DATA / "scorecard.json").read_text()) if (D.DATA / "scorecard.json").exists() else None
+    out.append(("scorecard.json is current", stored == json.loads(json.dumps(sc)), f"{sc['correct']}/{sc['rows']}"))
+    from .benchmark import OUT as BOUT
+    b = json.loads(BOUT.read_text()) if BOUT.exists() else {}
+    out.append((f"benchmark covers >= {st.cfg('benchmark.target_vms')} VMs", b.get("vms", 0) >= st.cfg("benchmark.target_vms"),
+                f"{b.get('vms')} VMs in {b.get('seconds', {}).get('total')} s"))
+    out.append(("ASSUMPTIONS.md matches its inputs", AS.build() == AS.OUT.read_text(encoding="utf-8") if AS.OUT.exists() else False, ""))
+    stored_alerts = json.loads((D.DATA / "alerts.json").read_text()) if (D.DATA / "alerts.json").exists() else None
+    out.append(("alerts.json is current", stored_alerts == json.loads(json.dumps(AL.envelope(ctx, alerts), default=str)), ""))
+    return out
+
+
+CHECKS = [cp1, cp2, cp3, cp4, cp5, cp6, cp7, cp8, cp9, cp10, cp11, cp12, cp13]
+NAMES = PL.ORDER + ["extras"]
 
 
 def main():
@@ -177,9 +225,9 @@ def main():
     st = State()
     ok_all = True
     for k in range(1, upto + 1):
-        rows = _selection_checks(st, k) + CHECKS[k - 1](st)
+        rows = (_selection_checks(st, k) if k <= len(PL.ORDER) else []) + CHECKS[k - 1](st)
         ok = all(r[1] for r in rows)
-        print(f"\n=== CP{k} {PL.ORDER[k - 1]} {'PASS' if ok else 'FAIL'}")
+        print(f"\n=== CP{k} {NAMES[k - 1]} {'PASS' if ok else 'FAIL'}")
         for d, good, v in rows:
             print(f"  {'PASS' if good else 'FAIL'}  {d}  {v}")
         if not ok:

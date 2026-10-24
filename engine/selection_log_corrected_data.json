@@ -1,0 +1,2019 @@
+[
+ {
+  "checkpoint": 1,
+  "component": "clean",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": []
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_basic",
+    "total": 9.887,
+    "correctness": 3.887,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 141,
+      "correct": 137,
+      "contested_rows": 2,
+      "bulk_rows": 76,
+      "bulk_correct": 76,
+      "misses": [
+       "dev-report-02",
+       "prod-queue-02",
+       "staging-api-09",
+       "vol-growing-10"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 1,
+    "prior": 6,
+    "desc": "snap to grid + de-duplicate + out-of-range -> NaN"
+   },
+   {
+    "candidate": "b_flat_cpu",
+    "total": 9.858,
+    "correctness": 3.858,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 141,
+      "correct": 136,
+      "contested_rows": 2,
+      "bulk_rows": 76,
+      "bulk_correct": 76,
+      "misses": [
+       "dev-report-02",
+       "prod-queue-02",
+       "prod-search-02",
+       "staging-api-09",
+       "vol-growing-10"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 2,
+    "prior": 7,
+    "desc": "a + mask CPU-only flatlines >= 2 h"
+   },
+   {
+    "candidate": "c_flat_all",
+    "total": 9.887,
+    "correctness": 3.887,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 141,
+      "correct": 137,
+      "contested_rows": 2,
+      "bulk_rows": 76,
+      "bulk_correct": 76,
+      "misses": [
+       "dev-report-02",
+       "prod-queue-02",
+       "staging-api-09",
+       "vol-growing-10"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 2,
+    "prior": 8,
+    "desc": "a + mask flatlines where CPU and memory are both frozen >= 2 h"
+   },
+   {
+    "candidate": "d_flat_all_interp",
+    "total": 9.887,
+    "correctness": 3.887,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 141,
+      "correct": 137,
+      "contested_rows": 2,
+      "bulk_rows": 76,
+      "bulk_correct": 76,
+      "misses": [
+       "dev-report-02",
+       "prod-queue-02",
+       "staging-api-09",
+       "vol-growing-10"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 3,
+    "prior": 6,
+    "desc": "c + bridge gaps <= 15 min by interpolation"
+   }
+  ],
+  "selected": "a_basic",
+  "selected_total": 9.887,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "b_daily_peaks",
+   "noncompute": "a_state",
+   "vetoes": "b_fixed_sig",
+   "patterns": "b_daily",
+   "candidates": "d_relative_replay",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 2,
+  "component": "gates_data",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": true,
+      "rows_changed": [
+       "prod-batch-20"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_basic",
+        "total": 9.887
+       },
+       {
+        "candidate": "b_flat_cpu",
+        "total": 9.858
+       },
+       {
+        "candidate": "c_flat_all",
+        "total": 9.887
+       },
+       {
+        "candidate": "d_flat_all_interp",
+        "total": 9.887
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_basic",
+    "total": 9.636,
+    "correctness": 3.636,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 11,
+      "correct": 10,
+      "contested_rows": 2,
+      "bulk_rows": 4,
+      "bulk_correct": 4,
+      "misses": [
+       "prod-batch-20"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 4,
+    "prior": 7,
+    "desc": "history >= 14 d, no resize < 14 d, coverage >= 80%, no 3x level shift"
+   },
+   {
+    "candidate": "b_min_bucket",
+    "total": 9.636,
+    "correctness": 3.636,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 11,
+      "correct": 10,
+      "contested_rows": 2,
+      "bulk_rows": 4,
+      "bulk_correct": 4,
+      "misses": [
+       "staging-flaky-19"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 5,
+    "prior": 7,
+    "desc": "a + flag if any hour-of-week bucket < 50% observed"
+   },
+   {
+    "candidate": "c_peak_hours",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 11,
+      "correct": 11,
+      "contested_rows": 2,
+      "bulk_rows": 4,
+      "bulk_correct": 4,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 6,
+    "prior": 9,
+    "desc": "a + flag if the VM's two busiest hours are < 50% observed"
+   }
+  ],
+  "selected": "c_peak_hours",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "b_daily_peaks",
+   "noncompute": "a_state",
+   "vetoes": "b_fixed_sig",
+   "patterns": "b_daily",
+   "candidates": "d_relative_replay",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 3,
+  "component": "gates_policy",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_table",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 11,
+      "correct": 11,
+      "contested_rows": 0,
+      "bulk_rows": 0,
+      "bulk_correct": 0,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 1,
+    "prior": 9,
+    "desc": "tag/policy table, price check, missing env treated as prod"
+   },
+   {
+    "candidate": "b_infer",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 11,
+      "correct": 11,
+      "contested_rows": 0,
+      "bulk_rows": 0,
+      "bulk_correct": 0,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 2,
+    "prior": 5,
+    "desc": "a + guess a missing env from the name prefix"
+   }
+  ],
+  "selected": "a_table",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "b_daily_peaks",
+   "noncompute": "a_state",
+   "vetoes": "b_fixed_sig",
+   "patterns": "b_daily",
+   "candidates": "d_relative_replay",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 4,
+  "component": "peaks",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": true,
+      "rows_changed": [
+       "prod-queue-02"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_basic",
+        "total": 9.943
+       },
+       {
+        "candidate": "b_flat_cpu",
+        "total": 9.915
+       },
+       {
+        "candidate": "c_flat_all",
+        "total": 9.943
+       },
+       {
+        "candidate": "d_flat_all_interp",
+        "total": 9.943
+       }
+      ]
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_p99_days",
+    "total": 9.733,
+    "correctness": 3.733,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 15,
+      "correct": 14,
+      "contested_rows": 2,
+      "bulk_rows": 10,
+      "bulk_correct": 10,
+      "misses": [
+       "prod-queue-02"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0284
+     }
+    },
+    "params": 3,
+    "prior": 6,
+    "desc": "PLAN.md 7: >= 4 peak days AND p99 >= 80"
+   },
+   {
+    "candidate": "b_daily_peaks",
+    "total": 9.467,
+    "correctness": 3.467,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 15,
+      "correct": 13,
+      "contested_rows": 2,
+      "bulk_rows": 10,
+      "bulk_correct": 10,
+      "misses": [
+       "dev-report-02",
+       "prod-queue-02"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0213
+     }
+    },
+    "params": 2,
+    "prior": 8,
+    "desc": ">= 4 days with a 30-min peak above 80%"
+   },
+   {
+    "candidate": "c_periodicity",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 15,
+      "correct": 15,
+      "contested_rows": 2,
+      "bulk_rows": 10,
+      "bulk_correct": 10,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0284
+     }
+    },
+    "params": 2,
+    "prior": 6,
+    "desc": "autocorrelation at 24 h/168 h >= 0.3 AND p99 >= 80"
+   }
+  ],
+  "selected": "c_periodicity",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "a_state",
+   "vetoes": "b_fixed_sig",
+   "patterns": "b_daily",
+   "candidates": "d_relative_replay",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 5,
+  "component": "noncompute",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": true,
+      "rows_changed": [
+       "vol-growing-10"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_basic",
+        "total": 9.972
+       },
+       {
+        "candidate": "b_flat_cpu",
+        "total": 9.943
+       },
+       {
+        "candidate": "c_flat_all",
+        "total": 9.972
+       },
+       {
+        "candidate": "d_flat_all_interp",
+        "total": 9.972
+       }
+      ]
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_state",
+    "total": 9.833,
+    "correctness": 3.833,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 24,
+      "correct": 23,
+      "contested_rows": 1,
+      "bulk_rows": 14,
+      "bulk_correct": 14,
+      "misses": [
+       "vol-growing-10"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 3,
+    "prior": 9,
+    "desc": "unattached > 7 d / attached-to-stopped / zero IOPS / < 20% used"
+   },
+   {
+    "candidate": "b_state_growth",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 24,
+      "correct": 24,
+      "contested_rows": 1,
+      "bulk_rows": 14,
+      "bulk_correct": 14,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 5,
+    "prior": 8,
+    "desc": "a + growth veto: reject if full within 30 days"
+   }
+  ],
+  "selected": "b_state_growth",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "b_daily",
+   "candidates": "d_relative_replay",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 6,
+  "component": "vetoes",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": true,
+      "rows_changed": [
+       "prod-orders-08",
+       "prod-search-06"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_basic",
+        "total": 9.972
+       },
+       {
+        "candidate": "b_flat_cpu",
+        "total": 9.943
+       },
+       {
+        "candidate": "c_flat_all",
+        "total": 9.972
+       },
+       {
+        "candidate": "d_flat_all_interp",
+        "total": 9.972
+       }
+      ]
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "noncompute",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_fixed",
+    "total": 9.0,
+    "correctness": 3.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 12,
+      "correct": 9,
+      "contested_rows": 5,
+      "bulk_rows": 6,
+      "bulk_correct": 3,
+      "misses": [
+       "prod-batch-66",
+       "staging-batch-68",
+       "dev-batch-69"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 44
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0213
+     }
+    },
+    "params": 7,
+    "prior": 7,
+    "desc": "leak >= 3 resets, memory > 70, IOPS > 70, network > 60, growth to 85% < 60 d"
+   },
+   {
+    "candidate": "b_fixed_sig",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 12,
+      "correct": 12,
+      "contested_rows": 5,
+      "bulk_rows": 6,
+      "bulk_correct": 6,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0071
+     }
+    },
+    "params": 8,
+    "prior": 9,
+    "desc": "a + growth only if the trend is significant (p < 0.05)"
+   },
+   {
+    "candidate": "c_any70",
+    "total": 9.333,
+    "correctness": 3.333,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 12,
+      "correct": 10,
+      "contested_rows": 5,
+      "bulk_rows": 6,
+      "bulk_correct": 6,
+      "misses": [
+       "prod-search-06",
+       "prod-orders-08"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 1,
+    "prior": 4,
+    "desc": "any metric > 70% vetoes"
+   }
+  ],
+  "selected": "b_fixed_sig",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "b_daily",
+   "candidates": "d_relative_replay",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 7,
+  "component": "patterns",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "noncompute",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "vetoes",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_p99",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 3,
+      "correct": 3,
+      "contested_rows": 0,
+      "bulk_rows": 0,
+      "bulk_correct": 0,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 5,
+    "prior": 7,
+    "desc": "one-off via p99 without the top day; went quiet; reserved memory"
+   },
+   {
+    "candidate": "b_daily",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 3,
+      "correct": 3,
+      "contested_rows": 0,
+      "bulk_rows": 0,
+      "bulk_correct": 0,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 5,
+    "prior": 8,
+    "desc": "one-off via the daily-peak profile (2nd day < 50); went quiet; reserved memory"
+   }
+  ],
+  "selected": "a_p99",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "a_p99",
+   "candidates": "d_relative_replay",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 8,
+  "component": "candidates",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": true,
+      "rows_changed": [
+       "staging-api-09"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_basic",
+        "total": 10.0
+       },
+       {
+        "candidate": "b_flat_cpu",
+        "total": 9.943
+       },
+       {
+        "candidate": "c_flat_all",
+        "total": 10.0
+       },
+       {
+        "candidate": "d_flat_all_interp",
+        "total": 10.0
+       }
+      ]
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "noncompute",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "vetoes",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "patterns",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_simple",
+    "total": 8.731,
+    "correctness": 3.231,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 0.5,
+    "evidence": {
+     "correctness": {
+      "rows": 26,
+      "correct": 21,
+      "contested_rows": 14,
+      "bulk_rows": 18,
+      "bulk_correct": 16,
+      "misses": [
+       "dev-etl-04",
+       "dev-support-05",
+       "staging-load-06",
+       "staging-batch-68",
+       "dev-batch-69"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 42
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0638
+     }
+    },
+    "params": 4,
+    "prior": 4,
+    "desc": "idle on CPU only; percentile underused; fixed 20:00-08:00 + weekend template"
+   },
+   {
+    "candidate": "b_plan7",
+    "total": 8.769,
+    "correctness": 2.769,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 26,
+      "correct": 18,
+      "contested_rows": 14,
+      "bulk_rows": 18,
+      "bulk_correct": 13,
+      "misses": [
+       "dev-tiny-14",
+       "staging-db-02",
+       "prod-old-12",
+       "dev-old-85",
+       "dev-old-86",
+       "dev-old-87",
+       "staging-old-88",
+       "staging-old-89"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 8,
+    "prior": 7,
+    "desc": "4-metric idle with absolute lines; percentile underused; weekly-profile off-hours"
+   },
+   {
+    "candidate": "c_relative",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 26,
+      "correct": 26,
+      "contested_rows": 14,
+      "bulk_rows": 18,
+      "bulk_correct": 18,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 9,
+    "prior": 8,
+    "desc": "4-metric idle relative to plan size; percentile underused; profile + 30-min wake buffer"
+   },
+   {
+    "candidate": "d_relative_replay",
+    "total": 9.846,
+    "correctness": 3.846,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 26,
+      "correct": 25,
+      "contested_rows": 14,
+      "bulk_rows": 18,
+      "bulk_correct": 18,
+      "misses": [
+       "staging-api-09"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 48
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 8,
+    "prior": 8,
+    "desc": "c with underused decided by replay (no cliff)"
+   }
+  ],
+  "selected": "c_relative",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "a_p99",
+   "candidates": "c_relative",
+   "sizing": "c_replay_search",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 9,
+  "component": "sizing",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "noncompute",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "vetoes",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "patterns",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "candidates",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_formula",
+    "total": 7.357,
+    "correctness": 3.857,
+    "safety": 1,
+    "explainability": 2,
+    "robustness": 0.5,
+    "evidence": {
+     "correctness": {
+      "rows": 28,
+      "correct": 27,
+      "contested_rows": 1,
+      "bulk_rows": 12,
+      "bulk_correct": 12,
+      "misses": [
+       "dev-report-02"
+      ]
+     },
+     "safety": {
+      "unsafe": 1,
+      "evaluated": 48
+     },
+     "unsafe_details": [
+      {
+       "resource_id": "vm-0005",
+       "name": "dev-report-02",
+       "problems": [
+        "resize: 60 min > 90% on B1"
+       ]
+      }
+     ],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0745
+     }
+    },
+    "params": 3,
+    "prior": 4,
+    "desc": "percentile formula, round up, prod one step; no replay"
+   },
+   {
+    "candidate": "b_formula_replay",
+    "total": 9.5,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 0.5,
+    "evidence": {
+     "correctness": {
+      "rows": 28,
+      "correct": 28,
+      "contested_rows": 1,
+      "bulk_rows": 12,
+      "bulk_correct": 12,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0709
+     }
+    },
+    "params": 6,
+    "prior": 7,
+    "desc": "PLAN.md 7: formula then Peak Replay gate"
+   },
+   {
+    "candidate": "c_replay_search",
+    "total": 9.5,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 0.5,
+    "evidence": {
+     "correctness": {
+      "rows": 28,
+      "correct": 28,
+      "contested_rows": 1,
+      "bulk_rows": 12,
+      "bulk_correct": 12,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0709
+     }
+    },
+    "params": 7,
+    "prior": 8,
+    "desc": "cheapest plan whose replay passes (incl. 2nd-busiest-day peak)"
+   },
+   {
+    "candidate": "d_replay_core",
+    "total": 9.5,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 0.5,
+    "evidence": {
+     "correctness": {
+      "rows": 28,
+      "correct": 28,
+      "contested_rows": 1,
+      "bulk_rows": 12,
+      "bulk_correct": 12,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0709
+     }
+    },
+    "params": 12,
+    "prior": 7,
+    "desc": "c + core-count targets + forward replay under significant growth"
+   }
+  ],
+  "selected": "b_formula_replay",
+  "selected_total": 9.5,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "a_p99",
+   "candidates": "c_relative",
+   "sizing": "b_formula_replay",
+   "risk": "c_hybrid",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 10,
+  "component": "risk",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "noncompute",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "vetoes",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "patterns",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "candidates",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "sizing",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_points",
+    "total": 8.067,
+    "correctness": 2.567,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 0.5,
+    "evidence": {
+     "correctness": {
+      "auc": 0.821
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0674
+     }
+    },
+    "params": 12,
+    "prior": 5,
+    "desc": "PLAN.md 7 points table -> Low/Medium/High"
+   },
+   {
+    "candidate": "b_bootstrap",
+    "total": 9.801,
+    "correctness": 3.801,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "auc": 0.975
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 4,
+    "prior": 8,
+    "desc": "P(bad month) by resampling observed days; escalate for prod/stateful/stop"
+   },
+   {
+    "candidate": "c_hybrid",
+    "total": 9.801,
+    "correctness": 3.801,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "auc": 0.975
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0
+     }
+    },
+    "params": 16,
+    "prior": 9,
+    "desc": "b decides the level; points listed as contributing factors"
+   }
+  ],
+  "selected": "b_bootstrap",
+  "selected_total": 9.801,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "a_p99",
+   "candidates": "c_relative",
+   "sizing": "b_formula_replay",
+   "risk": "b_bootstrap",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 11,
+  "component": "cost",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "noncompute",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "vetoes",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "patterns",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "candidates",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "sizing",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "risk",
+      "depends_on_current": false,
+      "rows_changed": []
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_sequential",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "resources_with_options": 68,
+      "invariants_ok": 68,
+      "violations": [],
+      "floor_rows": 1,
+      "floor_ok": 1
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 1,
+    "prior": 9,
+    "desc": "sequential cost per action set (no double counting)"
+   },
+   {
+    "candidate": "b_additive",
+    "total": 9.942,
+    "correctness": 3.942,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "resources_with_options": 68,
+      "invariants_ok": 67,
+      "violations": [
+       "dev-web-03"
+      ],
+      "floor_rows": 1,
+      "floor_ok": 1
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0035
+     }
+    },
+    "params": 1,
+    "prior": 2,
+    "desc": "sum of single savings vs the original cost (double counts)"
+   }
+  ],
+  "selected": "a_sequential",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "a_p99",
+   "candidates": "c_relative",
+   "sizing": "b_formula_replay",
+   "risk": "b_bootstrap",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ },
+ {
+  "checkpoint": 12,
+  "component": "assemble",
+  "passes": [
+   {
+    "pass": 1,
+    "dependence": [
+     {
+      "earlier": "clean",
+      "depends_on_current": true,
+      "rows_changed": [
+       "dev-web-03",
+       "prod-legacy-06"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_basic",
+        "total": 10.0
+       },
+       {
+        "candidate": "b_flat_cpu",
+        "total": 9.943
+       },
+       {
+        "candidate": "c_flat_all",
+        "total": 10.0
+       },
+       {
+        "candidate": "d_flat_all_interp",
+        "total": 10.0
+       }
+      ]
+     },
+     {
+      "earlier": "gates_data",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "gates_policy",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "peaks",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "noncompute",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "vetoes",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "patterns",
+      "depends_on_current": true,
+      "rows_changed": [
+       "prod-legacy-06"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_p99",
+        "total": 10.0
+       },
+       {
+        "candidate": "b_daily",
+        "total": 10.0
+       }
+      ]
+     },
+     {
+      "earlier": "candidates",
+      "depends_on_current": false,
+      "rows_changed": []
+     },
+     {
+      "earlier": "sizing",
+      "depends_on_current": true,
+      "rows_changed": [
+       "dev-web-03"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_formula",
+        "total": 7.357
+       },
+       {
+        "candidate": "b_formula_replay",
+        "total": 9.5
+       },
+       {
+        "candidate": "c_replay_search",
+        "total": 9.5
+       },
+       {
+        "candidate": "d_replay_core",
+        "total": 9.5
+       }
+      ]
+     },
+     {
+      "earlier": "risk",
+      "depends_on_current": true,
+      "rows_changed": [
+       "dev-web-03",
+       "prod-legacy-06"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_points",
+        "total": 8.067
+       },
+       {
+        "candidate": "b_bootstrap",
+        "total": 9.801
+       },
+       {
+        "candidate": "c_hybrid",
+        "total": 9.801
+       }
+      ]
+     },
+     {
+      "earlier": "cost",
+      "depends_on_current": true,
+      "rows_changed": [
+       "dev-web-03",
+       "prod-legacy-06"
+      ],
+      "rescored": [
+       {
+        "candidate": "a_sequential",
+        "total": 10.0
+       },
+       {
+        "candidate": "b_additive",
+        "total": 9.942
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "initial": [
+   {
+    "candidate": "a_ladder",
+    "total": 9.943,
+    "correctness": 3.943,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 141,
+      "correct": 139,
+      "contested_rows": 2,
+      "bulk_rows": 76,
+      "bulk_correct": 76,
+      "misses": [
+       "prod-legacy-06",
+       "dev-web-03"
+      ]
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0,
+      "note": "no thresholds"
+     }
+    },
+    "params": 1,
+    "prior": 6,
+    "desc": "first-match ladder in stage order (PLAN.md 7)"
+   },
+   {
+    "candidate": "b_precedence",
+    "total": 10.0,
+    "correctness": 4.0,
+    "safety": 3,
+    "explainability": 2,
+    "robustness": 1,
+    "evidence": {
+     "correctness": {
+      "rows": 141,
+      "correct": 141,
+      "contested_rows": 2,
+      "bulk_rows": 76,
+      "bulk_correct": 76,
+      "misses": []
+     },
+     "safety": {
+      "unsafe": 0,
+      "evaluated": 47
+     },
+     "unsafe_details": [],
+     "explainability": {
+      "visible_share": 1.0
+     },
+     "robustness": {
+      "flip_rate": 0.0,
+      "note": "no thresholds"
+     }
+    },
+    "params": 2,
+    "prior": 9,
+    "desc": "evidence board + published precedence; all fired signals listed"
+   }
+  ],
+  "selected": "b_precedence",
+  "selected_total": 10.0,
+  "accepted": true,
+  "selection_after": {
+   "clean": "a_basic",
+   "gates_data": "c_peak_hours",
+   "gates_policy": "a_table",
+   "peaks": "c_periodicity",
+   "noncompute": "b_state_growth",
+   "vetoes": "b_fixed_sig",
+   "patterns": "a_p99",
+   "candidates": "c_relative",
+   "sizing": "b_formula_replay",
+   "risk": "b_bootstrap",
+   "cost": "a_sequential",
+   "assemble": "b_precedence"
+  }
+ }
+]

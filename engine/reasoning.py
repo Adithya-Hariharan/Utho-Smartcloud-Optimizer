@@ -193,6 +193,10 @@ def _ledger(sens):
             sv = "definition (not a threshold)"
         elif sec in ("score", "backtest"):
             sv = "selection-level: see the weight sweep"
+        elif sec == "alerts":
+            sv = "alerts only: never changes a verdict or a saving"
+        elif sec == "benchmark":
+            sv = "benchmark size only"
         else:
             sv = "not perturbed (list / seed)"
         rows.append(f"| `{key}` | {e['value']} | {e['category']} ({CAT[e['category']]}) | {e['why']} | {_where(key)} | {sv} |")
@@ -262,17 +266,57 @@ def main():
           "Each candidate's four sub-scores are re-weighted with alternative weight sets (bold = a different winner than "
           "the base weights).", ""] + sweep + ["",
           f"{'No selection changes under any alternative weighting: the choices are not an artefact of 4/3/2/1.' if changes == 0 else f'{changes} cell(s) change winner: those choices depend on the weighting and are judgement calls, stated as such.'}", ""]
-    L += ["## 5. Label disputes (truth.csv rows the selected engine disagrees with)", "",
-          "These are kept as `xfail(strict=True)` tests: if the engine ever starts agreeing with one, the test fails and "
-          "the dispute must be re-examined.", "", "| resource | label says | engine says | evidence and reasoning |", "|---|---|---|---|"]
+    L += ["## 5. Label disputes (truth.csv rows the selected engine disagreed with)", "",
+          "Found on the dataset of commit 7b73730. **Resolved on the data branch (b1_adi)**: five planted VMs pinned, "
+          "right-sized resampling kept busy on average, three contradictory labels corrected. The disputes therefore apply "
+          "only to that dataset (identified by its fingerprint in `engine/disputes.py`): there they are `xfail(strict=True)` "
+          "tests; on the corrected dataset every truth row must match, and the engine (same selected logic) gets 141/141. "
+          "The logic selection re-run on the corrected data is recorded in section 7.", "",
+          "| resource | label said | engine said | evidence and reasoning |", "|---|---|---|---|"]
     for n, d in DISPUTES.items():
         L.append(f"| {n} | {d['label']} | {d['engine']} | {d['summary']} |")
-    L += ["", "## 6. Numbers ledger", "",
+    L += ["", "## 6. Alerts, presets, scorecard, benchmark", "",
+          "**Alerts** (`engine/alerts.py`, `data/alerts.json`). Every alert states the number, the threshold and why.",
+          "- *Usage spike*: robust z of the 30-min rolling **log-ratio** to the same hour-of-week median, sigma = "
+          "`alerts.mad_to_sigma` x MAD. Three decisions, each fixing a measured false-alarm source: (1) rolling the "
+          "*deviation* instead of the raw value stopped windows straddling an hour boundary from comparing a peak hour with "
+          "a quiet one (prod-billing-01 at 12:00 was '77% vs 3%'); (2) scaling MAD to sigma makes 4 a real 4-sigma "
+          "threshold (plain 4 x MAD is ~2.7 sigma); (3) the log scale treats the fitted multiplicative day-to-day drift "
+          "(Bitbrains sd 0.59) as normal spread. Spike alerts fell 56 -> 36 -> 11, the strongest being the planted "
+          "one-off (prod-reports-02, z 15) and the random bursts (prod-queue-02).",
+          "- *Cost increase*: alerts on the provisioning **step** only (the day cost changes), not on the following days "
+          "while the 7-day average catches up. Threshold x1.1 is measured: billing is flat on 87% of team-days and the "
+          "steps in the window are +12.9% / +12.7% (new VMs) vs +2.4% / -1.7% / -3.4%; the plan's x1.2 missed both "
+          "new-VM events.",
+          "- *Capacity trend* (CPU p95, memory p95, disk, volumes): significant least-squares slope over the last 14 days "
+          "reaching 90% within 30 days (critical within 7). *Level shift* / *possible compromise* (CPU and egress both "
+          "> 3x). *Memory leak*, *under-provisioned*, *monitoring missing*, *budget overrun* (forecast = spent + 7-day "
+          "run-rate x days left vs 1.25 x first-quarter spend).", "",
+          "**Presets** (`engine/presets_report.json`): savings move only 18.6% -> 19.5% from max-performance to "
+          "max-savings because Peak Replay, the memory caps, the recurring-peak veto and the one-step prod rule are "
+          "preset-independent; none of the presets produces an unsafe change in the held-out week.", "",
+          "**Scorecard** (`data/scorecard.json`) and **benchmark** (`engine/benchmark.json`): summarised in ASSUMPTIONS.md.", "",
+          "## 7. Numbers ledger", "",
           "Every number the engine uses. Categories: M measured, C cited default, D derived, S scenario, J judgement. "
           "Sensitivity = verdicts that flip and headline-saving change when only that number moves. Large swings at "
           "+/-25% on a percentile or coverage mark a boundary, not fragility: a percentile x 1.1 hits 100 (the single "
           "worst sample) and min_coverage x 1.25 = 1.0 (no missing sample allowed at all).", ""]
     L += _ledger(sens)
+    corr = HERE / "selection_log_corrected_data.json"
+    if corr.exists():
+        cl = {e["checkpoint"]: e for e in json.loads(corr.read_text())}
+        L += ["", "## 8. Selection re-run on the corrected dataset", "",
+              "The full checkpointed selection was re-run on the data branch's corrected dataset (engine code combined "
+              "with it in a temporary worktree, nothing committed): `engine/selection_log_corrected_data.json`.", "",
+              "| CP | component | selected (this dataset) | total | selected (corrected dataset) | total |", "|---|---|---|---|---|---|"]
+        same = True
+        for e in log:
+            c = cl.get(e["checkpoint"], {})
+            same &= c.get("selected") == e["selected"]
+            L.append(f"| {e['checkpoint']} | {e['component']} | `{e['selected']}` | {e['selected_total']} | "
+                     f"`{c.get('selected')}` | {c.get('selected_total')} |")
+        L += ["", "**Identical selection on both datasets**: the chosen logic does not depend on the disputed labels."
+              if same else "**The selection differs on the corrected dataset**: see the rows above."]
     L += ["", "### Presets", "", "Presets change only the sizing percentile, CPU target and replay budget (AWS Compute "
           "Optimizer exposes the same trade-off as 'maximum savings' ... 'maximum performance').", "",
           "| preset | percentile prod / non-prod | CPU target prod / non-prod | replay budget prod / non-prod (min/month) |",

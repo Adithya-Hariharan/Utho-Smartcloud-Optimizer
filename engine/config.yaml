@@ -19,6 +19,8 @@ time_units:      # the only bare numbers allowed in engine code are these, plus 
   hours_per_month: {value: 730, category: C, why: "cloud billing convention (8,760 h / 12); same as pricing.csv"}
   days_per_month: {value: 30, category: D, why: "the replay budget is 'per month'; scaled by observed days / 30"}
   saturday_index: {value: 5, category: D, why: "pandas dayofweek: Monday = 0 ... Saturday = 5, Sunday = 6"}
+  ms_per_second: {value: 1000, category: D, why: "unit conversion for the benchmark report (seconds -> milliseconds)"}
+  bytes_per_mb: {value: 1000000, category: D, why: "unit conversion for the benchmark report (bytes -> MB, decimal)"}
   mbps_to_mb_per_hour: {value: 450, category: D, why: "1 Mbps x 3,600 s / 8 bits = 450 MB per hour"}
 
 percentiles:
@@ -144,6 +146,26 @@ risk:
 
 cost:
   floor_inr: {value: 500, category: C, why: "catalogue: below Rs 500/month a recommendation is not worth a human's attention (applies to compute changes; deleting/releasing unused resources has no blast radius)"}
+
+alerts:
+  spike_mad_k: {value: 4, category: C, why: "execution plan: a spike is 4 robust sigmas above the median of the same hour of the week; the median/MAD baseline is not inflated by the spike itself, unlike mean/standard deviation"}
+  mad_to_sigma: {value: 1.4826, category: D, why: "consistency constant: for normal data sigma = 1.4826 x MAD, so k x 1.4826 x MAD is a k-sigma robust threshold (plain 4 x MAD is only ~2.7 sigma)"}
+  spike_min_level: {value: 50, category: J, why: "a 'spike' that stays under 50% CPU is not operationally interesting, however unusual"}
+  capacity_level: {value: 90, category: C, why: "execution plan: alert when the trend reaches 90% (CPU, memory or disk)"}
+  trend_days_warning: {value: 30, category: C, why: "execution plan: days until 90% < 30 -> warning"}
+  trend_days_critical: {value: 7, category: C, why: "execution plan: capacity < 7 days -> critical"}
+  trend_lookback_days: {value: 14, category: C, why: "execution plan: straight-line fit on the last 14 days (recent slope, not the month's average)"}
+  trend_pvalue: {value: 0.05, category: C, why: "only statistically significant slopes raise a capacity alert (same as vetoes.growth_pvalue)"}
+  cost_jump_ratio: {value: 1.1, category: M, why: "billing is piecewise constant (87% of team-days unchanged), so every change is a provisioning event and there is no noise to guard against; in the window the steps are +12.9% and +12.7% (new VMs) vs +2.4%, -1.7%, -3.4% (a volume, a stop, a resize). 1.1 separates material provisioning from routine changes; the execution plan's 1.2 would miss both new-VM events"}
+  cost_window_days: {value: 7, category: C, why: "execution plan: trailing 7-day average (one weekly cycle)"}
+  cost_lookback_days: {value: 30, category: D, why: "cost jumps are reported for the same 30-day window as the metrics"}
+  budget_base_days: {value: 90, category: D, why: "budgets are set from the first quarter (90 days) of the 180-day billing history"}
+  budget_multiplier: {value: 1.25, category: S, why: "scenario: each team's monthly budget = 125% of its first-quarter monthly spend (the bill then grew ~40%, so several teams overrun)"}
+  budget_critical_over: {value: 0.10, category: C, why: "execution plan: forecast more than 10% over budget -> critical"}
+  runrate_days: {value: 7, category: D, why: "month-end forecast = spent so far + (mean of the last 7 days) x days left"}
+
+benchmark:
+  target_vms: {value: 1000, category: S, why: "PLAN.md scale story: show the engine on a ~1,000-VM fleet (about 9x the demo fleet)"}
 
 backtest:
   split_day: {value: 23, category: D, why: "30 days - 7: decide on 23 days (still >= 14), test on the last full week so every weekday is seen once out of sample"}

@@ -2,7 +2,7 @@
  "schema_version": "1.0",
  "generated_at": "2026-10-20T00:00:00+05:30",
  "preset": "default",
- "config_hash": "87d3fbf4c445",
+ "config_hash": "b79939bc506e",
  "data_window": {
   "start": "2026-09-20",
   "end": "2026-10-19",
@@ -1634,7 +1634,9 @@
      "terminal": false
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0021"
+   ]
   },
   {
    "rec_id": "REC-vm-0007-default",
@@ -2173,7 +2175,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0022"
+   ]
   },
   {
    "rec_id": "REC-vm-0009-default",
@@ -2914,7 +2918,9 @@
      "terminal": false
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0019"
+   ]
   },
   {
    "rec_id": "REC-vm-0012-default",
@@ -3188,7 +3194,9 @@
      "terminal": false
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0023"
+   ]
   },
   {
    "rec_id": "REC-vm-0013-default",
@@ -3987,7 +3995,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0012"
+   ]
   },
   {
    "rec_id": "REC-vm-0016-default",
@@ -4238,7 +4248,10 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0013",
+    "ALT-0024"
+   ]
   },
   {
    "rec_id": "REC-vm-0017-default",
@@ -4462,7 +4475,9 @@
      "terminal": false
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0025"
+   ]
   },
   {
    "rec_id": "REC-vm-0018-default",
@@ -6371,7 +6386,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0026"
+   ]
   },
   {
    "rec_id": "REC-vm-0025-default",
@@ -11681,7 +11698,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0020"
+   ]
   },
   {
    "rec_id": "REC-vm-0045-default",
@@ -13002,7 +13021,9 @@
      "terminal": false
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0010"
+   ]
   },
   {
    "rec_id": "REC-vm-0050-default",
@@ -13253,7 +13274,11 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0004",
+    "ALT-0014",
+    "ALT-0027"
+   ]
   },
   {
    "rec_id": "REC-vm-0051-default",
@@ -14189,7 +14214,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0029"
+   ]
   },
   {
    "rec_id": "REC-vm-0054-default",
@@ -14731,7 +14758,9 @@
      "terminal": false
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0011"
+   ]
   },
   {
    "rec_id": "REC-vm-0056-default",
@@ -14951,7 +14980,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0005"
+   ]
   },
   {
    "rec_id": "REC-vm-0057-default",
@@ -15171,7 +15202,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0006"
+   ]
   },
   {
    "rec_id": "REC-vm-0058-default",
@@ -15391,7 +15424,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0007"
+   ]
   },
   {
    "rec_id": "REC-vm-0059-default",
@@ -15653,7 +15688,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0008"
+   ]
   },
   {
    "rec_id": "REC-vm-0060-default",
@@ -16733,7 +16770,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0028"
+   ]
   },
   {
    "rec_id": "REC-vm-0065-default",
@@ -26602,7 +26641,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0030"
+   ]
   },
   {
    "rec_id": "REC-vm-0100-default",
@@ -27258,7 +27299,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0031"
+   ]
   },
   {
    "rec_id": "REC-vm-0102-default",
@@ -33110,7 +33153,9 @@
      "terminal": true
     }
    ],
-   "alert_ids": []
+   "alert_ids": [
+    "ALT-0009"
+   ]
   },
   {
    "rec_id": "REC-ip-0001-default",

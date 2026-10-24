@@ -59,5 +59,9 @@ def axes(cfg, start, n_days):
             "slot_of_week": ts.dayofweek.to_numpy() * spd + (np.arange(n_days * spd) % spd)}
 
 
+def load_billing():
+    return pd.read_parquet(DATA / "billing_daily.parquet")
+
+
 def load_truth():
     return pd.read_csv(DATA / "truth.csv", keep_default_na=False)

@@ -1,0 +1,194 @@
+{
+ "rows": 141,
+ "correct": 132,
+ "accuracy": 0.9362,
+ "disputes_active": true,
+ "headline": {
+  "idle VMs stopped": "7/7",
+  "schedulable VMs scheduled": "15/15",
+  "orphaned volumes cleaned": "1/1",
+  "unused IPs released": "1/1",
+  "long-stopped resources cleaned": "3/3",
+  "recurring peaks protected": "13/15",
+  "underused VMs resized": "20/23",
+  "saturated VMs upsized": "1/1",
+  "unsafe downsizes (held-out week)": "0/46"
+ },
+ "per_group": {
+  "batch_nightly": {
+   "rows": 5,
+   "correct": 3,
+   "recall": 0.6
+  },
+  "bursty_daily": {
+   "rows": 7,
+   "correct": 7,
+   "recall": 1.0
+  },
+  "healthy_ip": {
+   "rows": 5,
+   "correct": 5,
+   "recall": 1.0
+  },
+  "healthy_volume": {
+   "rows": 9,
+   "correct": 9,
+   "recall": 1.0
+  },
+  "memory_bound": {
+   "rows": 3,
+   "correct": 3,
+   "recall": 1.0
+  },
+  "office_hours_dev": {
+   "rows": 15,
+   "correct": 15,
+   "recall": 1.0
+  },
+  "planted A": {
+   "rows": 29,
+   "correct": 25,
+   "recall": 0.862
+  },
+  "planted B": {
+   "rows": 9,
+   "correct": 8,
+   "recall": 0.889
+  },
+  "planted C": {
+   "rows": 11,
+   "correct": 11,
+   "recall": 1.0
+  },
+  "planted D": {
+   "rows": 10,
+   "correct": 10,
+   "recall": 1.0
+  },
+  "planted E": {
+   "rows": 5,
+   "correct": 4,
+   "recall": 0.8
+  },
+  "planted G": {
+   "rows": 1,
+   "correct": 1,
+   "recall": 1.0
+  },
+  "right_sized_prod": {
+   "rows": 15,
+   "correct": 14,
+   "recall": 0.933
+  },
+  "steady_low": {
+   "rows": 12,
+   "correct": 12,
+   "recall": 1.0
+  },
+  "zombie": {
+   "rows": 5,
+   "correct": 5,
+   "recall": 1.0
+  }
+ },
+ "per_verdict": {
+  "exclude": {
+   "predicted": 21,
+   "expected": 21,
+   "true_positive": 21,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  "flag": {
+   "predicted": 6,
+   "expected": 6,
+   "true_positive": 6,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  "healthy": {
+   "predicted": 31,
+   "expected": 35,
+   "true_positive": 31,
+   "precision": 1.0,
+   "recall": 0.886
+  },
+  "recommend": {
+   "predicted": 50,
+   "expected": 51,
+   "true_positive": 48,
+   "precision": 0.96,
+   "recall": 0.941
+  },
+  "reject": {
+   "predicted": 30,
+   "expected": 27,
+   "true_positive": 25,
+   "precision": 0.833,
+   "recall": 0.926
+  },
+  "upsize": {
+   "predicted": 3,
+   "expected": 1,
+   "true_positive": 1,
+   "precision": 0.333,
+   "recall": 1.0
+  }
+ },
+ "misses": [
+  {
+   "name": "prod-api-04",
+   "expected": "healthy / RIGHT_SIZED",
+   "engine": "upsize / UNDER_PROVISIONED",
+   "disputed": true
+  },
+  {
+   "name": "prod-web-11a",
+   "expected": "recommend / UNDERUSED",
+   "engine": "reject / PEAK_REPLAY_FAILED",
+   "disputed": true
+  },
+  {
+   "name": "prod-web-11b",
+   "expected": "recommend / UNDERUSED",
+   "engine": "reject / PEAK_REPLAY_FAILED",
+   "disputed": true
+  },
+  {
+   "name": "prod-web-11c",
+   "expected": "recommend / UNDERUSED",
+   "engine": "reject / PEAK_REPLAY_FAILED",
+   "disputed": true
+  },
+  {
+   "name": "staging-demo-10",
+   "expected": "healthy / RIGHT_SIZED",
+   "engine": "reject / PEAK_REPLAY_FAILED",
+   "disputed": true
+  },
+  {
+   "name": "prod-api-02",
+   "expected": "healthy / RIGHT_SIZED",
+   "engine": "upsize / UNDER_PROVISIONED",
+   "disputed": true
+  },
+  {
+   "name": "prod-checkout-34",
+   "expected": "healthy / RIGHT_SIZED",
+   "engine": "reject / NO_CHEAPER_PLAN",
+   "disputed": true
+  },
+  {
+   "name": "staging-batch-68",
+   "expected": "reject / VETO_RECURRING_PEAK",
+   "engine": "recommend / OFF_HOURS",
+   "disputed": true
+  },
+  {
+   "name": "dev-batch-69",
+   "expected": "reject / VETO_RECURRING_PEAK",
+   "engine": "recommend / OFF_HOURS",
+   "disputed": true
+  }
+ ]
+}

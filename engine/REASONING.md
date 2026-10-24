@@ -262,11 +262,11 @@ Each candidate's four sub-scores are re-weighted with alternative weight sets (b
 
 No selection changes under any alternative weighting: the choices are not an artefact of 4/3/2/1.
 
-## 5. Label disputes (truth.csv rows the selected engine disagrees with)
+## 5. Label disputes (truth.csv rows the selected engine disagreed with)
 
-These are kept as `xfail(strict=True)` tests: if the engine ever starts agreeing with one, the test fails and the dispute must be re-examined.
+Found on the dataset of commit 7b73730. **Resolved on the data branch (b1_adi)**: five planted VMs pinned, right-sized resampling kept busy on average, three contradictory labels corrected. The disputes therefore apply only to that dataset (identified by its fingerprint in `engine/disputes.py`): there they are `xfail(strict=True)` tests; on the corrected dataset every truth row must match, and the engine (same selected logic) gets 141/141. The logic selection re-run on the corrected data is recorded in section 7.
 
-| resource | label says | engine says | evidence and reasoning |
+| resource | label said | engine said | evidence and reasoning |
 |---|---|---|---|
 | prod-api-02 | healthy / RIGHT_SIZED | upsize / UNDER_PROVISIONED | The 30-min mean CPU reaches 100% on 7 of 30 days and p95 is 89% on B3. Under the fitted noise this VM is saturated, not right-sized; the label was written for the hand-set curve (p95 ~70%). Fix belongs in the data (pin it on b1_adi), not in the engine. |
 | prod-api-04 | healthy / RIGHT_SIZED (+ capacity alert) | upsize / UNDER_PROVISIONED | The VM is growing (the planted trend) and its 30-min peak already touched 100% and 93% on two days. Upsizing a growing, saturating VM is the safer recommendation; the label expected the growth to stay below saturation inside the window. |
@@ -278,28 +278,41 @@ These are kept as `xfail(strict=True)` tests: if the engine ever starts agreeing
 | staging-batch-68 | reject / VETO_RECURRING_PEAK | recommend / OFF_HOURS | Non-prod batch VM idle except 01:00-03:00. The recurring peak correctly blocks any resize, but an off-hours schedule that keeps 01:00-03:00 on saves 148 h/week safely (0 unsafe in the backtest). This is exactly dev-etl-04's case, whose label is OFF_HOURS; the two labels contradict each other and the engine follows one principle: a recurring peak blocks shrinking, not scheduling around it. |
 | dev-batch-69 | reject / VETO_RECURRING_PEAK | recommend / OFF_HOURS | Same as staging-batch-68 (off 149 h/week, nightly window kept on). |
 
-## 6. Numbers ledger
+## 6. Alerts, presets, scorecard, benchmark
+
+**Alerts** (`engine/alerts.py`, `data/alerts.json`). Every alert states the number, the threshold and why.
+- *Usage spike*: robust z of the 30-min rolling **log-ratio** to the same hour-of-week median, sigma = `alerts.mad_to_sigma` x MAD. Three decisions, each fixing a measured false-alarm source: (1) rolling the *deviation* instead of the raw value stopped windows straddling an hour boundary from comparing a peak hour with a quiet one (prod-billing-01 at 12:00 was '77% vs 3%'); (2) scaling MAD to sigma makes 4 a real 4-sigma threshold (plain 4 x MAD is ~2.7 sigma); (3) the log scale treats the fitted multiplicative day-to-day drift (Bitbrains sd 0.59) as normal spread. Spike alerts fell 56 -> 36 -> 11, the strongest being the planted one-off (prod-reports-02, z 15) and the random bursts (prod-queue-02).
+- *Cost increase*: alerts on the provisioning **step** only (the day cost changes), not on the following days while the 7-day average catches up. Threshold x1.1 is measured: billing is flat on 87% of team-days and the steps in the window are +12.9% / +12.7% (new VMs) vs +2.4% / -1.7% / -3.4%; the plan's x1.2 missed both new-VM events.
+- *Capacity trend* (CPU p95, memory p95, disk, volumes): significant least-squares slope over the last 14 days reaching 90% within 30 days (critical within 7). *Level shift* / *possible compromise* (CPU and egress both > 3x). *Memory leak*, *under-provisioned*, *monitoring missing*, *budget overrun* (forecast = spent + 7-day run-rate x days left vs 1.25 x first-quarter spend).
+
+**Presets** (`engine/presets_report.json`): savings move only 18.6% -> 19.5% from max-performance to max-savings because Peak Replay, the memory caps, the recurring-peak veto and the one-step prod rule are preset-independent; none of the presets produces an unsafe change in the held-out week.
+
+**Scorecard** (`data/scorecard.json`) and **benchmark** (`engine/benchmark.json`): summarised in ASSUMPTIONS.md.
+
+## 7. Numbers ledger
 
 Every number the engine uses. Categories: M measured, C cited default, D derived, S scenario, J judgement. Sensitivity = verdicts that flip and headline-saving change when only that number moves. Large swings at +/-25% on a percentile or coverage mark a boundary, not fragility: a percentile x 1.1 hits 100 (the single worst sample) and min_coverage x 1.25 = 1.0 (no missing sample allowed at all).
 
 | key | value | category | why | where used | sensitivity (-25% / -10% / +10% / +25%: flips, saving change) |
 |---|---|---|---|---|---|
-| `time_units.slot_minutes` | 5 | D (derived) | metrics are sampled every 5 minutes (data contract PLAN.md 4.2) | engine/backtest.py, engine/components/clean.py, engine/components/risk.py, engine/data.py, engine/pipeline.py, engine/replay.py, engine/score.py | definition (not a threshold) |
-| `time_units.slots_per_hour` | 12 | D (derived) | 60 minutes / 5-minute samples | engine/backtest.py, engine/components/clean.py, engine/data.py, engine/evidence.py | definition (not a threshold) |
-| `time_units.slots_per_day` | 288 | D (derived) | 24 hours x 12 samples per hour | engine/backtest.py, engine/components/noncompute.py, engine/components/risk.py, engine/components/sizing.py, engine/data.py, engine/evidence.py, engine/output.py, engine/pipeline.py, engine/replay.py, engine/score.py | definition (not a threshold) |
-| `time_units.hours_per_day` | 24 | D (derived) | calendar: hours in a day | engine/components/candidates.py, engine/evidence.py | definition (not a threshold) |
-| `time_units.days_per_week` | 7 | D (derived) | calendar: days in a week | engine/evidence.py | definition (not a threshold) |
+| `time_units.slot_minutes` | 5 | D (derived) | metrics are sampled every 5 minutes (data contract PLAN.md 4.2) | engine/alerts.py, engine/backtest.py, engine/components/clean.py, engine/components/risk.py, engine/data.py, engine/pipeline.py, engine/replay.py, engine/score.py | definition (not a threshold) |
+| `time_units.slots_per_hour` | 12 | D (derived) | 60 minutes / 5-minute samples | engine/alerts.py, engine/backtest.py, engine/components/clean.py, engine/data.py, engine/evidence.py | definition (not a threshold) |
+| `time_units.slots_per_day` | 288 | D (derived) | 24 hours x 12 samples per hour | engine/alerts.py, engine/backtest.py, engine/components/noncompute.py, engine/components/risk.py, engine/components/sizing.py, engine/data.py, engine/evidence.py, engine/output.py, engine/pipeline.py, engine/replay.py, engine/score.py | definition (not a threshold) |
+| `time_units.hours_per_day` | 24 | D (derived) | calendar: hours in a day | engine/alerts.py, engine/components/candidates.py, engine/evidence.py | definition (not a threshold) |
+| `time_units.days_per_week` | 7 | D (derived) | calendar: days in a week | engine/alerts.py, engine/evidence.py | definition (not a threshold) |
 | `time_units.hours_per_week` | 168 | D (derived) | 24 hours x 7 days in a week | engine/components/candidates.py, engine/components/cost.py, engine/evidence.py | definition (not a threshold) |
 | `time_units.minutes_per_hour` | 60 | D (derived) | calendar: minutes in an hour | engine/components/candidates.py, engine/components/risk.py | definition (not a threshold) |
-| `time_units.hours_per_month` | 730 | C (cited default) | cloud billing convention (8,760 h / 12); same as pricing.csv | - | definition (not a threshold) |
+| `time_units.hours_per_month` | 730 | C (cited default) | cloud billing convention (8,760 h / 12); same as pricing.csv | engine/alerts.py | definition (not a threshold) |
 | `time_units.days_per_month` | 30 | D (derived) | the replay budget is 'per month'; scaled by observed days / 30 | engine/components/risk.py, engine/replay.py | definition (not a threshold) |
 | `time_units.saturday_index` | 5 | D (derived) | pandas dayofweek: Monday = 0 ... Saturday = 5, Sunday = 6 | engine/components/candidates.py, engine/data.py | definition (not a threshold) |
+| `time_units.ms_per_second` | 1000 | D (derived) | unit conversion for the benchmark report (seconds -> milliseconds) | engine/benchmark.py | definition (not a threshold) |
+| `time_units.bytes_per_mb` | 1000000 | D (derived) | unit conversion for the benchmark report (bytes -> MB, decimal) | engine/benchmark.py | definition (not a threshold) |
 | `time_units.mbps_to_mb_per_hour` | 450 | D (derived) | 1 Mbps x 3,600 s / 8 bits = 450 MB per hour | engine/evidence.py | definition (not a threshold) |
 | `percentiles.prod` | 99 | C (cited default) | AWS Compute Optimizer default is P99.5; p99 is the conservative read that still ignores single noisy samples. Used for evidence and the one-off test ('p99 without the busiest day'); sizing reads the same value from the selected preset | engine/evidence.py, engine/pipeline.py | 20, -25.4% / 9, -13.8% / 0, +0.0% / 0, +0.0% |
 | `percentiles.nonprod` | 95 | C (cited default) | AWS 'maximum savings' style preset for lower-stakes environments; catalogue doc recommends p95 for dev/staging | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `evidence.report_percentiles` | [50, 95, 99] | D (derived) | the schema's evidence block reports cpu/mem p50, p95 and p99 | engine/evidence.py, engine/output.py, engine/pipeline.py | not perturbed (list / seed) |
 | `evidence.io_net_percentile` | 95 | C (cited default) | catalogue: IOPS and network vetoes are stated on p95 | engine/evidence.py, engine/output.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 66, -72.1% / 66, -72.1% |
-| `evidence.trend_percentile` | 95 | C (cited default) | PLAN.md 6: trend is a linear fit of daily p95 CPU | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 1, +0.0% / 1, +0.0% |
+| `evidence.trend_percentile` | 95 | C (cited default) | PLAN.md 6: trend is a linear fit of daily p95 CPU | engine/alerts.py, engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 1, +0.0% / 1, +0.0% |
 | `clean.flatline_hours` | 2 | J (judgement) | a live agent never reports the exact same CPU+memory pair for 24 consecutive 5-min samples; 2 h is long enough to avoid catching brief steady states and short enough to catch a stuck agent within a day | engine/components/clean.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `clean.interp_max_slots` | 3 | J (judgement) | gaps up to 15 min are bridged for replay continuity only; longer gaps stay NaN because interpolating them would invent load | engine/components/clean.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `clean.pct_min` | 0 | D (derived) | physical lower bound of a percentage | engine/components/clean.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
@@ -308,13 +321,13 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `gates_data.min_coverage` | 0.8 | J (judgement) | catalogue quality gate; at 80% a missing 20% would have to be concentrated in peaks to hide them, which peak-window coverage checks separately | engine/components/gates_data.py | 1, +1.2% / 0, +0.0% / 1, -2.1% / 100, -92.7% |
 | `gates_data.medium_coverage` | 0.95 | J (judgement) | between 80% and 95% the resource is evaluated but flagged MEDIUM_COVERAGE and gets +1 risk point | engine/components/gates_data.py, engine/components/risk.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.day_min_coverage` | 0.5 | J (judgement) | a day counts towards history only if at least half of it was observed | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `gates_data.anomaly_ratio` | 3.0 | J (judgement) | catalogue: a 3x level shift is far outside daily variation (fitted drift sd is 0.11-0.59), so sizing on it would be sizing on an incident | engine/backtest.py, engine/components/gates_data.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `gates_data.anomaly_recent_hours` | 48 | J (judgement) | two days: long enough to be sustained, short enough to catch an incident before the monthly report | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
+| `gates_data.anomaly_ratio` | 3.0 | J (judgement) | catalogue: a 3x level shift is far outside daily variation (fitted drift sd is 0.11-0.59), so sizing on it would be sizing on an incident | engine/alerts.py, engine/backtest.py, engine/components/gates_data.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
+| `gates_data.anomaly_recent_hours` | 48 | J (judgement) | two days: long enough to be sustained, short enough to catch an incident before the monthly report | engine/alerts.py, engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.peak_coverage_min` | 0.5 | J (judgement) | if fewer than half of the days were observed during the VM's busiest hours, the peak itself is unknown | engine/components/gates_data.py | 1, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.peak_hours_top` | 2 | J (judgement) | the two busiest hours of the day define the 'peak window' (a 40-min batch fits in one or two hours) | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_data.bucket_coverage_min` | 0.5 | J (judgement) | candidate b: any hour-of-week bucket under 50% observed is treated as a blind spot | engine/components/gates_data.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `gates_policy.stopped_recent_days` | 30 | C (cited default) | catalogue: 'stopped > 30 days, still billing'; a shorter stop is treated as maintenance | engine/components/gates_policy.py, engine/components/noncompute.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `peaks.rolling_slots` | 6 | J (judgement) | 30-minute rolling mean (6 x 5 min): a sustained peak, not a single sample; matches the alert rule's 30-minute persistence | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
+| `peaks.rolling_slots` | 6 | J (judgement) | 30-minute rolling mean (6 x 5 min): a sustained peak, not a single sample; matches the alert rule's 30-minute persistence | engine/alerts.py, engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `peaks.peak_level` | 80 | J (judgement) | a VM running above 80% for 30 min is busy enough that halving it would overload it (80 x 2 > 90 overload line) | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `peaks.recurring_min_days` | 4 | D (derived) | a weekly job appears 4-5 times in 30 days, so >= 4 separates 'weekly or more often' from one-offs | engine/components/peaks.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `peaks.p99_min` | 80 | D (derived) | candidate a: same as peak_level so the p99 condition and the daily-peak condition talk about the same busy level | engine/components/peaks.py | 1, +0.0% / 1, +0.0% / 5, +0.0% / 13, +0.0% |
@@ -329,7 +342,7 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `vetoes.mem_p99` | 70 | C (cited default) | catalogue memory veto; leaves 25+ points before the 95% OOM cap | engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 1, +3.3% / 2, +3.3% |
 | `vetoes.iops_p95` | 70 | C (cited default) | catalogue IOPS veto: disk-bound workloads do not recover gracefully when IO is squeezed | engine/components/vetoes.py | 1, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `vetoes.net_p95` | 60 | C (cited default) | catalogue network veto: a proxy is 'quiet by CPU, essential in fact' | engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
-| `vetoes.leak_min_resets` | 3 | J (judgement) | three or more sharp memory drops in 30 days is a repeating restart cycle, not a one-off restart | engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
+| `vetoes.leak_min_resets` | 3 | J (judgement) | three or more sharp memory drops in 30 days is a repeating restart cycle, not a one-off restart | engine/alerts.py, engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `vetoes.leak_drop` | 25 | J (judgement) | a drop of 25 points between consecutive samples is a process restart, far above memory noise (fitted sd 3.1) | engine/evidence.py, engine/pipeline.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `vetoes.reserved_mem_level` | 75 | J (judgement) | memory flat above 75% looks like a reserved heap rather than load | engine/components/patterns.py, engine/components/vetoes.py | 1, +0.0% / 1, +0.0% / 1, +0.0% / 1, +0.0% |
 | `vetoes.reserved_mem_std` | 1 | M (measured) | measured separation in our data: a reserved heap (prod-search-06) has sd 0.50, a cache under load (prod-cache-04) still moves with sd 1.21; PLAN.md 7 said 2, which cannot tell them apart | engine/components/patterns.py, engine/components/vetoes.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 1, +0.0% |
@@ -393,6 +406,22 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `risk.low_points_max` | 2 | C (cited default) | PLAN.md 7: 0-2 Low | engine/components/risk.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `risk.medium_points_max` | 4 | C (cited default) | PLAN.md 7: 3-4 Medium, 5+ High | engine/components/risk.py | 0, +0.0% / 0, +0.0% / 0, +0.0% / 0, +0.0% |
 | `cost.floor_inr` | 500 | C (cited default) | catalogue: below Rs 500/month a recommendation is not worth a human's attention (applies to compute changes; deleting/releasing unused resources has no blast radius) | engine/components/cost.py | 1, +0.4% / 1, +0.4% / 0, +0.0% / 0, +0.0% |
+| `alerts.spike_mad_k` | 4 | C (cited default) | execution plan: a spike is 4 robust sigmas above the median of the same hour of the week; the median/MAD baseline is not inflated by the spike itself, unlike mean/standard deviation | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.mad_to_sigma` | 1.4826 | D (derived) | consistency constant: for normal data sigma = 1.4826 x MAD, so k x 1.4826 x MAD is a k-sigma robust threshold (plain 4 x MAD is only ~2.7 sigma) | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.spike_min_level` | 50 | J (judgement) | a 'spike' that stays under 50% CPU is not operationally interesting, however unusual | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.capacity_level` | 90 | C (cited default) | execution plan: alert when the trend reaches 90% (CPU, memory or disk) | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.trend_days_warning` | 30 | C (cited default) | execution plan: days until 90% < 30 -> warning | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.trend_days_critical` | 7 | C (cited default) | execution plan: capacity < 7 days -> critical | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.trend_lookback_days` | 14 | C (cited default) | execution plan: straight-line fit on the last 14 days (recent slope, not the month's average) | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.trend_pvalue` | 0.05 | C (cited default) | only statistically significant slopes raise a capacity alert (same as vetoes.growth_pvalue) | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.cost_jump_ratio` | 1.1 | M (measured) | billing is piecewise constant (87% of team-days unchanged), so every change is a provisioning event and there is no noise to guard against; in the window the steps are +12.9% and +12.7% (new VMs) vs +2.4%, -1.7%, -3.4% (a volume, a stop, a resize). 1.1 separates material provisioning from routine changes; the execution plan's 1.2 would miss both new-VM events | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.cost_window_days` | 7 | C (cited default) | execution plan: trailing 7-day average (one weekly cycle) | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.cost_lookback_days` | 30 | D (derived) | cost jumps are reported for the same 30-day window as the metrics | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.budget_base_days` | 90 | D (derived) | budgets are set from the first quarter (90 days) of the 180-day billing history | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.budget_multiplier` | 1.25 | S (scenario choice) | scenario: each team's monthly budget = 125% of its first-quarter monthly spend (the bill then grew ~40%, so several teams overrun) | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.budget_critical_over` | 0.1 | C (cited default) | execution plan: forecast more than 10% over budget -> critical | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `alerts.runrate_days` | 7 | D (derived) | month-end forecast = spent so far + (mean of the last 7 days) x days left | engine/alerts.py | alerts only: never changes a verdict or a saving |
+| `benchmark.target_vms` | 1000 | S (scenario choice) | PLAN.md scale story: show the engine on a ~1,000-VM fleet (about 9x the demo fleet) | engine/benchmark.py, engine/checkpoints.py | benchmark size only |
 | `backtest.split_day` | 23 | D (derived) | 30 days - 7: decide on 23 days (still >= 14), test on the last full week so every weekday is seen once out of sample | engine/backtest.py, engine/score.py | selection-level: see the weight sweep |
 | `score.w_correct` | 4 | J (judgement) | correctness carries the brief's 25% safety criterion plus the edge-case contract: the largest single weight | engine/score.py | selection-level: see the weight sweep |
 | `score.w_safety` | 3 | J (judgement) | an unsafe downsize is the worst possible outcome; weighted just below correctness only because it is binary and already near-guaranteed by replay | engine/score.py | selection-level: see the weight sweep |
@@ -412,6 +441,27 @@ Every number the engine uses. Categories: M measured, C cited default, D derived
 | `score.max_passes` | 3 | J (judgement) | coordinate ascent cap; selections are expected to settle in 1-2 passes | engine/select.py | selection-level: see the weight sweep |
 | `score.sensitivity_small` | 0.1 | C (cited default) | ledger sensitivity at +/-10% | engine/sensitivity.py | selection-level: see the weight sweep |
 | `score.sensitivity_large` | 0.25 | J (judgement) | ledger sensitivity at +/-25% | engine/sensitivity.py | selection-level: see the weight sweep |
+
+## 8. Selection re-run on the corrected dataset
+
+The full checkpointed selection was re-run on the data branch's corrected dataset (engine code combined with it in a temporary worktree, nothing committed): `engine/selection_log_corrected_data.json`.
+
+| CP | component | selected (this dataset) | total | selected (corrected dataset) | total |
+|---|---|---|---|---|---|
+| 1 | clean | `a_basic` | 9.631 | `a_basic` | 9.887 |
+| 2 | gates_data | `c_peak_hours` | 10.0 | `c_peak_hours` | 10.0 |
+| 3 | gates_policy | `a_table` | 10.0 | `a_table` | 10.0 |
+| 4 | peaks | `c_periodicity` | 9.529 | `c_periodicity` | 10.0 |
+| 5 | noncompute | `b_state_growth` | 10.0 | `b_state_growth` | 10.0 |
+| 6 | vetoes | `b_fixed_sig` | 9.333 | `b_fixed_sig` | 10.0 |
+| 7 | patterns | `a_p99` | 10.0 | `a_p99` | 10.0 |
+| 8 | candidates | `c_relative` | 9.692 | `c_relative` | 10.0 |
+| 9 | sizing | `b_formula_replay` | 8.597 | `b_formula_replay` | 9.5 |
+| 10 | risk | `b_bootstrap` | 9.791 | `b_bootstrap` | 9.801 |
+| 11 | cost | `a_sequential` | 10.0 | `a_sequential` | 10.0 |
+| 12 | assemble | `b_precedence` | 9.745 | `b_precedence` | 10.0 |
+
+**Identical selection on both datasets**: the chosen logic does not depend on the disputed labels.
 
 ### Presets
 
