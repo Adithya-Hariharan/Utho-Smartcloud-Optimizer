@@ -182,5 +182,5 @@ Monthly run-rate (last day x 730/24): Rs 619,490
 | INFO | fleet | share mean CPU < 20%: real Azure 0.9123, Bitbrains 0.8175 (depends on archetype mix) | PASS | 0.741 |
 | INFO | fleet | median CPU p95: real Azure 7.2657, Bitbrains 2.9604 (our fleet is deliberately busier) | PASS | 55.6 |
 | BILL | fleet | month 6 / month 1 in 1.35-1.45 | PASS | 1.383 |
-| SIZE | data/ | total <= 30 MB | PASS | 12.4 MB |
+| SIZE | data/ | total <= 30 MB | PASS | 13.2 MB |
 | COUNT | inventory | 117 VMs, 15 volumes, 8 IPs | PASS | {'vm': 117, 'volume': 15, 'ip': 8} |

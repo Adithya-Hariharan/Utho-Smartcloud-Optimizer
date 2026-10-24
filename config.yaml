@@ -1,0 +1,177 @@
+# SmartCloud Optimizer: single source of truth for the backend (PLAN_final.md, B7).
+# Every tunable entry is {value, why, source}. Prices are ILLUSTRATIVE.
+
+schema_version: "1.0"
+
+window:
+  timezone: Asia/Kolkata
+  start: "2026-09-20T00:00:00+05:30"
+  end: "2026-10-19T23:55:00+05:30"
+  now: "2026-10-20T00:00:00+05:30"
+  step_minutes: 5
+  slots: 8640
+  days: 30
+
+billing:
+  hours_per_month:
+    value: 730
+    why: Standard cloud billing month (365 x 24 / 12); daily cost = monthly x 24 / 730.
+    source: generator/config.py HOURS_PER_MONTH
+  stopped_vm_billed:
+    value: false
+    why: Compute is free while a VM is stopped; disk and IP keep billing.
+    source: assumption, to be confirmed with Utho mentors
+
+pricing:
+  basis: Illustrative, modelled on Utho public Basic tiers, ex-GST. All regions priced the same.
+  plans:
+    S1: {vcpu: 1, ram_gb: 2, bandwidth_mbps: 250, monthly_inr: 705, basis: "assumption: half of B1"}
+    B1: {vcpu: 2, ram_gb: 4, bandwidth_mbps: 500, monthly_inr: 1410, basis: "modelled on Utho Basic 1 public listing (illustrative)"}
+    B2: {vcpu: 4, ram_gb: 8, bandwidth_mbps: 1000, monthly_inr: 2826, basis: "modelled on Utho Basic 2 public listing (illustrative)"}
+    B3: {vcpu: 6, ram_gb: 16, bandwidth_mbps: 1000, monthly_inr: 3978, basis: "modelled on Utho Basic 3 public listing (illustrative)"}
+    B4: {vcpu: 8, ram_gb: 32, bandwidth_mbps: 2000, monthly_inr: 6690, basis: "modelled on Utho Basic 4 public listing (illustrative)"}
+    B5: {vcpu: 16, ram_gb: 64, bandwidth_mbps: 2000, monthly_inr: 13000, basis: "assumption: fills the gap between B4 and B6"}
+    B6: {vcpu: 24, ram_gb: 96, bandwidth_mbps: 4000, monthly_inr: 25962, basis: "modelled on Utho Basic 6 public listing (illustrative)"}
+  volume_inr_per_gb_month:
+    value: 8
+    why: Block storage rate; also used for a VM's boot disk (billed inline, B3).
+    source: assumption (illustrative)
+  snapshot_inr_per_gb_month:
+    value: 4
+    why: Snapshot kept before any delete.
+    source: assumption (illustrative)
+  ip_inr_per_month:
+    value: 200
+    why: Public IPv4; billed on the IP's own row only.
+    source: assumption (illustrative)
+  legacy_plan_rates:
+    value: {L-OLD-4: 3500}
+    why: Billing-only rates for plans outside the catalogue, so the bill adds up. The engine still treats them as unknown price (D8).
+    source: generator/config.py LEGACY_PLANS
+
+thresholds:
+  lookback_days: {value: 30, why: "Above AWS Compute Optimizer's 14-day minimum; catches weekly cycles", source: "AWS Compute Optimizer docs"}
+  percentile_prod: {value: 99, why: "Conservative read of peaks for prod", source: "AWS default P99.5; p99 chosen"}
+  percentile_nonprod: {value: 95, why: "Non-prod tolerates brief saturation", source: "plan section 7"}
+  cpu_target_prod_pct: {value: 70, why: "About 30% headroom after resize", source: "AWS 20-30% headroom guidance"}
+  cpu_target_nonprod_pct: {value: 80, why: "About 20% headroom after resize", source: "AWS 20-30% headroom guidance"}
+  mem_target_pct: {value: 75, why: "Memory exhaustion crashes (OOM); CPU only slows", source: "plan section 7"}
+  mem_hard_cap_pct: {value: 95, why: "No replayed sample may exceed this", source: "plan section 7"}
+  replay_limit_minutes_prod: {value: 0, why: "Hard safety gate for prod", source: "plan section 7"}
+  replay_limit_minutes_nonprod: {value: 30, why: "Per month above 90% CPU", source: "plan section 7"}
+  idle_cpu_pct: {value: 5, why: "Idle CPU threshold", source: "Datadog, Azure Advisor"}
+  idle_net_mb_per_hour: {value: 5, why: "Plan section 7 absolute idle line (1 Mbps = 450 MB/h); kept for reference, the VM idle test uses idle_net_pct_bw", source: "Datadog, Azure Advisor"}
+  idle_iops_p95: {value: 5, why: "Absolute IOPS line; still used for the idle-volume review (C3)", source: "Datadog, Azure Advisor"}
+  idle_net_pct_bw: {value: 0.1, why: "VM idle if mean (in + out) network < 0.1% of plan bandwidth; real network is lognormal, so absolute MB/h lines call idle VMs busy", source: "engine/config.yaml candidates.idle_net_pct_bw (main)"}
+  idle_iops_pct: {value: 1, why: "VM idle if IOPS p95 < 1% of provisioned IOPS", source: "engine/config.yaml candidates.idle_iops_pct (main)"}
+  underused_cpu_pct: {value: 40, why: "Leaves room after headroom", source: "plan section 7"}
+  underused_mem_pct: {value: 50, why: "Leaves room after headroom", source: "plan section 7"}
+  veto_mem_p99_pct: {value: 70, why: "Memory-bound", source: "catalogue doc"}
+  veto_iops_p95_pct: {value: 70, why: "Disk-bound", source: "catalogue doc"}
+  veto_net_p95_pct: {value: 60, why: "Network is the workload", source: "catalogue doc"}
+  min_days_of_data: {value: 14, why: "AWS minimum", source: "AWS Compute Optimizer docs"}
+  min_coverage: {value: 0.80, why: "Data quality gate (80-95% allowed with lower confidence)", source: "plan section 7"}
+  orphan_age_days: {value: 7, why: "Avoids catching resources mid-setup", source: "plan section 7"}
+  stopped_vm_days: {value: 30, why: "Not a maintenance stop", source: "plan section 7"}
+  saving_floor_inr: {value: 500, why: "Not worth human attention below this", source: "plan section 7"}
+  flatline_slots: {value: 24, why: "cpu AND mem constant for 2 h = stuck agent", source: "PLAN_final.md B4"}
+  leak_drop_pct_points: {value: 25, why: "One sawtooth reset in memory", source: "generator/validate.py A11"}
+  leak_cpu_drop_pct_points: {value: 20, why: "A memory drop together with a CPU drop this large is a job ending, not a leak reset", source: "PLAN_final.md B9a.3"}
+  recurring_peak_pct: {value: 80, why: "30-minute rolling mean above this marks a peak day", source: "plan section 6"}
+  recurring_peak_min_weeks: {value: 3, why: "A peak in the same IST hour-of-week in this many weeks is scheduled, not random", source: "engine design (G1 uses the same 3-week baseline)"}
+  peak_hour_p95_pct: {value: 50, why: "Hours of day with p95 CPU at or above this form the peak window whose coverage is checked", source: "engine design (E9)"}
+  peak_window_min_coverage: {value: 0.5, why: "Peak hours observed less than this are under-observed", source: "plan section 7 step 5"}
+  reserved_mem_min_pct: {value: 75, why: "Flat memory at or above this may be a reserved heap", source: "plan section 7 step 5"}
+  reserved_mem_max_std: {value: 0.75, why: "Std of memory below this = reserved, not used (memory-bound VMs vary with CPU, std >= 1)", source: "tuned on the planted cases; plan says < 2"}
+  went_quiet_ratio: {value: 0.2, why: "Last 7 days vs prior 23 days", source: "plan section 7 step 5"}
+  one_off_p99_pct: {value: 80, why: "High p99 that disappears without the busiest day", source: "plan section 7 step 5"}
+  one_off_excl_max_pct: {value: 40, why: "p99 without the busiest day below this = a single event", source: "plan section 7 step 5"}
+  growth_days_to_85: {value: 60, why: "Growing toward capacity within this many days blocks shrinking", source: "plan section 7 step 4"}
+  growth_min_slope: {value: 0.3, why: "Slope (points/day) below this is flat noise", source: "PLAN_final.md B5"}
+  growth_min_r2: {value: 0.5, why: "Fit quality; a weekly on/off pattern is not a trend", source: "PLAN_final.md B9a.1"}
+  shrinkable_mean_cpu_pct: {value: 20, why: "Looks wasteful on its average", source: "plan section 7 step 6 (Rejections panel test)"}
+  upsize_cpu_p99_pct: {value: 90, why: "CPU p99 above this = saturated (plan section 7 step 3)", source: "plan section 7; engine/config.yaml sizing.upsize_level (main)"}
+  upsize_min_mean_cpu_pct: {value: 20, why: "A VM idle on average that touches 90% is batchy, not starved: no upsize below this mean", source: "engine/components/sizing.py _upsize (main)"}
+  off_hour_cpu_p95_pct: {value: 5, why: "An hour is off if CPU p95 is below this in every week", source: "plan section 7 step 6"}
+  off_block_min_hours: {value: 4, why: "Shorter off blocks are start/stop churn", source: "plan section 7 step 6"}
+  off_min_hours_per_week: {value: 40, why: "Below this a schedule is not worth it", source: "plan section 7 step 6"}
+  volume_target_used_pct: {value: 50, why: "Migrated volume sized so current use is at most this", source: "engine design (C5)"}
+  volume_size_step_gb: {value: 50, why: "Volume sizes are rounded up to this step", source: "engine design (C5)"}
+  volume_oversized_used_pct: {value: 30, why: "A volume using less than this (p99) is a shrink candidate", source: "engine design (C5)"}
+  confidence_week_variation: {value: 0.10, why: "Weekly p95 varying less than this between weeks = High confidence", source: "plan section 7"}
+  comparisons: {value: "strict < / >", why: "A value exactly on a threshold does not trigger it (staging-api-09)", source: "plan section 7"}
+
+alerts:
+  g1_mad_k: {value: 4, why: "Spike = above median + k x MAD of the same hour-of-week", source: "plan G1"}
+  g1_min_points_above_median: {value: 20, why: "Avoids alerts on near-flat series where MAD is tiny", source: "PLAN_final.md B5"}
+  g1_min_consecutive_samples: {value: 6, why: "30 minutes", source: "plan G1"}
+  g1_min_other_weeks: {value: 3, why: "Baseline needs enough weeks", source: "PLAN_final.md B5"}
+  g3_level_shift_ratio: {value: 3, why: "Last 48 h vs prior 28 d", source: "plan G3"}
+  g4_cpu_pct: {value: 90, why: "Miner-like saturation", source: "plan G4"}
+  g4_net_out_ratio: {value: 5, why: "Last 24 h net_out vs median of 28 prior daily means", source: "PLAN_final.md B5"}
+  g5_days_to_90: {value: 30, why: "Capacity alert horizon", source: "plan G5"}
+  g5_critical_days: {value: 7, why: "Capacity critical horizon", source: "plan severity rules"}
+  g5_min_slope: {value: 0.3, why: "Ignore flat noise (points/day)", source: "PLAN_final.md B5"}
+  g5_fit_days: {value: 14, why: "Recent trend", source: "plan G5"}
+  g5_min_days: {value: 7, why: "Minimum daily values for a fit", source: "PLAN_final.md B5"}
+  g5_min_r2: {value: 0.5, why: "Fit quality; a weekend-only load is not a trend", source: "PLAN_final.md B9a.1"}
+  g6_leak_cycles: {value: 3, why: "Sawtooth cycles", source: "plan G6"}
+  g7_jump_ratio: {value: 1.05, why: "Team daily cost vs its previous 7-day mean, with a new resource that day", source: "PLAN_final.md B5"}
+  g9_share_above_90: {value: 0.05, why: "Share of CPU samples above 90%", source: "PLAN_final.md B5"}
+
+# Presets (plan section 7 preset table). default mirrors the thresholds above.
+# Besides percentile, CPU target and replay limit (plan section 7), each preset sets how wide the net of "shrink
+# candidates" is: underused (CPU P < x and mem P < y) and looks-shrinkable (mean CPU < z). Peak Replay, the 95%
+# memory cap and the prod one-step rule are the same in every preset, so a wider net never makes a resize unsafe.
+# default must equal thresholds.underused_cpu_pct / underused_mem_pct / shrinkable_mean_cpu_pct.
+presets:
+  max_savings: {label: Max savings, enabled: true, pct_prod: 90, pct_nonprod: 90, cpu_target_prod: 90, cpu_target_nonprod: 90, replay_limit_prod: 60, replay_limit_nonprod: 60, underused_cpu_pct: 55, underused_mem_pct: 65, shrinkable_mean_cpu_pct: 30}
+  balanced: {label: Balanced, enabled: true, pct_prod: 95, pct_nonprod: 95, cpu_target_prod: 80, cpu_target_nonprod: 80, replay_limit_prod: 30, replay_limit_nonprod: 30, underused_cpu_pct: 45, underused_mem_pct: 55, shrinkable_mean_cpu_pct: 25}
+  default: {label: Default, enabled: true, pct_prod: 99, pct_nonprod: 95, cpu_target_prod: 70, cpu_target_nonprod: 80, replay_limit_prod: 0, replay_limit_nonprod: 30, underused_cpu_pct: 40, underused_mem_pct: 50, shrinkable_mean_cpu_pct: 20}
+  max_performance: {label: Max performance, enabled: true, pct_prod: 99.5, pct_nonprod: 99.5, cpu_target_prod: 60, cpu_target_nonprod: 60, replay_limit_prod: 0, replay_limit_nonprod: 0, underused_cpu_pct: 30, underused_mem_pct: 40, shrinkable_mean_cpu_pct: 15}
+
+# Carbon estimate (Forecast & Green). PLACEHOLDER coefficients: published averages, not measured from this
+# dataset (no power, PUE or grid data exists in data/). Future scope: add per-plan power, data-centre PUE and
+# region grid intensity to the dataset (PLAN_frontend_integration.md section 10).
+carbon:
+  placeholder: true
+  w_per_vcpu_min: 0.74
+  w_per_vcpu_max: 3.5
+  w_per_gb_ram: 0.392
+  pue: 1.4
+  kg_co2_per_kwh: 0.71
+  default_util_pct: 10
+  source: "PLACEHOLDER: Cloud Carbon Footprint methodology averages; India grid factor from CEA. Not measured from this dataset."
+
+forecast:
+  alpha: {value: 0.3, why: "Holt-Winters level smoothing", source: "frontend reference (mock_engine.holt_winters)"}
+  beta: {value: 0.05, why: "Holt-Winters trend smoothing", source: "frontend reference"}
+  gamma: {value: 0.2, why: "Holt-Winters weekly-season smoothing", source: "frontend reference"}
+  season_days: {value: 7, why: "Weekly season", source: "plan section 1 (Holt-Winters, weekly season)"}
+  history_days: {value: 60, why: "Days of history shown with the forecast", source: "frontend reference"}
+
+whatif:
+  busy_cpu_pct: {value: 5, why: "An off hour is busy if CPU (max over weeks of the hourly p95) is at least this", source: "same as the off-hours idle line"}
+
+metrics:
+  gap_min_slots: {value: 6, why: "Missing runs of at least 30 minutes are reported as gaps", source: "frontend reference (mock_engine gaps)"}
+
+# Rows of the Assumptions page: display name, value text (formatted from config) and why.
+assumptions_table:
+  - {name: "Lookback", value: "{thresholds.lookback_days} days", why_from: thresholds.lookback_days}
+  - {name: "Percentile", value: "p{thresholds.percentile_prod:g} prod, p{thresholds.percentile_nonprod:g} non-prod", why_from: thresholds.percentile_prod}
+  - {name: "CPU target after resize", value: "{thresholds.cpu_target_prod_pct}% prod, {thresholds.cpu_target_nonprod_pct}% non-prod", why_from: thresholds.cpu_target_prod_pct}
+  - {name: "Memory target / hard cap", value: "p99 ≤ {thresholds.mem_target_pct}%, no sample > {thresholds.mem_hard_cap_pct}%", why_from: thresholds.mem_target_pct}
+  - {name: "Peak Replay limit", value: "{thresholds.replay_limit_minutes_prod} min > 90% prod, ≤ {thresholds.replay_limit_minutes_nonprod} min/month non-prod", why_from: thresholds.replay_limit_minutes_prod}
+  - {name: "Idle", value: "CPU < {thresholds.idle_cpu_pct}%, network < {thresholds.idle_net_pct_bw}% of bandwidth, IOPS p95 < {thresholds.idle_iops_pct}% of provisioned", why_from: thresholds.idle_net_pct_bw}
+  - {name: "Underused", value: "CPU < {thresholds.underused_cpu_pct}% and memory < {thresholds.underused_mem_pct}%", why_from: thresholds.underused_cpu_pct}
+  - {name: "Vetoes", value: "memory {thresholds.veto_mem_p99_pct}%, IOPS {thresholds.veto_iops_p95_pct}%, network {thresholds.veto_net_p95_pct}%", why_from: thresholds.veto_mem_p99_pct}
+  - {name: "Minimum data", value: "{thresholds.min_days_of_data} days; coverage ≥ {thresholds.min_coverage:.0%}", why_from: thresholds.min_coverage}
+  - {name: "Orphan age", value: "{thresholds.orphan_age_days} days", why_from: thresholds.orphan_age_days}
+  - {name: "Stopped VM", value: "> {thresholds.stopped_vm_days} days", why_from: thresholds.stopped_vm_days}
+  - {name: "Saving floor", value: "₹{thresholds.saving_floor_inr}/month (compute changes)", why_from: thresholds.saving_floor_inr}
+  - {name: "Prod step", value: "one plan down per change", why: "Small, reversible moves"}
+  - {name: "Comparisons", value: "{thresholds.comparisons}", why_from: thresholds.comparisons}
+
+api:
+  cors_origins: ["http://localhost:5173"]
