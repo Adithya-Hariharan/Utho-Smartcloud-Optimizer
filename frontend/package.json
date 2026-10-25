@@ -13,7 +13,6 @@
     "verify": "node scripts/verify.mjs",
     "verify:watch": "node scripts/verify.mjs --watch",
     "lint": "eslint .",
-    "fixtures": "node -e \"require('child_process').execFileSync(require('fs').existsSync('../.venv/Scripts/python.exe')?'../.venv/Scripts/python.exe':'../.venv/bin/python',['../docs/reference/mock_engine.py'],{stdio:'inherit'})\" && node scripts/check_fixtures.mjs",
     "verify:live": "node scripts/verify.mjs --live --force"
   },
   "dependencies": {

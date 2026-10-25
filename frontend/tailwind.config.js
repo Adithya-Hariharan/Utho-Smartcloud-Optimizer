@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-// Every colour comes from CSS variables in src/theme.css (generated from DESIGN.md), as r g b channels.
+// Every colour comes from CSS variables in src/theme.css, as r g b channels.
 const c = (name) => `rgb(var(--c-${name}) / <alpha-value>)`
 const scale = (name, keys) => Object.fromEntries(keys.map((k) => [k, c(`${name}-${k}`)]))
 

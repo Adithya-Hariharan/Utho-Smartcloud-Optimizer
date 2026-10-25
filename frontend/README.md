@@ -14,7 +14,7 @@ npm run dev                       # http://localhost:5173, proxies /api → http
 The backend runs on :8000; to use another address, set `VITE_API_URL`.
 
 **Temporary fallback (dev server only).** While nothing listens on the backend port:
-- The dev server answers `/api/*` from `fallback/api/`, plan-shaped data built from `../data` by `docs/reference/mock_engine.py`.
+- The dev server answers `/api/*` from `fallback/api/`, a saved snapshot of API responses built from `../data`.
 - The header shows **Fallback data · backend offline**.
 
 When the backend starts, requests go to it straight away. Open pages refetch within about 4 seconds and show a "Backend connected" toast. Set `VITE_API_FALLBACK=off` to disable the fallback. Delete `fallback/` once the backend serves everything.
@@ -37,8 +37,6 @@ npm run verify:live            # browser tests against the real backend on :8000
 **How the tests get data:**
 - By default, `/api/*` is stubbed **inside the test browser**, using the same resolver and data as the dev-server fallback (`fallback/resolve.ts`, `fallback/api/`).
 - `verify:live` turns the stub off and reads expectations from the real API.
-
-**Refreshing the fallback data:** after the data changes, regenerate it with `npm run fixtures` (needs the repo `.venv`).
 
 ## Layout
 

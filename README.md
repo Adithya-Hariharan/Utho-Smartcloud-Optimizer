@@ -190,7 +190,6 @@ python -m generator.validate    # 178 data checks
 |---|---|
 | `backend/` | API, pipeline, engine, cost, insights |
 | `frontend/` | React + TypeScript website |
-| `engine/` | Reference engine — how each rule was chosen and scored |
 | `generator/` | Seeded data generator, fitted to public traces |
 | `data/` | Dataset + answer key |
 | `config.yaml` | Every threshold and price, with its reason |
@@ -202,9 +201,7 @@ python -m generator.validate    # 178 data checks
 
 | Document | For |
 |---|---|
-| [`ASSUMPTIONS.md`](ASSUMPTIONS.md) | Thresholds, presets, scorecard, benchmark |
 | [`data/DATASET.md`](data/DATASET.md) | How the data was built |
-| [`engine/REASONING.md`](engine/REASONING.md) | Why each rule and number was chosen |
 | [`frontend/API_CONTRACT.md`](frontend/API_CONTRACT.md) | API used by the website |
 
 ---
