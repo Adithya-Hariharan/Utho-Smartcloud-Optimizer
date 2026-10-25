@@ -12,6 +12,8 @@ import { formatCompactINR, formatDayIST, formatINR } from '../../lib/format'
 export function ForecastChart({ forecast, acceptedMonthlySaving, height = 300 }: { forecast: Forecast; acceptedMonthlySaving: number; height?: number }) {
   const option = useMemo<EChartsCoreOption>(() => {
     const daily = (acceptedMonthlySaving * 24) / 730
+    // with nothing accepted the two lines are identical, so only the forecast is drawn
+    const hasActions = acceptedMonthlySaving !== 0
     const dates = [...forecast.history.dates, ...forecast.forecast.dates]
     const pad = (n: number) => Array<number | null>(n).fill(null)
     const h = forecast.history.total.length
@@ -22,7 +24,7 @@ export function ForecastChart({ forecast, acceptedMonthlySaving, height = 300 }:
     const band = [...pad(h), ...forecast.forecast.upper.map((u, i) => Math.round((u - forecast.forecast.lower[i]) * 100) / 100)]
     return {
       grid: { ...baseGrid, left: 60, top: 32 },
-      legend: { type: 'scroll', top: 0, left: 0, itemWidth: 14, itemHeight: 2, textStyle: { color: INK.secondary, fontSize: 11 }, data: ['Billed', 'Forecast', 'With accepted actions', '95% band'] },
+      legend: { type: 'scroll', top: 0, left: 0, itemWidth: 14, itemHeight: 2, textStyle: { color: INK.secondary, fontSize: 11 }, data: ['Billed', 'Forecast', ...(hasActions ? ['With accepted actions'] : []), '95% band'] },
       tooltip: {
         ...tooltipBase,
         formatter: (ps: { axisValue: string; seriesName: string; value: number | null; marker: string }[]) =>
@@ -34,8 +36,9 @@ export function ForecastChart({ forecast, acceptedMonthlySaving, height = 300 }:
         { name: 'band-base', type: 'line', data: lower, stack: 'band', showSymbol: false, lineStyle: { opacity: 0 }, silent: true },
         { name: '95% band', type: 'line', data: band, stack: 'band', showSymbol: false, lineStyle: { opacity: 0 }, areaStyle: { color: SERIES[0], opacity: 0.12 }, itemStyle: { color: SERIES[0] }, silent: true },
         { name: 'Billed', type: 'line', data: history, showSymbol: false, lineStyle: { width: 1.5, color: INK.secondary }, itemStyle: { color: INK.secondary } },
-        { name: 'Forecast', type: 'line', data: baseline, showSymbol: false, lineStyle: { width: 2, color: SERIES[0], type: 'dashed' }, itemStyle: { color: SERIES[0] } },
-        { name: 'With accepted actions', type: 'line', data: withActions, showSymbol: false, lineStyle: { width: 2, color: SERIES[2] }, itemStyle: { color: SERIES[2] } },
+        ...(hasActions ? [{ name: 'With accepted actions', type: 'line', data: withActions, showSymbol: false, lineStyle: { width: 2, color: SERIES[2] }, itemStyle: { color: SERIES[2] } }] : []),
+        // drawn last so the dashed forecast stays visible where the lines meet
+        { name: 'Forecast', type: 'line', data: baseline, showSymbol: false, z: 3, lineStyle: { width: 2, color: SERIES[0], type: 'dashed' }, itemStyle: { color: SERIES[0] } },
       ],
     }
   }, [forecast, acceptedMonthlySaving])
