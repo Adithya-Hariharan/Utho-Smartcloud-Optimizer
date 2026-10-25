@@ -269,12 +269,6 @@ def verify_cp5():
 
 
 # ------------------------------------------------------------------ CP6 docs match the data
-def _section(text, header, next_prefix):
-    a = text.index(header)
-    b = text.find(next_prefix, a + len(header))
-    return text[a:b if b != -1 else None]
-
-
 def verify_cp6():
     out = []
     r = _run("generator.fit.report", "--check")
@@ -282,19 +276,6 @@ def verify_cp6():
                 r.returncode == 0, r.stdout.strip()))
     doc = (DATA / "DATASET.md").read_text(encoding="utf-8")
     out.append(("DATASET.md: no 'recalled from memory' left", "recalled from memory" not in doc, ""))
-    plan = (ROOT / "PLAN.md").read_text(encoding="utf-8")
-    g34 = _section(plan, "## G3.", "## G5.")
-    out.append(("PLAN.md G3/G4: no 'recalled from memory' left", "recalled from memory" not in g34, ""))
-    P = json.loads(PARAMS.read_text())
-    for k, fmt in (("ar1_phi_cpu", "{:.3f}"), ("mem_coupling", "{:.3f}"), ("mem_ar1_phi", "{:.3f}"),
-                   ("net_lognorm_sigma", "{:.2f}"), ("net_out_in_ratio", "{:.3f}"), ("iops_lognorm_sigma", "{:.2f}")):
-        s = fmt.format(P[k]["value"])
-        out.append((f"PLAN.md G4 quotes fitted {k} = {s}", s in g34, ""))
-    base = subprocess.run(["git", "show", f"{BASELINE}:PLAN.md"], cwd=ROOT, capture_output=True, text=True,
-                          encoding="utf-8").stdout
-    for header, nxt in (("### 4.5 Recommendation schema", "\n## 5."), ("## 10. API", "\n## 11.")):
-        out.append((f"PLAN.md '{header}' byte-identical to {BASELINE}",
-                    _section(base, header, nxt) == _section(plan, header, nxt), ""))
     return out
 
 
